@@ -34,3 +34,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+#converted gzipped base64 nbt string to json
+testContent/parsed.json
+
+#downloaded skyblock profile
+testContent/skyblockprofile.json
