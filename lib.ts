@@ -1,10 +1,12 @@
+// *** CUSTOM PROTOS ***
+
 declare global {
     interface String {
         capitalize(): string
     }
     interface Number {
         compact(): string,
-        addCommas(): string,
+        addCommas(fixedLength?: number): string,
     }
 }
 
@@ -12,8 +14,18 @@ String.prototype.capitalize = function() {
     return this[0].toUpperCase() + this.slice(1).toLowerCase();
 }
 
-Number.prototype.addCommas = function() {
-    return this.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+Number.prototype.addCommas = function(fixedLength?: number) {
+    var split: string[];
+
+    if(fixedLength === undefined) {
+        split = this.toString().split(".")
+    } else {
+        split = this.toFixed(fixedLength).split(".");
+    }
+    
+    split[0] = split[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+    return split.join(".")
 }
 
 Number.prototype.compact = function() {
@@ -34,6 +46,157 @@ Number.prototype.compact = function() {
 
     return formatter.format(Number(this));
 }
+
+// *** PROFILES ***
+
+export function getMostRecentProfile(apiData: any): number {
+    var highest = 0;
+    var highestIndex = 0;
+
+    for(let i=0;i<apiData.profiles.length;i++) {
+        var last_save = apiData.profiles[i].last_save
+
+        if(last_save > highest) {
+            highest = last_save;
+            highestIndex = i;
+        }
+    }
+
+    return highestIndex;
+}
+
+export interface membersList {
+    [key: string]: profileMember
+}
+
+export interface baseProfile { //base profile. all profile types can be derived from this (dont use)
+    profile_id: string,
+    members: membersList,
+    community_upgrades: object
+    last_save: number,
+    cute_name: string,
+}
+
+export interface profile extends baseProfile { //normal profile
+    banking: object
+}
+
+export interface bingoProfile extends baseProfile { //bingo profile
+    game_mode: "bingo"
+}
+
+export interface profileMember { //all objects can be expanded upon; all any[] | any need more info
+    //misc important
+    last_save: number,
+    stats: object,
+
+    //misc stats
+    first_join: number,
+    first_join_hub: number
+    last_death: number,
+    death_count: number,
+    
+    //fairy souls
+    fishing_treasure_caught: number,
+    fairy_souls_collected: number,
+    fairy_exchanges: number,
+    fairy_souls: number,
+    
+    //money
+    personal_bank_upgrade: number,
+    coin_purse: number,
+
+    //main progression
+    objectives: object,
+    achievement_spawnned_island_types: string[],
+    quests: object,
+    tutorial: string[],
+    crafted_generators: string[],
+    visited_zones: string[],
+    unlocked_coll_tiers: string[],
+    nether_island_player_data: object,
+    visited_modes: string[],
+    collection: object,
+    
+    //side quests
+    harp_quest: object,
+    trophy_fish: object,
+    trapper_quest: object,
+
+    //pets
+    pets: object[],
+    autopet: object,
+
+    //slayer
+    slayer_quest: object,
+    slayer_bosses: object,
+
+    //mining
+    forge: object,
+    mining_core: object,
+
+    //misc
+    dungeons: object,
+    jacob2: object,
+    experimentation: object,
+    bestiary: object,
+    soulflow: number,
+    
+    //effects / buffs
+    perks: object,
+    active_effects: object[],
+    paused_effects: any[],
+    disabled_potion_effects: string[],
+    temp_stat_buffs: any[],
+    
+    //essence
+    essence_undead: number,
+    essence_crimson: number,
+    essence_diamond: number,
+    essence_dragon: number,
+    essence_gold: number,
+    essence_ice: number,
+    essence_wither: number,
+    essence_spider: number,
+    
+    //skills
+    experience_skill_runecrafting: number,
+    experience_skill_mining: number,
+    experience_skill_alchemy: number,
+    experience_skill_taming: number,
+    experience_skill_combat: number,
+    experience_skill_farming: number,
+    experience_skill_social2: number,
+    experience_skill_enchanting: number,
+    experience_skill_fishing: number,
+    experience_skill_foraging: number,
+    experience_skill_carpentry: number,
+    
+    //wardrobe
+    wardrobe_contents: object,
+    wardrobe_equipped_slot: number,
+    
+    //misc storage
+    accessory_bag_storage: object,
+    sacks_counts: object,
+    backpack_icons: object,
+    
+    //storage / inventory
+    inv_armor: object
+    equipment_contents: object,
+    inv_contents: object,
+    ender_chest_contents: object,
+    backpack_contents: object,
+    personal_vault_contents: object,
+    talisman_bag: object,
+    potion_bag: object,
+    fishing_bag: object,
+    quiver: object,
+    candy_inventory_contents: object,
+}
+
+
+// *** SKILLS ***
 
 export interface skillExpInfo {
     level: number, //decimal
@@ -63,8 +226,8 @@ export const skillExtrapolation = {
 
 export function getSkillExtrapolation(skill: skillName) {
     if(skill == "dungeoneering") return skillExtrapolation.dungeoneering;
-    if(skill == "runecrafting") return skillExtrapolation.dungeoneering;
-    if(skill == "social") return skillExtrapolation.dungeoneering;
+    if(skill == "runecrafting") return skillExtrapolation.runecrafting;
+    if(skill == "social") return skillExtrapolation.social;
 
     var skillCap = skillCaps[skill];
 

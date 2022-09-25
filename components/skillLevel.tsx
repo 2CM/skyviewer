@@ -1,54 +1,41 @@
-import { getSkillType, skillCaps, skillExpToLevel, skillLeveling } from "../lib";
+import { getSkillType, skillCaps, skillExpInfo, skillExpToLevel, skillLeveling } from "../lib";
 import type { skillName, skillType } from "../lib";
 import { useContext, useRef, useState } from "react";
-import { dataContext } from "../pages/_app";
+import { dataContext } from "../pages/profile/[profileName]";
 import Image from "next/image";
 import styles from "../styles/skillLevel.module.css";
 import utilStyles from "../styles/utils.module.css";
 
-
+//import type { dataContextInterface } from "../pages/profile/[profileName]"
 interface props {
     //skillExp: number,
     skillName: skillName
 }
 
 export default function SkillLevel({skillName}: props) {
-    var skillExp = useContext(dataContext).mining;
-    
-    var levelInfo = skillExpToLevel(skillExp, skillName);
-    var extrapolatedLevelInfo = skillExpToLevel(skillExp, skillName, true);
+    var dataContextData = useContext(dataContext);
 
+    if(!dataContextData.data) return <></>;
 
-    var [expDisplay, setExpDisplay] = useState(`${Math.round(levelInfo.progress).compact()}/${Math.round(levelInfo.toLevelUp).compact()}`);
-    var [expDisplayPrecise, setExpDisplayPrecise] = useState(`${Math.round(levelInfo.progress).addCommas()}/${Math.round(levelInfo.toLevelUp).addCommas()}`);
-
-    //var totalDisplay = `${skillExp.compact()}`;
-    //var totalDisplayPrecise = `${skillExp.addCommas()}`
-
-
-    var [percentage, setPercentage] = useState(levelInfo.level-Math.floor(levelInfo.level) || (levelInfo.level == 60 ? 1 : 0));
-    var complete = levelInfo.level >= 60;
-
-
-    var skillLevelRef = useRef<HTMLInputElement>(null);
-    var imageContainerRef = useRef<HTMLInputElement>(null);
-    var progressBarRef = useRef<HTMLInputElement>(null);
-
-    var skillExpRef = useRef<HTMLInputElement>(null);
-    var skillExpPreciseRef = useRef<HTMLInputElement>(null);
-
-    /*
-    if(progressBarRef.current && skillLevelRef.current) {
-        var widthInPx = skillLevelRef.current.clientWidth * percentage
-
-        progressBarRef.current.style.width = `${widthInPx-(22*percentage==0?0:1)}px`;
-
-        if(complete) progressBarRef.current.style.width = `${skillLevelRef.current.clientWidth}px`;
-    }
-    */
+    var skillExp = dataContextData.data.apiData.profiles[dataContextData.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].experience_skill_mining;
 
     var [displayType, setDisplayType] = useState(1);
-    const displayTypes = ["progress", "total", "extrapolated"];
+    var displayTypes = ["progress", "total", "extrapolated"];
+
+    var levelInfo = skillExpToLevel(skillExp, skillName);
+    var extrapolatedLevelInfo: skillExpInfo;
+
+    var isMaxLevel = levelInfo.toLevelUp == 0;
+    
+    if(isMaxLevel) {
+        extrapolatedLevelInfo = skillExpToLevel(skillExp, skillName, true);
+    } else {
+        extrapolatedLevelInfo = levelInfo;
+        displayTypes.pop();
+    }
+
+    const addCommasDecimals = 1;
+
 
     var changeDisplayType = () => {
         var currentDisplayType = displayType % displayTypes.length;
@@ -59,18 +46,18 @@ export default function SkillLevel({skillName}: props) {
 
         switch(currentDisplayType) {
             case 0: //progress
-                setExpDisplay(`${Math.round(levelInfo.progress).compact()}/${Math.round(levelInfo.toLevelUp).compact()}`);
-                setExpDisplayPrecise(`${Math.round(levelInfo.progress).addCommas()}/${Math.round(levelInfo.toLevelUp).addCommas()}`);
+                setExpDisplay(`${Math.round(levelInfo.progress).compact()} / ${Math.round(levelInfo.toLevelUp).compact()}`);
+                setExpDisplayPrecise(`${Math.round(levelInfo.progress).addCommas(addCommasDecimals)} / ${Math.round(levelInfo.toLevelUp).addCommas(addCommasDecimals)}`);
 
-                setPercentage(levelInfo.level-Math.floor(levelInfo.level) || (levelInfo.level == 60 ? 1 : 0));
+                setPercentage(levelInfo.level-Math.floor(levelInfo.level) || (isMaxLevel ? 1 : 0));
             break;
             case 1: //total
                 setExpDisplay(skillExp.compact());
-                setExpDisplayPrecise(skillExp.addCommas());
+                setExpDisplayPrecise(skillExp.addCommas(addCommasDecimals));
             break;
             case 2: //extrapolated
-                setExpDisplay(`${Math.round(extrapolatedLevelInfo.progress).compact()}/${Math.round(extrapolatedLevelInfo.toLevelUp).compact()}`);
-                setExpDisplayPrecise(`${Math.round(extrapolatedLevelInfo.progress).addCommas()}/${Math.round(extrapolatedLevelInfo.toLevelUp).addCommas()}`);
+                setExpDisplay(`${Math.round(extrapolatedLevelInfo.progress).compact()} / ${Math.round(extrapolatedLevelInfo.toLevelUp).compact()}`);
+                setExpDisplayPrecise(`${Math.round(extrapolatedLevelInfo.progress).addCommas(addCommasDecimals)} / ${Math.round(extrapolatedLevelInfo.toLevelUp).addCommas(addCommasDecimals)}`);
 
                 setPercentage(extrapolatedLevelInfo.level-Math.floor(extrapolatedLevelInfo.level))
             break;
@@ -79,16 +66,32 @@ export default function SkillLevel({skillName}: props) {
         console.log("changing display type")
     }
 
+    var [expDisplay, setExpDisplay] = useState(`${Math.round(levelInfo.progress).compact()} / ${Math.round(levelInfo.toLevelUp).compact()}`);
+    var [expDisplayPrecise, setExpDisplayPrecise] = useState(`${Math.round(levelInfo.progress).addCommas(addCommasDecimals)} / ${Math.round(levelInfo.toLevelUp).addCommas(addCommasDecimals)}`);
+
+
+    var [percentage, setPercentage] = useState(levelInfo.level-Math.floor(levelInfo.level) || (isMaxLevel ? 1 : 0));
+
+
+    var skillLevelRef = useRef<HTMLInputElement>(null);
+    var imageContainerRef = useRef<HTMLInputElement>(null);
+    var progressBarRef = useRef<HTMLInputElement>(null);
+
+    var skillExpRef = useRef<HTMLInputElement>(null);
+    var skillExpPreciseRef = useRef<HTMLInputElement>(null);
+
+    
+
     return (
         <div ref={skillLevelRef} className={styles.skillLevel}>
             <div className={styles.infoContainer}>
                 <div className={styles.name}>
-                    {skillName.capitalize()} <b>{Math.floor(levelInfo.level)} <span className={utilStyles.grayed}>({Math.floor(extrapolatedLevelInfo.level)}) ({displayTypes[(displayType-1) % displayTypes.length].capitalize()})</span></b>
+                    {skillName.capitalize()} <b>{Math.floor(levelInfo.level)} <span className={utilStyles.grayed}>{isMaxLevel ? `(${Math.floor(extrapolatedLevelInfo.level)})` : ""} ({displayTypes[(displayType-1) % displayTypes.length].capitalize()})</span></b>
                 </div>
                 <div className={styles.skillBarContainer}>
                     <div className={styles.before}></div>
                     <div className={styles.skillBar}>
-                        <div ref={progressBarRef} style={{width: `calc(${Math.floor(percentage*100)}% + ${22 * (percentage == 0 ? 0 : 1)}px)`}} className={`${styles.skillBarProgress} ${complete ? styles.skillComplete : ""}`}></div>
+                        <div ref={progressBarRef} style={{width: `calc(${Math.floor(percentage*100)}% + ${22 * (percentage == 0 ? 0 : 1)}px)`}} className={`${styles.skillBarProgress} ${isMaxLevel ? styles.skillComplete : ""}`}></div>
                         <div className={styles.skillBarText} onClick={changeDisplayType}>
                             <div ref={skillExpRef} className={styles.skillBarExp}>{expDisplay} XP</div>
                             <div ref={skillExpPreciseRef} className={styles.skillBarExpPrecise}>{expDisplayPrecise} XP</div>
@@ -96,7 +99,7 @@ export default function SkillLevel({skillName}: props) {
                     </div>
                 </div>
             </div>
-            <div ref={imageContainerRef} className={`${styles.imageContainer} ${complete ? styles.skillComplete : ""}`}>
+            <div ref={imageContainerRef} className={`${styles.imageContainer} ${isMaxLevel ? styles.skillComplete : ""}`}>
                 <Image src={""} className={styles.image}></Image>
             </div>
         </div>
