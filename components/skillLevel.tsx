@@ -12,6 +12,50 @@ interface props {
     skillName: skillName
 }
 
+interface expDisplay {
+    display: string,
+    displayPrecise: string,
+    percentage: number
+}
+
+function getExpDisplay(displayType: number, levelInfo: skillExpInfo, extrapolatedLevelInfo: skillExpInfo, decimals: number, skillExp: number, isMaxLevel: boolean): expDisplay {
+    var display: string;
+    var displayPrecise: string;
+    var percentage: number;
+
+    switch(displayType) {
+        default:
+            display = "error"
+            displayPrecise = "also error"
+            percentage = 0;
+        break;
+        case 0: //progress
+            display = `${Math.round(levelInfo.progress).compact()} / ${Math.round(levelInfo.toLevelUp).compact()}`;
+            displayPrecise = `${Math.round(levelInfo.progress).addCommas(decimals)} / ${Math.round(levelInfo.toLevelUp).addCommas(decimals)}`;
+
+            percentage = levelInfo.level-Math.floor(levelInfo.level) || (isMaxLevel ? 1 : 0);
+        break;
+        case 1: //total
+            display = skillExp.compact();
+            displayPrecise = skillExp.addCommas(decimals);
+
+            percentage = 1;
+        break;
+        case 2: //extrapolated
+            display = `${Math.round(extrapolatedLevelInfo.progress).compact()} / ${Math.round(extrapolatedLevelInfo.toLevelUp).compact()}`;
+            displayPrecise = `${Math.round(extrapolatedLevelInfo.progress).addCommas(decimals)} / ${Math.round(extrapolatedLevelInfo.toLevelUp).addCommas(decimals)}`;
+
+            percentage = extrapolatedLevelInfo.level-Math.floor(extrapolatedLevelInfo.level)
+        break;
+    }
+
+    return {
+        display: display,
+        displayPrecise: displayPrecise,
+        percentage: percentage
+    }
+}
+
 export default function SkillLevel({skillName}: props) {
     var dataContextData = useContext(dataContext);
 
@@ -34,7 +78,7 @@ export default function SkillLevel({skillName}: props) {
         displayTypes.pop();
     }
 
-    const addCommasDecimals = 1;
+    const decimals = 1;
 
 
     var changeDisplayType = () => {
@@ -44,33 +88,22 @@ export default function SkillLevel({skillName}: props) {
 
         console.log(displayType, currentDisplayType)
 
-        switch(currentDisplayType) {
-            case 0: //progress
-                setExpDisplay(`${Math.round(levelInfo.progress).compact()} / ${Math.round(levelInfo.toLevelUp).compact()}`);
-                setExpDisplayPrecise(`${Math.round(levelInfo.progress).addCommas(addCommasDecimals)} / ${Math.round(levelInfo.toLevelUp).addCommas(addCommasDecimals)}`);
+        var newDisplay = getExpDisplay(currentDisplayType, levelInfo, extrapolatedLevelInfo, decimals, skillExp, isMaxLevel);
 
-                setPercentage(levelInfo.level-Math.floor(levelInfo.level) || (isMaxLevel ? 1 : 0));
-            break;
-            case 1: //total
-                setExpDisplay(skillExp.compact());
-                setExpDisplayPrecise(skillExp.addCommas(addCommasDecimals));
-            break;
-            case 2: //extrapolated
-                setExpDisplay(`${Math.round(extrapolatedLevelInfo.progress).compact()} / ${Math.round(extrapolatedLevelInfo.toLevelUp).compact()}`);
-                setExpDisplayPrecise(`${Math.round(extrapolatedLevelInfo.progress).addCommas(addCommasDecimals)} / ${Math.round(extrapolatedLevelInfo.toLevelUp).addCommas(addCommasDecimals)}`);
-
-                setPercentage(extrapolatedLevelInfo.level-Math.floor(extrapolatedLevelInfo.level))
-            break;
-        }
+        setExpDisplay(newDisplay.display);
+        setExpDisplayPrecise(newDisplay.displayPrecise);
+        setPercentage(newDisplay.percentage);
 
         console.log("changing display type")
     }
 
-    var [expDisplay, setExpDisplay] = useState(`${Math.round(levelInfo.progress).compact()} / ${Math.round(levelInfo.toLevelUp).compact()}`);
-    var [expDisplayPrecise, setExpDisplayPrecise] = useState(`${Math.round(levelInfo.progress).addCommas(addCommasDecimals)} / ${Math.round(levelInfo.toLevelUp).addCommas(addCommasDecimals)}`);
+    var initialDisplay = getExpDisplay(0, levelInfo, extrapolatedLevelInfo, decimals, skillExp, isMaxLevel);
+
+    var [expDisplay, setExpDisplay] = useState(initialDisplay.display);
+    var [expDisplayPrecise, setExpDisplayPrecise] = useState(initialDisplay.displayPrecise);
 
 
-    var [percentage, setPercentage] = useState(levelInfo.level-Math.floor(levelInfo.level) || (isMaxLevel ? 1 : 0));
+    var [percentage, setPercentage] = useState(initialDisplay.percentage);
 
 
     var skillLevelRef = useRef<HTMLInputElement>(null);
