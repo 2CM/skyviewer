@@ -4,13 +4,15 @@ import Head from "next/head";
 import { Context, createContext, useEffect, useState} from 'react'
 import fs from "fs";
 import { baseProfile, getMostRecentProfile, profile } from "../../lib";
+import Skills from "../../components/skills";
+
 
 interface dataContextInterface {
+	apiData?: {
+		success: boolean,
+		profiles: baseProfile[]
+	}
 	data?: {
-		apiData: {
-			success: boolean,
-			profiles: baseProfile[]
-		},
 		selectedProfile: number
 	}
 }
@@ -20,17 +22,22 @@ export var dataContext: Context<dataContextInterface> = createContext({});
 export default function profileViewer() {
     var router = useRouter();
     var { profileName } = router.query;
-	var [data, setData] = useState({});
+	var [data, setData] = useState<dataContextInterface>({});
 
 
 	useEffect(() => {
 		var doAsyncStuff = async () => {
 			var apiDataRaw = await fetch("/api/getProfile");
-			var apiData: dataContextInterface = await apiDataRaw.json();
+			var apiData = await apiDataRaw.json();
 
 			console.log(apiData)
 
-			setData({data: {apiData: apiData, selectedProfile: 2}})
+			setData({
+				apiData: apiData,
+				data: {
+					selectedProfile: 2
+				}
+			});
 		}
 
 		doAsyncStuff();
@@ -43,7 +50,11 @@ export default function profileViewer() {
 			</Head>
 			<main>
 				<main>
-					<SkillLevel skillName="combat"/>
+					{/* <SkillLevel skillName="combat"/>
+					<SkillLevel skillName="mining"/>
+					<SkillLevel skillName="enchanting"/>
+					<SkillLevel skillName="foraging"/> */}
+					<Skills/>
 				</main>
 			</main>
 		</dataContext.Provider>

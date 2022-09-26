@@ -284,9 +284,9 @@ export function skillExpToLevel(exp: number, skill: skillName, extrapolate: bool
     var skillType: skillType = getSkillType(skill);
     var skillCap = skillCaps[skill];
 
-    for (let i = 0; i < skillLeveling[skillType].length; i++) {
+    for (let i = 0; i < skillCaps[skill]; i++) {
         if (skillLeveling[skillType][i] > exp) {
-            console.log(skillLeveling[skillType][i], exp)
+            //console.log(skillLeveling[skillType][i], exp)
             lowerBoundIndex = i - 1;
 
             break;

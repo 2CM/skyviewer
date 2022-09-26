@@ -6,11 +6,12 @@ import Image from "next/image";
 import styles from "../styles/skillLevel.module.css";
 import utilStyles from "../styles/utils.module.css";
 
-//import type { dataContextInterface } from "../pages/profile/[profileName]"
 interface props {
-    //skillExp: number,
-    skillName: skillName
+    skillName: skillName,
+    onChangeDisplayType: () => void,
+    displayType: number,
 }
+
 
 interface expDisplay {
     display: string,
@@ -56,54 +57,23 @@ function getExpDisplay(displayType: number, levelInfo: skillExpInfo, extrapolate
     }
 }
 
-export default function SkillLevel({skillName}: props) {
+export default function SkillLevel({skillName, onChangeDisplayType, displayType}: props) {
+    //data
     var dataContextData = useContext(dataContext);
 
-    if(!dataContextData.data) return <></>;
+    if(!dataContextData.apiData || !dataContextData.data) return <></>; //will have better error handling in the future
 
-    var skillExp: number = dataContextData.data.apiData.profiles[dataContextData.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"][skillNameToApiName[skillName]];
+    var skillExp: number = dataContextData.apiData.profiles[dataContextData.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"][skillNameToApiName[skillName]];
 
-    var [displayType, setDisplayType] = useState(1);
+    //display
     var displayTypes = ["progress", "total", "extrapolated"];
 
     var levelInfo = skillExpToLevel(skillExp, skillName);
-    var extrapolatedLevelInfo: skillExpInfo;
-
     var isMaxLevel = levelInfo.toLevelUp == 0;
-    
-    if(isMaxLevel) {
-        extrapolatedLevelInfo = skillExpToLevel(skillExp, skillName, true);
-    } else {
-        extrapolatedLevelInfo = levelInfo;
-        displayTypes.pop();
-    }
 
-    const decimals = 1;
+    var extrapolatedLevelInfo = isMaxLevel ? skillExpToLevel(skillExp, skillName, true) : levelInfo;;
 
-
-    var changeDisplayType = () => {
-        var currentDisplayType = displayType % displayTypes.length;
-
-        setDisplayType(displayType+1);
-
-        console.log(displayType, currentDisplayType)
-
-        var newDisplay = getExpDisplay(currentDisplayType, levelInfo, extrapolatedLevelInfo, decimals, skillExp, isMaxLevel);
-
-        setExpDisplay(newDisplay.display);
-        setExpDisplayPrecise(newDisplay.displayPrecise);
-        setPercentage(newDisplay.percentage);
-
-        console.log("changing display type")
-    }
-
-    var initialDisplay = getExpDisplay(0, levelInfo, extrapolatedLevelInfo, decimals, skillExp, isMaxLevel);
-
-    var [expDisplay, setExpDisplay] = useState(initialDisplay.display);
-    var [expDisplayPrecise, setExpDisplayPrecise] = useState(initialDisplay.displayPrecise);
-
-
-    var [percentage, setPercentage] = useState(initialDisplay.percentage);
+    var displayInfo = getExpDisplay((displayType-1) % displayTypes.length, levelInfo, extrapolatedLevelInfo, 1, skillExp, isMaxLevel);
 
 
     return (
@@ -115,10 +85,10 @@ export default function SkillLevel({skillName}: props) {
                 <div className={styles.skillBarContainer}>
                     <div className={styles.before}></div>
                     <div className={styles.skillBar}>
-                        <div style={{width: `calc(${Math.floor(percentage*100)}% + ${22 * (percentage == 0 ? 0 : 1)}px)`}} className={`${styles.skillBarProgress} ${isMaxLevel ? styles.skillComplete : ""}`}></div>
-                        <div className={styles.skillBarText} onClick={changeDisplayType}>
-                            <div className={styles.skillBarExp}>{expDisplay} XP</div>
-                            <div className={styles.skillBarExpPrecise}>{expDisplayPrecise} XP</div>
+                        <div style={{width: `calc(${Math.floor(displayInfo.percentage*100)}% + ${22 * (displayInfo.percentage == 0 ? 0 : 1)}px)`}} className={`${styles.skillBarProgress} ${isMaxLevel ? styles.skillComplete : ""}`}></div>
+                        <div className={styles.skillBarText} onClick={onChangeDisplayType}>
+                            <div className={styles.skillBarExp}>{displayInfo.display} XP</div>
+                            <div className={styles.skillBarExpPrecise}>{displayInfo.displayPrecise} XP</div>
                         </div>
                     </div>
                 </div>
