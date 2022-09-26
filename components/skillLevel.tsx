@@ -106,17 +106,8 @@ export default function SkillLevel({skillName}: props) {
     var [percentage, setPercentage] = useState(initialDisplay.percentage);
 
 
-    var skillLevelRef = useRef<HTMLInputElement>(null);
-    var imageContainerRef = useRef<HTMLInputElement>(null);
-    var progressBarRef = useRef<HTMLInputElement>(null);
-
-    var skillExpRef = useRef<HTMLInputElement>(null);
-    var skillExpPreciseRef = useRef<HTMLInputElement>(null);
-
-    
-
     return (
-        <div ref={skillLevelRef} className={styles.skillLevel}>
+        <div className={styles.skillLevel}>
             <div className={styles.infoContainer}>
                 <div className={styles.name}>
                     {skillName.capitalize()} <b>{Math.floor(levelInfo.level)} <span className={utilStyles.grayed}>{isMaxLevel ? `(${Math.floor(extrapolatedLevelInfo.level)})` : ""} ({displayTypes[(displayType-1) % displayTypes.length].capitalize()})</span></b>
@@ -124,15 +115,15 @@ export default function SkillLevel({skillName}: props) {
                 <div className={styles.skillBarContainer}>
                     <div className={styles.before}></div>
                     <div className={styles.skillBar}>
-                        <div ref={progressBarRef} style={{width: `calc(${Math.floor(percentage*100)}% + ${22 * (percentage == 0 ? 0 : 1)}px)`}} className={`${styles.skillBarProgress} ${isMaxLevel ? styles.skillComplete : ""}`}></div>
+                        <div style={{width: `calc(${Math.floor(percentage*100)}% + ${22 * (percentage == 0 ? 0 : 1)}px)`}} className={`${styles.skillBarProgress} ${isMaxLevel ? styles.skillComplete : ""}`}></div>
                         <div className={styles.skillBarText} onClick={changeDisplayType}>
-                            <div ref={skillExpRef} className={styles.skillBarExp}>{expDisplay} XP</div>
-                            <div ref={skillExpPreciseRef} className={styles.skillBarExpPrecise}>{expDisplayPrecise} XP</div>
+                            <div className={styles.skillBarExp}>{expDisplay} XP</div>
+                            <div className={styles.skillBarExpPrecise}>{expDisplayPrecise} XP</div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div ref={imageContainerRef} className={`${styles.imageContainer} ${isMaxLevel ? styles.skillComplete : ""}`}>
+            <div className={`${styles.imageContainer} ${isMaxLevel ? styles.skillComplete : ""}`}>
                 <Image src={""} className={styles.image}></Image>
             </div>
         </div>
