@@ -1,3 +1,11 @@
+interface IObjectKeys {
+    //(PROBABLY A TEMP SOLUTION, THIS DOESNT LOOK STABLE. SOME TYPESCRIPT GOD CAN CORRECT ME ON A BETTER WAY TO DO THIS)
+    //this interface is extended from when theres an interface that you need to select a value using object[key] notation. if you dont use it, youll get a ts error
+
+    
+    [key: string]: any;
+}
+
 // *** CUSTOM PROTOS ***
 
 declare global {
@@ -85,7 +93,7 @@ export interface bingoProfile extends baseProfile { //bingo profile
     game_mode: "bingo"
 }
 
-export interface profileMember { //all objects can be expanded upon; all any[] | any need more info
+export interface profileMember extends IObjectKeys { //all objects can be expanded upon; all any[] | any need more info
     //misc important
     last_save: number,
     stats: object,
@@ -160,17 +168,17 @@ export interface profileMember { //all objects can be expanded upon; all any[] |
     essence_spider: number,
     
     //skills
-    experience_skill_runecrafting: number,
+    experience_skill_farming: number,
     experience_skill_mining: number,
+    experience_skill_combat: number,
+    experience_skill_foraging: number,
+    experience_skill_fishing: number,
+    experience_skill_enchanting: number,
     experience_skill_alchemy: number,
     experience_skill_taming: number,
-    experience_skill_combat: number,
-    experience_skill_farming: number,
-    experience_skill_social2: number,
-    experience_skill_enchanting: number,
-    experience_skill_fishing: number,
-    experience_skill_foraging: number,
     experience_skill_carpentry: number,
+    experience_skill_runecrafting: number,
+    experience_skill_social2: number,
     
     //wardrobe
     wardrobe_contents: object,
@@ -222,6 +230,21 @@ export const skillExtrapolation = {
     runecrafting: 94450,
     social: 272800,
     dungeoneering: 569809640
+}
+
+export const skillNameToApiName = {
+    farming: "experience_skill_farming",
+    mining: "experience_skill_mining",
+    combat: "experience_skill_combat",
+    foraging: "experience_skill_foraging",
+    fishing: "experience_skill_fishing",
+    enchanting: "experience_skill_enchanting",
+    alchemy: "experience_skill_alchemy",
+    taming: "experience_skill_taming",
+    carpentry: "experience_skill_carpentry",
+    runecrafting: "experience_skill_runecrafting",
+    social: "experience_skill_social2",
+    dungeoneering: "experience_skill_mining" //dungeoneering doesnt have an "experience_skill_dungeoneering". the dungeoneering skill isnt gonna be used in the skill section anyways so it doesnt matter. (adding to to avoid a ts error)
 }
 
 export function getSkillExtrapolation(skill: skillName) {

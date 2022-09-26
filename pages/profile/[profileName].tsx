@@ -43,7 +43,7 @@ export default function profileViewer() {
 			</Head>
 			<main>
 				<main>
-					<SkillLevel skillName="mining"/>
+					<SkillLevel skillName="combat"/>
 				</main>
 			</main>
 		</dataContext.Provider>

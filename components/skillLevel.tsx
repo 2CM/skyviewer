@@ -1,4 +1,4 @@
-import { getSkillType, skillCaps, skillExpInfo, skillExpToLevel, skillLeveling } from "../lib";
+import { getSkillType, profileMember, skillCaps, skillExpInfo, skillExpToLevel, skillLeveling, skillNameToApiName } from "../lib";
 import type { skillName, skillType } from "../lib";
 import { useContext, useRef, useState } from "react";
 import { dataContext } from "../pages/profile/[profileName]";
@@ -61,7 +61,7 @@ export default function SkillLevel({skillName}: props) {
 
     if(!dataContextData.data) return <></>;
 
-    var skillExp = dataContextData.data.apiData.profiles[dataContextData.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].experience_skill_mining;
+    var skillExp: number = dataContextData.data.apiData.profiles[dataContextData.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"][skillNameToApiName[skillName]];
 
     var [displayType, setDisplayType] = useState(1);
     var displayTypes = ["progress", "total", "extrapolated"];
