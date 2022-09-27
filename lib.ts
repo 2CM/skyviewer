@@ -209,13 +209,28 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
 
     //misc
     dungeons: object,
+    perks: { //essence shops
+        permanent_health: number,
+        permanent_defense: number,
+        permanent_speed: number,
+        permanent_intelligence: number,
+        permanent_strength: number,
+        forbidden_blessing: number,
+        catacombs_boss_luck: number,
+        catacombs_looting: number,
+        catacombs_crit_damage: number,
+        catacombs_intelligence: number,
+        catacombs_strength: number,
+        catacombs_defense: number,
+        catacombs_health: number,
+        revive_stone: number
+    }
     jacob2: object,
     experimentation: object,
     bestiary: object,
     soulflow: number,
     
     //effects / buffs
-    perks: object,
     active_effects: object[],
     paused_effects: any[],
     disabled_potion_effects: string[],
@@ -642,12 +657,27 @@ export function calculateHotmStats(data: dataContextInterface): statsList {
     }
 }
 
+export function calculateEssenceStats(data: dataContextInterface): statsList {
+    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+
+    var perks = data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].perks;
+
+    return {
+        health: (perks.permanent_health || 0)*2,
+        defense: (perks.permanent_defense || 0),
+        walk_speed: (perks.permanent_speed || 0),
+        intelligence: (perks.permanent_intelligence || 0)*2,
+        strength: (perks.permanent_strength || 0),
+    }
+}
+
 export function calculateStats(data: dataContextInterface) {
     return addStatsLists([
         baseStats,
         calculateSkillStats(data),
         calculateFairySoulStats(data),
         calculateHotmStats(data),
+        calculateEssenceStats(data),
     ])
 
     /*
