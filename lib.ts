@@ -675,13 +675,26 @@ export function calculateEssenceStats(data: dataContextInterface): statsList {
     }
 }
 
-export function calculateStats(data: dataContextInterface) {
+export function calculatePepperStats(data: dataContextInterface): statsList {
+    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+
+    var peppers = data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].reaper_peppers_eaten;
+
+    if(peppers == undefined) return {};
+
+    return {
+        health: peppers
+    }
+}
+
+export function calculateStats(data: dataContextInterface): statsList {
     return addStatsLists([
         baseStats,
         calculateSkillStats(data),
         calculateFairySoulStats(data),
         calculateHotmStats(data),
         calculateEssenceStats(data),
+        calculatePepperStats(data),
     ])
 
     /*
