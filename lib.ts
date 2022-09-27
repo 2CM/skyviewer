@@ -131,7 +131,50 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
     collection: object,
     
     //side quests
-    harp_quest: object,
+    harp_quest: {
+        selected_song?: "hymn_joy" | "frere_jacques" | "amazing_grace" | "brahms" | "happy_birthday" | "greensleeves" | "jeopardy" | "minuet" | "joy_world" | "pure_imagination" | "vie_en_rose" | "fire_and_flames" | "pachelbel",
+        selected_song_epoch?: number,
+        claimed_talisman?: boolean,
+        song_hymn_joy_best_completion?: number,
+        song_hymn_joy_completions?: number,
+        song_hymn_joy_perfect_completions?: number,
+        song_frere_jacques_best_completion?: number,
+        song_frere_jacques_completions?: number,
+        song_frere_jacques_perfect_completions?: number,
+        song_amazing_grace_best_completion?: number,
+        song_amazing_grace_completions?: number,
+        song_amazing_grace_perfect_completions?: number,
+        song_brahms_best_completion?: number,
+        song_brahms_completions?: number,
+        song_brahms_perfect_completions?: number,
+        song_happy_birthday_best_completion?: number,
+        song_happy_birthday_completions?: number,
+        song_happy_birthday_perfect_completions?: number,
+        song_greensleeves_best_completion?: number,
+        song_greensleeves_completions?: number,
+        song_greensleeves_perfect_completions?: number,
+        song_jeopardy_best_completion?: number,
+        song_jeopardy_completions?: number,
+        song_jeopardy_perfect_completions?: number,
+        song_minuet_best_completion?: number,
+        song_minuet_completions?: number,
+        song_minuet_perfect_completions?: number,
+        song_joy_world_best_completion?: number,
+        song_joy_world_completions?: number,
+        song_joy_world_perfect_completions?: number,
+        song_pure_imagination_best_completion?: number,
+        song_pure_imagination_completions?: number,
+        song_pure_imagination_perfect_completions?: number,
+        song_vie_en_rose_best_completion?: number,
+        song_vie_en_rose_completions?: number,
+        song_vie_en_rose_perfect_completions?: number,
+        song_fire_and_flames_best_completion?: number,
+        song_fire_and_flames_completions?: number,
+        song_fire_and_flames_perfect_completions?: number,
+        song_pachelbel_best_completion?: number,
+        song_pachelbel_completions?: number,
+        song_pachelbel_perfect_completions?: number,
+    },
     trophy_fish: object,
     trapper_quest?: object,
 
@@ -687,7 +730,49 @@ export function calculatePepperStats(data: dataContextInterface): statsList {
     }
 }
 
+export const harpStats = {
+    hymn_joy: 1,
+    frere_jacques: 1,
+    amazing_grace: 1,
+    brahms: 2,
+    happy_birthday: 2,
+    greensleeves: 2,
+    jeopardy: 3,
+    minuet: 3,
+    joy_world: 3,
+    pure_imagination: 4,
+    vie_en_rose: 4,
+    fire_and_flames: 1,
+    pachelbel: 1,
+}
+
+export function calculateHarpStats(data: dataContextInterface): statsList {
+    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+
+    var harp_quest = data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].harp_quest;
+
+    if(Object.keys(harp_quest).length == 0) return {};
+
+    var stats: statsList = {intelligence: 0};
+
+    for(let i=0;i<Object.keys(harpStats).length;i++) {
+        var name = Object.keys(harpStats)[i];
+
+        var perfectCompletions = harp_quest["song_"+name+"_perfect_completions" as keyof typeof harp_quest];
+
+
+        if(typeof perfectCompletions != "number") continue;
+        if(stats.intelligence === undefined) continue; //yeah idk
+
+        stats.intelligence += (perfectCompletions >= 1 ? 1 : 0) * harpStats[name as keyof typeof harpStats];
+    }
+
+    return stats
+}
+
 export function calculateStats(data: dataContextInterface): statsList {
+    //return addStatsLists([{},calculateHarpStats(data)]);
+
     return addStatsLists([
         baseStats,
         calculateSkillStats(data),
@@ -695,6 +780,7 @@ export function calculateStats(data: dataContextInterface): statsList {
         calculateHotmStats(data),
         calculateEssenceStats(data),
         calculatePepperStats(data),
+        calculateHarpStats(data),
     ])
 
     /*
