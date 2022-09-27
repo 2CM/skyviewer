@@ -143,7 +143,69 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
 
     //mining
     forge: object,
-    mining_core: object,
+    mining_core: {
+        nodes: {
+            mining_speed?: number,
+
+            mining_fortune?: number,
+            titanium_insanium?: number,
+            forge_time?: number,
+            mining_speed_boost?: number,
+            pickobulus?: number,
+
+            daily_powder?: number,
+            luck_of_the_cave?: number,
+            crystallized?: number,
+
+            efficient_miner?: number,
+            seasoned_mineman?: number,
+            orbiter?: number,
+            mining_madness?: number,
+            front_loaded?: number,
+            sky_mall?: number,
+            precision_mining?: number,
+
+            special_0?: number, //peak of the mountain
+            goblin_killer?: number,
+            star_powder?: number,
+
+            mole?: number,
+            professional?: number,
+            fortunate?: number,
+            lonesome_miner?: number,
+            great_explorer?: number,
+            vein_seeker?: number,
+            maniac_miner?: number,
+
+            powder_buff?: number,
+            mining_speed_2?: number,
+            mining_fortune_2?: number,
+        },
+        recieved_free_tier: boolean,
+        tokens: number,
+        tokens_spent: 15,
+        powder_mithril: number,
+        powder_mithril_total: number,
+        experience: number,
+        powder_spent_mithril: number,
+        retroactive_tier2_token: boolean,
+        selected_pickaxe_ability: "mining_speed_boost",
+        crystals: {
+
+        },
+        greater_mines_last_access: number,
+        biomes: {
+
+        },
+        powder_gemstone: number,
+        powder_gemstone_total: number,
+        last_reset: number,
+        daily_ores_mined_day_mithril_ore: number,
+        daily_ores_mines_mithril_ore: number,
+        daily_ores_mined_day_gemstone: number,
+        daily_ores_mined_gemstone: number,
+        powder_spent_gemstone: number,
+    },
 
     //misc
     dungeons: object,
@@ -214,7 +276,6 @@ export interface skillExpInfo {
     toLevelUp: number, //skill exp to level up
     progress: number //skill exp you have since last level
 }
-
 
 export type skillType = "runecrafting" | "dungeoneering" | "social" | "experience";
 export type skillName = "farming" | "mining" | "combat" | "foraging" | "fishing" | "enchanting" | "alchemy" | "taming" | "dungeoneering" | "carpentry" | "runecrafting" | "social"
@@ -569,11 +630,24 @@ export function calculateFairySoulStats(data: dataContextInterface): statsList {
     }
 }
 
+//NEEDS MORE TESTING; havent accounted for toggles and interface is probably wrong because i cant test around right now
+export function calculateHotmStats(data: dataContextInterface): statsList {
+    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+
+    var mining_core = data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].mining_core;
+
+    return {
+        mining_fortune: 5*(mining_core.nodes.mining_fortune || 0) + 5*(mining_core.nodes.mining_fortune_2 || 0) + 50*(mining_core.nodes.mining_madness || 0),
+        mining_speed: 20*(mining_core.nodes.mining_speed || 0) + 40*(mining_core.nodes.mining_speed_2 || 0) + 50*(mining_core.nodes.mining_madness || 0),
+    }
+}
+
 export function calculateStats(data: dataContextInterface) {
     return addStatsLists([
         baseStats,
         calculateSkillStats(data),
-        calculateFairySoulStats(data)
+        calculateFairySoulStats(data),
+        calculateHotmStats(data),
     ])
 
     /*
