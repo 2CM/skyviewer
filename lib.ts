@@ -1,3 +1,5 @@
+import { dataContextInterface } from "./pages/profile/[profileName]";
+
 interface IObjectKeys {
     //(PROBABLY A TEMP SOLUTION, THIS DOESNT LOOK STABLE. SOME TYPESCRIPT GOD CAN CORRECT ME ON A BETTER WAY TO DO THIS)
     //this interface is extended from when theres an interface that you need to select a value using object[key] notation. if you dont use it, youll get a ts error
@@ -328,4 +330,288 @@ export function skillExpToLevel(exp: number, skill: skillName, extrapolate: bool
         toLevelUp: max-min,
         progress: (level-Math.floor(level))*(max-min)
     }
+}
+
+// *** STATS ***
+
+export type statName = "health" | "defense" | "true_defense" | "strength" | "walk_speed" | "critical_chance" | "critical_damage" | "intelligence" | "mining_speed" | "sea_creature_chance" | "magic_find" | "pet_luck" | "attack_speed" | "ability_damage" | "ferocity" | "mining_fortune" | "farming_fortune" | "foraging_fortune" | "breaking_power" | "pristine" | "combat_wisdom" | "mining_wisdom" | "farming_wisdom" | "foraging_wisdom" | "fishing_wisdom" | "enchanting_wisdom" | "alchemy_wisdom" | "carpentry_wisdom" | "runecrafting_wisdom" | "social_wisdom" | "fishing_speed" | "health_regen" | "vitality" | "mending";
+
+export interface statsList extends IObjectKeys {
+    health?: number,
+    defense?: number,
+    true_defense?: number,
+    strength?: number,
+    walk_speed?: number,
+    critical_chance?: number,
+    critical_damage?: number,
+    intelligence?: number,
+    mining_speed?: number,
+    sea_creature_chance?: number,
+    magic_find?: number,
+    pet_luck?: number,
+    attack_speed?: number,
+    ability_damage?: number,
+    ferocity?: number,
+    mining_fortune?: number,
+    farming_fortune?: number,
+    foraging_fortune?: number,
+    breaking_power?: number,
+    pristine?: number,
+    combat_wisdom?: number,
+    mining_wisdom?: number,
+    farming_wisdom?: number,
+    foraging_wisdom?: number,
+    fishing_wisdom?: number,
+    enchanting_wisdom?: number,
+    alchemy_wisdom?: number,
+    carpentry_wisdom?: number,
+    runecrafting_wisdom?: number,
+    social_wisdom?: number,
+    fishing_speed?: number,
+    health_regen?: number,
+    vitality?: number,
+    mending?: number,
+}
+
+export const statIdToStatName = {
+    health: "health",
+    defense: "defense",
+    true_defense: "true defense",
+    strength: "strength",
+    walk_speed: "speed",
+    critical_chance: "crit chance",
+    critical_damage: "crit damage",
+    intelligence: "intelligence",
+    mining_speed: "mining speed",
+    sea_creature_chance: "SCC",
+    magic_find: "magic find",
+    pet_luck: "pet luck",
+    attack_speed: "attack speed",
+    ability_damage: "ability damage",
+    ferocity: "ferocity",
+    mining_fortune: "mining fortune",
+    farming_fortune: "farming fortune",
+    foraging_fortune: "foraging fortune",
+    breaking_power: "breaking power",
+    pristine: "pristine",
+    combat_wisdom: "combat wisdom",
+    mining_wisdom: "mining wisdom",
+    farming_wisdom: "farming wisdom",
+    foraging_wisdom: "foraging wisdom",
+    fishing_wisdom: "fishing wisdom",
+    enchanting_wisdom: "enchanting wisdom",
+    alchemy_wisdom: "alchemy wisdom",
+    carpentry_wisdom: "carpentry wisdom",
+    runecrafting_wisdom: "runecrafting wisdom",
+    social_wisdom: "social wisdom",
+    fishing_speed: "fishing speed",
+    health_regen: "health regen",
+    vitality: "vitality",
+    mending: "mending",
+}
+
+export const baseStats: statsList = {
+    health: 100,
+    defense: 0,
+    true_defense: 0,
+    strength: 0,
+    walk_speed: 100,
+    critical_chance: 30,
+    critical_damage: 50,
+    intelligence: 0,
+    mining_speed: 0,
+    sea_creature_chance: 20,
+    magic_find: 0,
+    pet_luck: 0,
+    attack_speed: 0,
+    ability_damage: 0,
+    ferocity: 0,
+    mining_fortune: 0,
+    farming_fortune: 0,
+    foraging_fortune: 0,
+    breaking_power: 0,
+    pristine: 0,
+    combat_wisdom: 0,
+    mining_wisdom: 0,
+    farming_wisdom: 0,
+    foraging_wisdom: 0,
+    fishing_wisdom: 0,
+    enchanting_wisdom: 0,
+    alchemy_wisdom: 0,
+    carpentry_wisdom: 0,
+    runecrafting_wisdom: 0,
+    social_wisdom: 0,
+    fishing_speed: 0,
+    health_regen: 100,
+    vitality: 100,
+    mending: 100,
+}
+
+export function mergeStatsLists(list1: statsList, list2: statsList): statsList {
+    var newList: statsList = {};
+
+    var list1Copy = Object.assign({}, list1);
+    var list2Copy = Object.assign({}, list2);
+
+    for(let i=0;i<Object.keys(baseStats).length;i++) {
+        var key = Object.keys(baseStats)[i];
+
+        if(list1Copy[key] === undefined) list1Copy[key] = 0;
+        if(list2Copy[key] === undefined) list2Copy[key] = 0;
+
+        newList[key] = list1Copy[key]+list2Copy[key];
+    }
+
+    return newList;
+}
+
+export function addStatsLists(arr: statsList[]): statsList {
+    if(arr.length < 2) throw new Error("needs more than 2 members")
+
+    var added: statsList = arr[0];
+
+    for(let i=1;i<arr.length;i++) {
+        added = mergeStatsLists(added, arr[i]);
+    }
+
+    return added;
+}
+
+
+var skillLevelStats = {
+    farming: function(level: number): statsList {
+        return {
+            health: 2*level+Math.max(level-14,0)+Math.max(level-19,0)+Math.max(level-25,0),
+            farming_fortune: 4*level
+        }
+    },
+    mining: function(level: number): statsList {
+        return {
+            defense: Math.max(level-14,0)+level,
+            mining_fortune: 4*level,
+        }
+    },
+    combat: function(level: number): statsList {
+        return {
+            critical_chance: 0.5*level,
+        }
+    },
+    foraging: function(level: number): statsList {
+        return {
+            strength: 1*level+Math.max(level-14,0),
+        }
+    },
+    fishing: function(level: number): statsList {
+        return {
+            health: 2*level+Math.max(level-14,0)+Math.max(level-19,0)+Math.max(level-25,0),
+        }
+    },
+    enchanting: function(level: number): statsList {
+        return {
+            intelligence: 1*level+Math.max(level-14,0),
+            ability_damage: 0.5*level,
+        }
+    },
+    alchemy: function(level: number): statsList {
+        return {
+            intelligence: 1*level+Math.max(level-14,0),
+        }
+    },
+    taming: function(level: number): statsList {
+        return {
+            pet_luck: 1*level
+        }
+    },
+    carpentry: function(level: number): statsList {
+        return {
+            health: 1*level
+        }
+    }
+}
+
+
+export function calculateSkillStats(data: dataContextInterface): statsList {
+    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+
+    var stats = {};
+    
+    for(let i=0;i<Object.keys(skillCaps).length;i++) {
+        let name: skillName = Object.keys(skillCaps)[i] as skillName;
+
+        if(skillLevelStats[name as keyof typeof skillLevelStats] === undefined) break;
+
+        var levelInfo = skillExpToLevel(data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"][skillNameToApiName[name]], name)
+
+        stats = mergeStatsLists(stats, skillLevelStats[name as keyof typeof skillLevelStats](Math.floor(levelInfo.level)))
+    }
+
+    return stats;
+}
+
+export const fairySoulStats = {
+    health: [0, 3, 6, 10, 14, 19, 24, 30, 36, 43, 50, 58, 66, 75, 84, 94, 104, 115, 126, 138, 150, 163, 176, 190, 204, 219, 234, 250, 266, 283, 300, 318, 336, 355, 374, 394, 414, 435, 456, 478, 500, 523, 546, 569, 592, 615, 638, 661],
+    defense: [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 42, 43, 44, 45, 46, 48, 49, 50, 51, 52, 53, 54, 55],
+    strength: [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 42, 43, 44, 45, 46, 48, 49, 50, 51, 52, 53, 54, 55],
+    speed: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4]
+}
+
+export function calculateFairySoulStats(data: dataContextInterface): statsList {
+    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+
+    var exchanges = data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].fairy_exchanges;
+
+
+    return {
+        health: fairySoulStats.health[exchanges],
+        defense: fairySoulStats.defense[exchanges],
+        strength: fairySoulStats.strength[exchanges],
+        walk_speed: fairySoulStats.speed[exchanges],
+    }
+}
+
+export function calculateStats(data: dataContextInterface) {
+    return addStatsLists([
+        baseStats,
+        calculateSkillStats(data),
+        calculateFairySoulStats(data)
+    ])
+
+    /*
+    sources
+        base stats
+
+        holdable
+            armor
+            equipment
+
+        accessories
+            accessory power
+            enrichments
+            accessory stats
+            tuning points
+
+        milestone stats
+            skill stats
+            bestiary milestone
+            slayers
+            harp intelligence
+
+        temp effects
+            cake souls
+            potions
+            booster cookie
+
+        pets
+            pet stats
+            pet items
+            pet score
+            
+        pickable
+            wither esssence shop
+            hotm
+            
+        misc  
+            peppers
+            fairy souls
+    */
 }

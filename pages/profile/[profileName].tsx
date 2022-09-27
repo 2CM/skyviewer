@@ -5,9 +5,10 @@ import { Context, createContext, useEffect, useState} from 'react'
 import fs from "fs";
 import { baseProfile, getMostRecentProfile, profile } from "../../lib";
 import Skills from "../../components/skills";
+import Stats from "../../components/stats";
 
 
-interface dataContextInterface {
+export interface dataContextInterface {
 	apiData?: {
 		success: boolean,
 		profiles: baseProfile[]
@@ -55,6 +56,7 @@ export default function profileViewer() {
 					<SkillLevel skillName="enchanting"/>
 					<SkillLevel skillName="foraging"/> */}
 					<Skills/>
+					<Stats/>
 				</main>
 			</main>
 		</dataContext.Provider>
