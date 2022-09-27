@@ -102,28 +102,30 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
 
     //misc stats
     first_join: number,
-    first_join_hub: number
+    first_join_hub?: number
     last_death: number,
-    death_count: number,
+    death_count?: number,
+    reaper_peppers_eaten?: number,
+    favorite_arrow?: string, //needs expansion
     
     //fairy souls
-    fishing_treasure_caught: number,
+    fishing_treasure_caught?: number,
     fairy_souls_collected: number,
-    fairy_exchanges: number,
-    fairy_souls: number,
+    fairy_exchanges?: number,
+    fairy_souls?: number,
     
     //money
-    personal_bank_upgrade: number,
-    coin_purse: number,
+    personal_bank_upgrade?: number,
+    coin_purse?: number,
 
     //main progression
     objectives: object,
-    achievement_spawnned_island_types: string[],
+    achievement_spawnned_island_types?: string[],
     quests: object,
     tutorial: string[],
-    crafted_generators: string[],
-    visited_zones: string[],
-    unlocked_coll_tiers: string[],
+    crafted_generators?: string[],
+    visited_zones?: string[],
+    unlocked_coll_tiers?: string[],
     nether_island_player_data: object,
     visited_modes: string[],
     collection: object,
@@ -131,14 +133,14 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
     //side quests
     harp_quest: object,
     trophy_fish: object,
-    trapper_quest: object,
+    trapper_quest?: object,
 
     //pets
     pets: object[],
     autopet: object,
 
     //slayer
-    slayer_quest: object,
+    slayer_quest?: object,
     slayer_bosses: object,
 
     //mining
@@ -189,7 +191,7 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
         experience: number,
         powder_spent_mithril: number,
         retroactive_tier2_token: boolean,
-        selected_pickaxe_ability: "mining_speed_boost",
+        selected_pickaxe_ability: string, //needs expansion
         crystals: {
 
         },
@@ -226,38 +228,38 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
         revive_stone: number
     }
     jacob2: object,
-    experimentation: object,
+    experimentation?: object,
     bestiary: object,
-    soulflow: number,
+    soulflow?: number,
     
     //effects / buffs
     active_effects: object[],
-    paused_effects: any[],
-    disabled_potion_effects: string[],
-    temp_stat_buffs: any[],
+    paused_effects?: any[],
+    disabled_potion_effects?: string[],
+    temp_stat_buffs?: any[],
     
     //essence
-    essence_undead: number,
-    essence_crimson: number,
-    essence_diamond: number,
-    essence_dragon: number,
-    essence_gold: number,
-    essence_ice: number,
-    essence_wither: number,
-    essence_spider: number,
+    essence_undead?: number,
+    essence_crimson?: number,
+    essence_diamond?: number,
+    essence_dragon?: number,
+    essence_gold?: number,
+    essence_ice?: number,
+    essence_wither?: number,
+    essence_spider?: number,
     
     //skills
-    experience_skill_farming: number,
-    experience_skill_mining: number,
-    experience_skill_combat: number,
-    experience_skill_foraging: number,
-    experience_skill_fishing: number,
-    experience_skill_enchanting: number,
-    experience_skill_alchemy: number,
-    experience_skill_taming: number,
-    experience_skill_carpentry: number,
-    experience_skill_runecrafting: number,
-    experience_skill_social2: number,
+    experience_skill_farming?: number,
+    experience_skill_mining?: number,
+    experience_skill_combat?: number,
+    experience_skill_foraging?: number,
+    experience_skill_fishing?: number,
+    experience_skill_enchanting?: number,
+    experience_skill_alchemy?: number,
+    experience_skill_taming?: number,
+    experience_skill_carpentry?: number,
+    experience_skill_runecrafting?: number,
+    experience_skill_social2?: number,
     
     //wardrobe
     wardrobe_contents: object,
@@ -266,20 +268,20 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
     //misc storage
     accessory_bag_storage: object,
     sacks_counts: object,
-    backpack_icons: object,
+    backpack_icons?: object,
     
     //storage / inventory
     inv_armor: object
     equipment_contents: object,
     inv_contents: object,
-    ender_chest_contents: object,
-    backpack_contents: object,
+    ender_chest_contents?: object,
+    backpack_contents?: object,
     personal_vault_contents: object,
-    talisman_bag: object,
-    potion_bag: object,
-    fishing_bag: object,
-    quiver: object,
-    candy_inventory_contents: object,
+    talisman_bag?: object,
+    potion_bag?: object,
+    fishing_bag?: object,
+    quiver?: object,
+    candy_inventory_contents?: object,
 }
 
 
@@ -635,6 +637,8 @@ export function calculateFairySoulStats(data: dataContextInterface): statsList {
     if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
 
     var exchanges = data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].fairy_exchanges;
+
+    if(exchanges === undefined) return {};
 
 
     return {
