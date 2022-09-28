@@ -95,6 +95,43 @@ export interface bingoProfile extends baseProfile { //bingo profile
     game_mode: "bingo"
 }
 
+export interface slayerBoss {
+    claimed_levels: {
+        level_1?: boolean,
+        level_2?: boolean,
+        level_3?: boolean,
+        level_4?: boolean,
+        level_5?: boolean,
+        level_6?: boolean,
+        level_7?: boolean,
+        level_8?: boolean,
+        level_9?: boolean,
+    }
+    xp?: number,
+    boss_kills_tier_0?: number,
+    boss_kills_tier_1?: number,
+    boss_kills_tier_2?: number,
+    boss_kills_tier_3?: number,
+}
+
+export interface slayerBossT5 extends slayerBoss {
+    claimed_levels: {
+        level_1?: boolean,
+        level_2?: boolean,
+        level_3?: boolean,
+        level_4?: boolean,
+        level_5?: boolean,
+        level_6?: boolean,
+        level_7?: boolean,
+        level_8?: boolean,
+        level_9?: boolean,
+        level_7_special?: boolean,
+        level_8_special?: boolean,
+        level_9_special?: boolean,
+    }
+    boss_kills_tier_4?: number,
+}
+
 export interface profileMember extends IObjectKeys { //all objects can be expanded upon; all any[] | any need more info
     //misc important
     last_save: number,
@@ -184,7 +221,13 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
 
     //slayer
     slayer_quest?: object,
-    slayer_bosses: object,
+    slayer_bosses: {
+        zombie: slayerBossT5,
+        spider: slayerBoss,
+        wolf: slayerBoss,
+        enderman: slayerBoss,
+        blaze: slayerBoss,
+    },
 
     //mining
     forge: object,
@@ -770,8 +813,95 @@ export function calculateHarpStats(data: dataContextInterface): statsList {
     return stats
 }
 
+export const slayerStats = {
+    zombie: [
+        {health: 2},
+        {health: 2},
+        {health: 3},
+        {health: 3},
+        {health: 4},
+        {health: 4},
+        {health: 5},
+        {health: 5, health_regen: 50},
+        {health: 6},
+    ],
+    spider: [
+        {critical_damage: 1},
+        {critical_damage: 1},
+        {critical_damage: 1},
+        {critical_damage: 1},
+        {critical_damage: 2},
+        {critical_damage: 2},
+        {critical_damage: 1},
+        {critical_damage: 3, alchemy_wisdom: 10},
+        {critical_damage: 3},
+    ],
+    wolf: [
+        {walk_speed: 1},
+        {health: 2},
+        {walk_speed: 1},
+        {health: 2},
+        {critical_damage: 1},
+        {health: 3},
+        {critical_damage: 2},
+        {walk_speed: 1},
+        {health: 5},
+    ],
+    enderman: [
+        {health: 1},
+        {intelligence: 1},
+        {health: 2},
+        {intelligence: 2},
+        {health: 3},
+        {intelligence: 3},
+        {health: 4},
+        {intelligence: 4},
+        {health: 5},
+    ],
+    blaze: [
+        {health: 3},
+        {strength: 1},
+        {health: 4},
+        {true_defense: 1},
+        {health: 5},
+        {strength: 2},
+        {health: 6},
+        {true_defense: 2},
+        {health: 7},
+    ],
+}
+
+export function calculateSlayerStats(data: dataContextInterface): statsList {
+    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+
+    var slayer_bosses = data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].slayer_bosses;
+
+    var stats: statsList = mergeStatsLists({},{});
+
+    for(let i=0;i<Object.keys(slayerStats).length;i++) {
+        var name = Object.keys(slayerStats)[i];
+
+        for(let j=0;j<9;j++) {
+            var boss = slayer_bosses[name as keyof typeof slayer_bosses];
+
+            var claimed = boss.claimed_levels["level_"+j as keyof typeof boss.claimed_levels] === undefined ? false : true;
+            if(!claimed) continue;
+
+            var levelStats = slayerStats[name as keyof typeof slayerStats][j];
+
+            for(let k=0;k<Object.keys(levelStats).length;k++) {
+                var statName: statName = Object.keys(levelStats)[k] as statName;
+
+                stats[statName as string] += levelStats[statName as keyof typeof levelStats];
+            }
+        }
+    }
+
+    return stats;
+}
+
 export function calculateStats(data: dataContextInterface): statsList {
-    //return addStatsLists([{},calculateHarpStats(data)]);
+    //return addStatsLists([{},calculateSlayerStats(data)]);
 
     return addStatsLists([
         baseStats,
@@ -781,6 +911,7 @@ export function calculateStats(data: dataContextInterface): statsList {
         calculateEssenceStats(data),
         calculatePepperStats(data),
         calculateHarpStats(data),
+        calculateSlayerStats(data),
     ])
 
     /*
