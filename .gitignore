@@ -41,3 +41,7 @@ testContent/parsed.json
 #downloaded skyblock profile
 testContent/skyblockprofile.json
 testContent/refractionprofile.json
+
+#other test content
+testContent/parsedAccBag.json
+testContent/items.json

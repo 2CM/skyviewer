@@ -1,26 +1,31 @@
 import { useState } from "react";
+import { allSkillExpInfo, skillCaps, skillName } from "../lib";
 import SkillLevel from "./skillLevel";
 
-export default function Skills() {
+interface props {
+    skills: allSkillExpInfo
+}
+
+export default function Skills({skills}: props) {
     var [displayType, setDisplayType] = useState(1);
 
     var changeType = () => {
         setDisplayType(displayType+1);
     }
 
+    var skillLevels: JSX.Element[] = Object.keys(skillCaps).map(name => {
+        if(name == "dungeonnering") return <></>;
+
+        var skillExpInfos = skills[name as keyof typeof skills];
+
+        if(skillExpInfos === undefined) return <></>;
+
+        return <SkillLevel onChangeDisplayType={changeType} displayType={displayType} skillName={name as skillName} skillExpInfos={skillExpInfos}/>
+    })
+
     return (
         <div>
-            <SkillLevel onChangeDisplayType={changeType} displayType={displayType} skillName="farming"/>
-            <SkillLevel onChangeDisplayType={changeType} displayType={displayType} skillName="mining"/>
-            <SkillLevel onChangeDisplayType={changeType} displayType={displayType} skillName="combat"/>
-            <SkillLevel onChangeDisplayType={changeType} displayType={displayType} skillName="foraging"/>
-            <SkillLevel onChangeDisplayType={changeType} displayType={displayType} skillName="fishing"/>
-            <SkillLevel onChangeDisplayType={changeType} displayType={displayType} skillName="enchanting"/>
-            <SkillLevel onChangeDisplayType={changeType} displayType={displayType} skillName="alchemy"/>
-            <SkillLevel onChangeDisplayType={changeType} displayType={displayType} skillName="taming"/>
-            <SkillLevel onChangeDisplayType={changeType} displayType={displayType} skillName="carpentry"/>
-            <SkillLevel onChangeDisplayType={changeType} displayType={displayType} skillName="runecrafting"/>
-            <SkillLevel onChangeDisplayType={changeType} displayType={displayType} skillName="social"/>
+            {skillLevels}
         </div>
     )
 }

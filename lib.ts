@@ -1,4 +1,9 @@
-import { dataContextInterface } from "./pages/profile/[profileName]";
+import { readFileSync } from "fs";
+import nbt from "prismarine-nbt";
+import { promisify } from "util";
+import { apiData, dataContext, serverData } from "./pages/profile/[profileName]";
+
+var parseNbt = promisify(nbt.parse)
 
 interface IObjectKeys {
     //(PROBABLY A TEMP SOLUTION, THIS DOESNT LOOK STABLE. SOME TYPESCRIPT GOD CAN CORRECT ME ON A BETTER WAY TO DO THIS)
@@ -57,13 +62,172 @@ Number.prototype.compact = function() {
     return formatter.format(Number(this));
 }
 
+// *** ITEMS MANAGER ***
+
+export var items: item[] = [];
+export var itemsIndex = new Map<string, number>();
+
+//item type
+
+export type itemTier = "COMMON" | "UNCOMMON" | "RARE" | "EPIC" | "LEGENDARY" | "MYTHIC" | "DIVINE" | "SPECIAL" | "VERY_SPECIAL";
+
+export type itemSoulBoundType = "COOP" | "SOLO";
+
+export interface itemStats {
+    HEALTH?: number,
+    DEFENSE?: number,
+    TRUE_DEFENSE?: number,
+    STRENGTH?: number,
+    WALK_SPEED?: number,
+    CRITICAL_CHANCE?: number,
+    CRITICAL_DAMAGE?: number,
+    INTELLIGENCE?: number,
+    MINING_SPEED?: number,
+    SEA_CREATURE_CHANCE?: number,
+    MAGIC_FIND?: number,
+    PET_LUCK?: number,
+    ATTACK_SPEED?: number,
+    ABILITY_DAMAGE?: number,
+    FEROCITY?: number,
+    MINING_FORTUNE?: number,
+    FARMING_FORTUNE?: number,
+    FORAGING_FORTUNE?: number,
+    BREAKING_POWER?: number,
+    PRISTINE?: number,
+    COMBAT_WISDOM?: number,
+    MINING_WISDOM?: number,
+    FARMING_WISDOM?: number,
+    FORAGING_WISDOM?: number,
+    FISHING_WISDOM?: number,
+    ENCHANTING_WISDOM?: number,
+    ALCHEMY_WISDOM?: number,
+    CARPENTRY_WISDOM?: number,
+    RUNECRAFTING_WISDOM?: number,
+    SOCIAL_WISDOM?: number,
+    FISHING_SPEED?: number,
+    HEALTH_REGEN?: number,
+    VITALITY?: number,
+    MENDING?: number,
+}
+
+/*
+
+//CAN DO THESE ONES LATER
+
+export type itemRequirementType = "DUNGEON_TIER" | "DUNGEON_SKILL" | "TROPHY_FISHING";
+export type dungeonType = "CATACOMBS";
+export type trophyFishingReward = "BRONZE" | "SILVER" | "GOLD" | "DIAMOND";
+
+export interface itemRequirement {
+    type: itemRequirementType,
+    dungeon_type?: dungeonType,
+    tier?: number,
+    level?: number,
+    reward?: trophyFishingReward,
+}
+
+export interface itemUpgradeCost {
+    type: "ITEM" | "ESSENCE",
+    item_id?: string,
+    essence_type?: string,
+    amount: number,
+}
+*/
+
+export type itemGemstoneSlotType = "JADE" | "AMBER" | "TOPAZ" | "SAPPHIRE" | "AMETHYST" | "JASPER" | "RUBY" | "MINING" | "COMBAT" | "DEFENSIVE" | "OFFENSIVE" | "UNIVERSAL";
+
+export interface itemGemstoneSlot {
+    type: itemGemstoneSlot
+}
+
+export interface item {
+    material: string,
+    durability?: number,
+    item_durability?: number,
+    skin?: string,
+    name: string,
+    glowing?: boolean,
+    category: string,
+    tier?: itemTier,
+    soulbound: itemSoulBoundType,
+    stats?: itemStats,
+    npc_sell_price: number,
+    requirements: any,
+    can_have_attributes: boolean,
+    salvageable_from_recipe: boolean,
+    unstackable?: boolean,
+    description?: string,
+    museum?: boolean,
+    gemstone_slots: itemGemstoneSlot[],
+    dungeon_item?: boolean
+    id: string,
+}
+
+export async function itemIdToItem(id: string): Promise<item | undefined> {
+    if(itemsIndex.size == 0) return undefined;
+
+    var location = itemsIndex.get(id);
+
+    if(location == undefined) return undefined;
+
+    return items[location];
+}
+
+export async function initItems(data: apiData) {
+    if(itemsIndex.size != 0) {
+        console.log("items already inited");
+
+        return;
+    }
+
+    console.log("initing items")
+
+    //items = await (await fetch("/api/getItems")).json() //hypixel api items
+
+    if(data.itemsData === undefined) {
+        throw new Error("eee")
+    }
+
+    items = data.itemsData.items;
+
+
+    for (let i = 0; i < items.length; i++) {
+        itemsIndex.set(items[i].id, i);
+    }
+}
+
+export function itemStatsToStatsList(itemStats: itemStats): statsList {
+    var stats: statsList = {};
+
+    for (let i = 0; i < Object.keys(itemStats).length; i++) {
+        var name = Object.keys(itemStats)[i];
+
+        stats[name.toLowerCase() as keyof typeof stats] = itemStats[name as keyof typeof itemStats];
+    }
+
+    return stats;
+}
+
+// *** MISC ***
+
+export async function parseContents(contents: contents) {
+    var parsed = await parseNbt(Buffer.from(contents.data, "base64"));
+
+    parsed = nbt.simplify(parsed);
+
+    return parsed;
+
+    //console.log(JSON.stringify(parsed));
+}
+
+
 // *** PROFILES ***
 
 export function getMostRecentProfile(apiData: any): number {
     var highest = 0;
     var highestIndex = 0;
 
-    for(let i=0;i<apiData.profiles.length;i++) {
+    for (let i = 0; i < apiData.profiles.length; i++) {
         var last_save = apiData.profiles[i].last_save
 
         if(last_save > highest) {
@@ -94,6 +258,8 @@ export interface profile extends baseProfile { //normal profile
 export interface bingoProfile extends baseProfile { //bingo profile
     game_mode: "bingo"
 }
+
+export type harpSong = "hymn_joy" | "frere_jacques" | "amazing_grace" | "brahms" | "happy_birthday" | "greensleeves" | "jeopardy" | "minuet" | "joy_world" | "pure_imagination" | "vie_en_rose" | "fire_and_flames" | "pachelbel";
 
 export interface slayerBoss {
     claimed_levels: {
@@ -130,6 +296,24 @@ export interface slayerBossT5 extends slayerBoss {
         level_9_special?: boolean,
     }
     boss_kills_tier_4?: number,
+}
+
+export interface contents {
+    type: 0,
+    data: string
+}
+
+export type accessoryPower = string;
+
+export interface tuningSlot {
+    health: number,
+    defense: number,
+    walk_speed: number,
+    strength: number,
+    critical_damage: number,
+    critical_chance: number,
+    attack_speed: number,
+    intelligence: number
 }
 
 export interface profileMember extends IObjectKeys { //all objects can be expanded upon; all any[] | any need more info
@@ -169,7 +353,7 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
     
     //side quests
     harp_quest: {
-        selected_song?: "hymn_joy" | "frere_jacques" | "amazing_grace" | "brahms" | "happy_birthday" | "greensleeves" | "jeopardy" | "minuet" | "joy_world" | "pure_imagination" | "vie_en_rose" | "fire_and_flames" | "pachelbel",
+        selected_song?: harpSong,
         selected_song_epoch?: number,
         claimed_talisman?: boolean,
         song_hymn_joy_best_completion?: number,
@@ -352,7 +536,15 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
     wardrobe_equipped_slot: number,
     
     //misc storage
-    accessory_bag_storage: object,
+    accessory_bag_storage: {
+        tuning: {
+            slot_0?: tuningSlot,
+            highest_unlocked_slot: number,
+        },
+        selected_power?: accessoryPower,
+        unlocked_powers: accessoryPower[],
+        bag_upgrades_purchased: number,
+    },
     sacks_counts: object,
     backpack_icons?: object,
     
@@ -363,7 +555,7 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
     ender_chest_contents?: object,
     backpack_contents?: object,
     personal_vault_contents: object,
-    talisman_bag?: object,
+    talisman_bag?: contents,
     potion_bag?: object,
     fishing_bag?: object,
     quiver?: object,
@@ -378,6 +570,26 @@ export interface skillExpInfo {
     index: number, //index
     toLevelUp: number, //skill exp to level up
     progress: number //skill exp you have since last level
+}
+
+export interface skillExpInfos {
+    extrapolatedLevelInfo: skillExpInfo,
+    levelInfo: skillExpInfo,
+    skillExp: number,
+}
+
+export interface allSkillExpInfo {
+    farming?: skillExpInfos,
+    mining?: skillExpInfos,
+    combat?: skillExpInfos,
+    foraging?: skillExpInfos,
+    fishing?: skillExpInfos,
+    enchanting?: skillExpInfos,
+    alchemy?: skillExpInfos,
+    taming?: skillExpInfos,
+    carpentry?: skillExpInfos,
+    runecrafting?: skillExpInfos,
+    social?: skillExpInfos,
 }
 
 export type skillType = "runecrafting" | "dungeoneering" | "social" | "experience";
@@ -494,6 +706,32 @@ export function skillExpToLevel(exp: number, skill: skillName, extrapolate: bool
         toLevelUp: max-min,
         progress: (level-Math.floor(level))*(max-min)
     }
+}
+
+export function calculateAllSkillExp(apiData: apiData, selectedProfile: number): allSkillExpInfo {
+    if(apiData.profileData === undefined) {
+        console.error("profileData is undefined");
+        return {};
+    } 
+
+    var skills: allSkillExpInfo = {};
+
+    for (let i = 0; i < Object.keys(skillCaps).length; i++) {
+		var name = Object.keys(skillCaps)[i] as skillName;
+
+		if(name == "dungeoneering") continue;
+
+		var skillExp = apiData.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"][skillNameToApiName[name as keyof typeof skillNameToApiName] as keyof typeof apiData.profileData] as number;
+
+
+		skills[name as keyof typeof skills] = {
+			skillExp: skillExp,
+			levelInfo: skillExpToLevel(skillExp, name),
+			extrapolatedLevelInfo: skillExpToLevel(skillExp, name, true),
+		};
+	}
+
+    return skills;
 }
 
 // *** STATS ***
@@ -617,7 +855,7 @@ export function mergeStatsLists(list1: statsList, list2: statsList): statsList {
     var list1Copy = Object.assign({}, list1);
     var list2Copy = Object.assign({}, list2);
 
-    for(let i=0;i<Object.keys(baseStats).length;i++) {
+    for (let i = 0; i < Object.keys(baseStats).length; i++) {
         var key = Object.keys(baseStats)[i];
 
         if(list1Copy[key] === undefined) list1Copy[key] = 0;
@@ -634,7 +872,7 @@ export function addStatsLists(arr: statsList[]): statsList {
 
     var added: statsList = arr[0];
 
-    for(let i=1;i<arr.length;i++) {
+    for (let i = 1; i < arr.length; i++) {
         added = mergeStatsLists(added, arr[i]);
     }
 
@@ -694,17 +932,17 @@ var skillLevelStats = {
 }
 
 
-export function calculateSkillStats(data: dataContextInterface): statsList {
-    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+export async function calculateSkillStats(data: apiData, selectedProfile: number): Promise<statsList> {
+    if(!data.profileData) return {}
 
     var stats = {};
     
-    for(let i=0;i<Object.keys(skillCaps).length;i++) {
+    for (let i = 0; i < Object.keys(skillCaps).length; i++) {
         let name: skillName = Object.keys(skillCaps)[i] as skillName;
 
         if(skillLevelStats[name as keyof typeof skillLevelStats] === undefined) break;
 
-        var levelInfo = skillExpToLevel(data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"][skillNameToApiName[name]], name)
+        var levelInfo = skillExpToLevel(data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"][skillNameToApiName[name]], name)
 
         stats = mergeStatsLists(stats, skillLevelStats[name as keyof typeof skillLevelStats](Math.floor(levelInfo.level)))
     }
@@ -719,10 +957,10 @@ export const fairySoulStats = {
     speed: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4]
 }
 
-export function calculateFairySoulStats(data: dataContextInterface): statsList {
-    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+export async function calculateFairySoulStats(data: apiData, selectedProfile: number): Promise<statsList> {
+    if(!data.profileData) return {}
 
-    var exchanges = data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].fairy_exchanges;
+    var exchanges = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].fairy_exchanges;
 
     if(exchanges === undefined) return {};
 
@@ -736,10 +974,10 @@ export function calculateFairySoulStats(data: dataContextInterface): statsList {
 }
 
 //NEEDS MORE TESTING; havent accounted for toggles and interface is probably wrong because i cant test around right now
-export function calculateHotmStats(data: dataContextInterface): statsList {
-    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+export async function calculateHotmStats(data: apiData, selectedProfile: number): Promise<statsList> {
+    if(!data.profileData) return {}
 
-    var mining_core = data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].mining_core;
+    var mining_core = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].mining_core;
 
     return {
         mining_fortune: 5*(mining_core.nodes.mining_fortune || 0) + 5*(mining_core.nodes.mining_fortune_2 || 0) + 50*(mining_core.nodes.mining_madness || 0),
@@ -747,10 +985,10 @@ export function calculateHotmStats(data: dataContextInterface): statsList {
     }
 }
 
-export function calculateEssenceStats(data: dataContextInterface): statsList {
-    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+export async function calculateEssenceStats(data: apiData, selectedProfile: number): Promise<statsList> {
+    if(!data.profileData) return {}
 
-    var perks = data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].perks;
+    var perks = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].perks;
 
     return {
         health: (perks.permanent_health || 0)*2,
@@ -761,10 +999,10 @@ export function calculateEssenceStats(data: dataContextInterface): statsList {
     }
 }
 
-export function calculatePepperStats(data: dataContextInterface): statsList {
-    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+export async function calculatePepperStats(data: apiData, selectedProfile: number): Promise<statsList> {
+    if(!data.profileData) return {}
 
-    var peppers = data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].reaper_peppers_eaten;
+    var peppers = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].reaper_peppers_eaten;
 
     if(peppers == undefined) return {};
 
@@ -789,16 +1027,16 @@ export const harpStats = {
     pachelbel: 1,
 }
 
-export function calculateHarpStats(data: dataContextInterface): statsList {
-    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+export async function calculateHarpStats(data: apiData, selectedProfile: number): Promise<statsList> {
+    if(!data.profileData) return {}
 
-    var harp_quest = data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].harp_quest;
+    var harp_quest = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].harp_quest;
 
     if(Object.keys(harp_quest).length == 0) return {};
 
     var stats: statsList = {intelligence: 0};
 
-    for(let i=0;i<Object.keys(harpStats).length;i++) {
+    for (let i = 0; i < Object.keys(harpStats).length; i++) {
         var name = Object.keys(harpStats)[i];
 
         var perfectCompletions = harp_quest["song_"+name+"_perfect_completions" as keyof typeof harp_quest];
@@ -871,14 +1109,14 @@ export const slayerStats = {
     ],
 }
 
-export function calculateSlayerStats(data: dataContextInterface): statsList {
-    if(!data.apiData || !data.data) return mergeStatsLists({},{}); //will have better error handling in the future
+export async function calculateSlayerStats(data: apiData, selectedProfile: number): Promise<statsList> {
+    if(!data.profileData) return {}
 
-    var slayer_bosses = data.apiData.profiles[data.data.selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].slayer_bosses;
+    var slayer_bosses = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].slayer_bosses;
 
     var stats: statsList = mergeStatsLists({},{});
 
-    for(let i=0;i<Object.keys(slayerStats).length;i++) {
+    for (let i = 0; i < Object.keys(slayerStats).length; i++) {
         var name = Object.keys(slayerStats)[i];
 
         for(let j=0;j<9;j++) {
@@ -900,19 +1138,83 @@ export function calculateSlayerStats(data: dataContextInterface): statsList {
     return stats;
 }
 
-export function calculateStats(data: dataContextInterface): statsList {
-    //return addStatsLists([{},calculateSlayerStats(data)]);
+export const enrichmentStats = {
+    walk_speed: 1,
+    intelligence: 2,
+    critical_damage: 1,
+    critical_chance: 1,
+    strength: 1,
+    defense: 1,
+    health: 3,
+    magic_find: 0.5,
+    ferocity: 0.3,
+    sea_creature_chance: 0.3,
+    attack_speed: 0.5,
+}
+
+//gonna add maxwell stuff in here in the next commit
+export async function calculateAccStats(data: apiData, selectedProfile: number): Promise<statsList> {
+    if(!data.profileData) return {};
+
+    var talisman_bag_raw = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].talisman_bag; 
+
+    if(!talisman_bag_raw) return {health: 1};
+
+
+    var stats = {};
+
+    var taliBag = await parseContents(talisman_bag_raw) as IObjectKeys;
+    if(taliBag.i === undefined) return {health: 2};
+
+    var taliContents: IObjectKeys[] = taliBag.i;
+    taliContents = taliContents.filter(value => Object.keys(value).length !== 0);
+
+    for (let i = 0; i < taliContents.length; i++) {
+        var tali = taliContents[i];
+        var itemId = tali.tag.ExtraAttributes.id;
+
+        var itemInfo = await itemIdToItem(itemId);
+        if(itemInfo === undefined) {
+            console.log(`cant find item ${itemId}`);
+            continue;
+        }
+
+        var itemStatsList: statsList = {};
+
+        var itemStats = itemInfo.stats;
+        itemStatsList = itemStatsToStatsList(itemStats || {});
+
+        var itemEnrichment = tali.tag.ExtraAttributes.talisman_enrichment;
+
+        if(itemEnrichment !== undefined) {
+            var itemEnrichmentStats: statsList = {};
+
+            itemEnrichmentStats[itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
+
+            itemStatsList = mergeStatsLists(itemStatsList, itemEnrichmentStats)
+        }
+
+        stats = mergeStatsLists(stats, itemStatsList);
+    }
+
+    return stats;
+}
+
+
+export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsList> {
+    //return addStatsLists([{},await calculateAccStats(data, selectedProfile)]);
 
     return addStatsLists([
         baseStats,
-        calculateSkillStats(data),
-        calculateFairySoulStats(data),
-        calculateHotmStats(data),
-        calculateEssenceStats(data),
-        calculatePepperStats(data),
-        calculateHarpStats(data),
-        calculateSlayerStats(data),
-    ])
+        await calculateSkillStats(data, selectedProfile),
+        await calculateFairySoulStats(data, selectedProfile),
+        await calculateHotmStats(data, selectedProfile),
+        await calculateEssenceStats(data, selectedProfile),
+        await calculatePepperStats(data, selectedProfile),
+        await calculateHarpStats(data, selectedProfile),
+        await calculateSlayerStats(data, selectedProfile),
+        await calculateAccStats(data, selectedProfile),
+    ]) 
 
     /*
     sources
