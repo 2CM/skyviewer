@@ -879,6 +879,26 @@ export function addStatsLists(arr: statsList[]): statsList {
     return added;
 }
 
+export function multiplyStatsList(list: statsList, mult: number | statsList): statsList {
+    var stats: any = {};
+
+    for(let i = 0; i < Object.keys(list).length; i++) {
+        var name = Object.keys(list)[i];
+
+        if(typeof mult == "number") {
+            stats[name as keyof typeof stats] = list[name as keyof typeof list]*mult;
+        } else {
+            var multiplier = mult[name as keyof typeof list];
+
+            if(multiplier === undefined) multiplier = 1;
+
+            stats[name as keyof typeof stats] = list[name as keyof typeof list]*multiplier;
+        }
+    }
+
+    return stats;
+}
+
 
 var skillLevelStats = {
     farming: function(level: number): statsList {
@@ -957,6 +977,7 @@ export const fairySoulStats = {
     speed: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4]
 }
 
+//yes i know they got revamped ill do that later
 export async function calculateFairySoulStats(data: apiData, selectedProfile: number): Promise<statsList> {
     if(!data.profileData) return {}
 
@@ -1152,11 +1173,309 @@ export const enrichmentStats = {
     attack_speed: 0.5,
 }
 
+export const mpTable = {
+    COMMON: 3,
+    UNCOMMON: 5,
+    RARE: 8,
+    EPIC: 12,
+    LEGENDARY: 16,
+    MYTHIC: 22,
+    DIVINE: 0,
+    SPECIAL: 3,
+    VERY_SPECIAL: 5
+}
+
+export interface accPower {
+    per: statsList,
+    extra?: statsList,
+}
+
+export interface accPowers {
+    [key: string]: accPower
+}
+
+export const accPowers: accPowers  = {
+    //default powers
+    lucky: {
+        per: {
+            health: 3.35,
+            defense: 1.2,
+            strength: 4.8,
+            critical_chance: 4.35,
+            critical_damage: 4.8,
+        }
+    },
+    pretty: {
+        per: {
+            health: 1.65,
+            defense: 1.2,
+            walk_speed: 0.65,
+            strength: 4.8,
+            intelligence: 10.8,
+            critical_chance: 0.475,
+            critcial_damage: 1.2,
+        }
+    },
+    protected: {
+        per: {
+            health: 11.75,
+            defense: 10.8,
+            strength: 2.4,
+            critical_chance: 0.475,
+            critical_damage: 1.2,
+        }
+    },
+    simple: {
+        per: {
+            health: 5.02,
+            defense: 3.6,
+            walk_speed: 1.2,
+            strength: 3.6,
+            intelligence: 5.4,
+            critical_chance: 1.45,
+            cricial_damage: 3.6,
+        }
+    },
+    warrior: {
+        per: {
+            health: 3.35,
+            defense: 1.2,
+            strength: 8.4,
+            critical_chance: 2.4,
+            critical_damage: 6,
+        }
+    },
+    commando: {
+        per: {
+            health: 5.2,
+            defense: 2.2,
+            strength: 8.4,
+            critical_chance: 0.475,
+            critical_damage: 8.4,
+        }
+    },
+    diciplined: {
+        per: {
+            health: 5.02,
+            defense: 2.4,
+            strength: 7.2,
+            critical_chance: 1.45,
+            critical_damage: 7.2,
+        }
+    },
+    inspired: {
+        per: {
+            health: 1.65,
+            defense: 1.2,
+            strength: 4.8,
+            intelligence: 16.2,
+            critical_chance: 0.95,
+            critical_damage: 3.6,
+        }
+    },
+    ominous: {
+        per: {
+            health: 5.02,
+            walk_speed: 0.95,
+            strength: 3.6,
+            intelligence: 6.1,
+            critical_chance: 1.45,
+            critical_damage: 3.6,
+            attack_speed: 0.9,
+        }
+    },
+    prepared: {
+        per: {
+            health: 12.4,
+            defense: 11.3,
+            strength: 1.95,
+            critical_chance: 0.4,
+            critical_damage: 0.95
+        }
+    },
+
+    //power stones
+    scorching: {
+        per: {
+            strength: 8.4,
+            critical_damage: 9.6,
+            attack_speed: 1.8,
+        },
+        extra: {
+            ferocity: 7
+        }
+    },
+    healthy: {
+        per: {
+            health: 33.6,
+        },
+        extra: {
+            health: 200
+        }
+    },
+    slender: {
+        per: {
+            health: 8.4,
+            defense: 6,
+            walk_speed: 0.6,
+            strength: 6,
+            intelligence: 7.2,
+            critical_damage: 6,
+            attack_speed: 1.1, 
+        },
+        extra: {
+            defense: 100,
+            strength: 50,
+        }
+    },
+    strong: {
+        per: {
+            strength: 12,
+            critical_damage: 12,
+        },
+        extra: {
+            strength: 25,
+            critical_damage: 25,
+        }
+    },
+    bizzare: {
+        per: {
+            strength: -2.4,
+            intelligence: 43.2,
+            critical_damage: -2.4,
+        },
+        extra: {
+            ability_damage: 5,
+        }
+    },
+    demonic: {
+        per: {
+            strength: 5.5,
+            intelligence: 27.725,
+        },
+        extra: {
+            critical_damage: 50,
+        }
+    },
+    hurtful: {
+        per: {
+            strength: 4.8,
+            critical_damage: 19.2,
+        },
+        extra: {
+            attack_damage: 15,
+        }
+    },
+    pleasant: {
+        per: {
+            health: 13.45,
+            defense: 14.4,
+        },
+    },
+    adept: {
+        per: {
+            health: 16.8,
+            defense: 9.6,
+            intelligence: 3.6,
+        },
+        extra: {
+            health: 100,
+            defense: 50,
+        }
+    },
+    bloody: {
+        per: {
+            strength: 10.8,
+            intelligence: 3.6,
+            critical_damage: 10.8,
+        },
+        extra: {
+            attack_speed: 10,
+        }
+    },
+    forceful: {
+        per: {
+            health: 1.7,
+            strength: 18,
+            critical_damage: 4.8,
+        },
+        extra: {
+            ferocity: 4,
+        }
+    },
+    mythical: {
+        per: {
+            health: 5.7,
+            defense: 4.05,
+            walk_speed: 0.95,
+            strength: 4.05,
+            intelligence: 6.1,
+            critical_chance: 1.65,
+            critical_damage: 4.05,
+        },
+        extra: {
+            health: 150,
+            strength: 40,
+        }
+    },
+    shaded: {
+        per: {
+            walk_speed: 0.6,
+            strength: 4.8,
+            critical_damage: 18,
+        },
+        extra: {
+            attack_speed: 3,
+            ferocity: 3,
+        }
+    },
+    sighted: {
+        per: {
+            intelligence: 36,
+        },
+        extra: {
+            ability_damage: 3,
+        }
+    },
+    silky: {
+        per: {
+            walk_speed: 0.6,
+            critical_damage: 22.8,
+        },
+        extra: {
+            attack_speed: 5,
+        }
+    },
+    sweet: {
+        per: {
+            health: 15.1,
+            defense: 10.8,
+            walk_speed: 1.2,
+        },
+        extra: {
+            walk_speed: 5,
+        }
+    },
+}
+
+export const tuningValues: statsList = {
+    health: 5,
+    defense: 1,
+    walk_speed: 1.5,
+    strength: 1,
+    critical_damage: 1,
+    critical_chance: 0.2,
+    attack_speed: 0.2,
+    intelligence: 2,
+}
+
+
 //gonna add maxwell stuff in here in the next commit
 export async function calculateAccStats(data: apiData, selectedProfile: number): Promise<statsList> {
     if(!data.profileData) return {};
 
-    var talisman_bag_raw = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].talisman_bag; 
+    var talisman_bag_raw = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].talisman_bag;
+    var accessory_bag_storage = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].accessory_bag_storage;
 
     if(!talisman_bag_raw) return {health: 1};
 
@@ -1169,13 +1488,16 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
     var taliContents: IObjectKeys[] = taliBag.i;
     taliContents = taliContents.filter(value => Object.keys(value).length !== 0);
 
+    var mp = 0;
+
     for (let i = 0; i < taliContents.length; i++) {
         var tali = taliContents[i];
-        var itemId = tali.tag.ExtraAttributes.id;
+        var itemAttributes = tali.tag.ExtraAttributes;
+        var itemId = itemAttributes.id;
 
         var itemInfo = await itemIdToItem(itemId);
         if(itemInfo === undefined) {
-            console.log(`cant find item ${itemId}`);
+            console.warn(`cant find item ${itemId}`);
             continue;
         }
 
@@ -1195,14 +1517,53 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
         }
 
         stats = mergeStatsLists(stats, itemStatsList);
+
+        
+        var rarityIndex = Object.keys(mpTable).findIndex(name => {return itemInfo?.tier == name});
+        if(rarityIndex == -1) rarityIndex = 0;
+
+        // !!! i dont have any recombed accs so i cant test this one !!!
+        var rarityUpgrades = itemAttributes.rarity_upgrades;
+        var rarity = rarityIndex + (rarityUpgrades === undefined ? 0 : rarityUpgrades == 1 ? 1 : 0);
+
+
+        mp += mpTable[Object.keys(mpTable)[rarity] as keyof typeof mpTable];
     }
 
-    return stats;
+    if(accessory_bag_storage.selected_power === undefined) {
+        console.warn("no selected power");
+        return stats;
+    }
+
+    var maxwellStats: statsList = {};
+
+    var statsMultiplier = 29.97 * Math.pow((Math.log(0.0019 * mp + 1)), 1.2);
+
+    if(Object.keys(accPowers).findIndex(key => {return key == accessory_bag_storage.selected_power}) == -1) {
+        console.error("couldnt find selected power");
+        return stats;
+    }
+
+    var selectedPowerStats = accPowers[accessory_bag_storage.selected_power as keyof typeof accPowers];
+
+    if(selectedPowerStats.extra) {
+        maxwellStats = mergeStatsLists(maxwellStats, selectedPowerStats.extra);
+    }
+
+    maxwellStats = mergeStatsLists(maxwellStats, multiplyStatsList(selectedPowerStats.per, statsMultiplier));
+
+    console.log(`mp: ${mp}, multiplier: ${statsMultiplier}`);
+
+    return addStatsLists([
+        stats,
+        maxwellStats,
+        multiplyStatsList((accessory_bag_storage.tuning.slot_0 ? accessory_bag_storage.tuning.slot_0 : {}) as statsList, tuningValues)
+    ]);
 }
 
 
 export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsList> {
-    //return addStatsLists([{},await calculateAccStats(data, selectedProfile)]);
+    return addStatsLists([{},await calculateAccStats(data, selectedProfile)]);
 
     return addStatsLists([
         baseStats,

@@ -7,6 +7,6 @@ interface props {
 
 export default function Stat({statName, value}: props) {
     return (
-        <div>{statIdToStatName[statName]} <b>{value.addCommas()}</b></div>
+        <div>{statIdToStatName[statName]} <b>{value.addCommas(0)}</b></div>
     )
 }
