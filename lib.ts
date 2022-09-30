@@ -1563,7 +1563,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
 
 
 export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsList> {
-    return addStatsLists([{},await calculateAccStats(data, selectedProfile)]);
+    //return addStatsLists([{},await calculateAccStats(data, selectedProfile)]);
 
     return addStatsLists([
         baseStats,
