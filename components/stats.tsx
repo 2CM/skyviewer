@@ -1,12 +1,14 @@
-import { statName, statsList } from "../lib";
+import { statIdToStatName, statName, statsList, statsLists, sumStatsLists } from "../lib";
 import Stat from "./stat";
 
 interface props {
-    statValues: statsList
+    statValues: statsLists
 }
 
 export default function Stats({statValues}: props) {
-    var statsArr: JSX.Element[] = Object.keys(statValues).map(key => (<Stat statName={key as statName} value={statValues[key]}></Stat>));
+    var summedList = sumStatsLists(statValues);
+
+    var statsArr: JSX.Element[] = Object.keys(statIdToStatName).map(key => (<Stat statName={key as statName} value={summedList[key] || 0}></Stat>));
 
     return (
         <div>

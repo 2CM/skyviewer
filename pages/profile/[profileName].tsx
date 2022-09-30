@@ -2,7 +2,7 @@ import { useRouter } from "next/router"
 import Head from "next/head";
 import { Context, createContext, useEffect, useState} from 'react'
 import { readFileSync } from "fs";
-import { allSkillExpInfo, baseProfile, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, item, statsList } from "../../lib";
+import { allSkillExpInfo, baseProfile, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, item, statsList, statsLists } from "../../lib";
 import Skills from "../../components/skills";
 import Stats from "../../components/stats";
 
@@ -15,7 +15,7 @@ export interface dataContext {
 
 export interface serverData {
 	computedData: {
-		stats: statsList,
+		stats: statsLists,
 		skills: allSkillExpInfo
 	}
 }
@@ -65,7 +65,7 @@ export default function profileViewer(props: serverData) {
 			</Head>
 			<main>
 				<main>
-					<Skills skills={props.computedData.skills}/>
+					{/* <Skills skills={props.computedData.skills}/> */}
 					<Stats statValues={props.computedData.stats}/>
 				</main>
 			</main>

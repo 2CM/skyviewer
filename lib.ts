@@ -899,6 +899,22 @@ export function multiplyStatsList(list: statsList, mult: number | statsList): st
     return stats;
 }
 
+export interface statsLists {
+    [key: string]: statsList
+}
+
+export function sumStatsLists(lists: statsLists): statsList {
+    var stats: statsList = {};
+
+    for(let i = 0; i < Object.keys(lists).length; i++) {
+        var name = Object.keys(lists)[i];
+
+        stats = mergeStatsLists(stats, lists[name]);
+    }
+
+    return stats;
+}
+
 
 var skillLevelStats = {
     farming: function(level: number): statsList {
@@ -952,10 +968,10 @@ var skillLevelStats = {
 }
 
 
-export async function calculateSkillStats(data: apiData, selectedProfile: number): Promise<statsList> {
+export async function calculateSkillStats(data: apiData, selectedProfile: number): Promise<statsLists> {
     if(!data.profileData) return {}
 
-    var stats = {};
+    var stats: statsLists = {};
     
     for (let i = 0; i < Object.keys(skillCaps).length; i++) {
         let name: skillName = Object.keys(skillCaps)[i] as skillName;
@@ -964,7 +980,9 @@ export async function calculateSkillStats(data: apiData, selectedProfile: number
 
         var levelInfo = skillExpToLevel(data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"][skillNameToApiName[name]], name)
 
-        stats = mergeStatsLists(stats, skillLevelStats[name as keyof typeof skillLevelStats](Math.floor(levelInfo.level)))
+        stats[name] = skillLevelStats[name as keyof typeof skillLevelStats](Math.floor(levelInfo.level))
+
+        //stats = mergeStatsLists(stats, skillLevelStats[name as keyof typeof skillLevelStats](Math.floor(levelInfo.level)))
     }
 
     return stats;
@@ -1562,9 +1580,15 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
 }
 
 
-export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsList> {
+export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsLists> {
+    return Object.assign({},
+        await calculateSkillStats(data, selectedProfile),
+    ) 
+
+
     //return addStatsLists([{},await calculateAccStats(data, selectedProfile)]);
 
+    /*
     return addStatsLists([
         baseStats,
         await calculateSkillStats(data, selectedProfile),
@@ -1576,6 +1600,7 @@ export async function calculateStats(data: apiData, selectedProfile: number): Pr
         await calculateSlayerStats(data, selectedProfile),
         await calculateAccStats(data, selectedProfile),
     ]) 
+    */
 
     /*
     sources
