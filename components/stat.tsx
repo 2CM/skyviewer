@@ -1,4 +1,5 @@
 import { statIdToStatName, statName } from "../lib";
+import Tippy from "@tippyjs/react"
 
 interface props {
     statName: statName,
