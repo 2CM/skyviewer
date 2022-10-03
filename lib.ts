@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import nbt from "prismarine-nbt";
+import nbt, { list } from "prismarine-nbt";
 import { promisify } from "util";
 import { apiData, dataContext, serverData } from "./pages/profile/[profileName]";
 
@@ -849,7 +849,7 @@ export const baseStats: statsList = {
     mending: 100,
 }
 
-export function mergeStatsLists(list1: statsList, list2: statsList): statsList {
+export function mergeStatsCategory(list1: statsList, list2: statsList): statsList {
     var newList: statsList = {};
 
     var list1Copy = Object.assign({}, list1);
@@ -867,13 +867,13 @@ export function mergeStatsLists(list1: statsList, list2: statsList): statsList {
     return newList;
 }
 
-export function addStatsLists(arr: statsList[]): statsList {
+export function addStatsCategory(arr: statsList[]): statsList {
     if(arr.length < 2) throw new Error("needs more than 2 members")
 
     var added: statsList = arr[0];
 
     for (let i = 1; i < arr.length; i++) {
-        added = mergeStatsLists(added, arr[i]);
+        added = mergeStatsCategory(added, arr[i]);
     }
 
     return added;
@@ -899,20 +899,53 @@ export function multiplyStatsList(list: statsList, mult: number | statsList): st
     return stats;
 }
 
-export interface statsLists {
+export interface statsCategory {
     [key: string]: statsList
 }
 
-export function sumStatsLists(lists: statsLists): statsList {
+export interface statsCategories {
+    [key: string]: statsCategory
+}
+
+export function sumStatsCategories(categories: statsCategories): statsList {
     var stats: statsList = {};
 
-    for(let i = 0; i < Object.keys(lists).length; i++) {
-        var name = Object.keys(lists)[i];
+    var listsMerged = Object.assign({}, ...Object.values(categories));
 
-        stats = mergeStatsLists(stats, lists[name]);
+    for(let i = 0; i < Object.keys(listsMerged).length; i++) {
+        var name = Object.keys(listsMerged)[i];
+
+        stats = mergeStatsCategory(stats, listsMerged[name]);
     }
 
     return stats;
+}
+
+export function getStatSources(categories: statsCategories) {
+    var sources: any = {};
+
+    for(let i in Object.keys(categories)) {
+        var categoryName = Object.keys(categories)[i];
+        var category = categories[categoryName as keyof typeof categories];
+
+        for(let j in Object.keys(category)) {
+            var listName = Object.keys(category)[j];
+            var list = category[listName as keyof typeof category];
+
+            for(let k in Object.keys(list)) {
+                var statName = Object.keys(list)[k];
+                var stat = list[statName as keyof typeof list];
+
+                if(!stat) continue;
+
+                if(!sources[statName]) sources[statName] = {};
+                if(!sources[statName][categoryName]) sources[statName][categoryName] = {};
+                sources[statName][categoryName][listName] = stat;
+            }
+        }
+    }
+
+    return sources;
 }
 
 
@@ -968,10 +1001,10 @@ var skillLevelStats = {
 }
 
 
-export async function calculateSkillStats(data: apiData, selectedProfile: number): Promise<statsLists> {
+export async function calculateSkillStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
     if(!data.profileData) return {}
 
-    var stats: statsLists = {};
+    var stats: statsCategory = {};
     
     for (let i = 0; i < Object.keys(skillCaps).length; i++) {
         let name: skillName = Object.keys(skillCaps)[i] as skillName;
@@ -981,8 +1014,6 @@ export async function calculateSkillStats(data: apiData, selectedProfile: number
         var levelInfo = skillExpToLevel(data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"][skillNameToApiName[name]], name)
 
         stats[name] = skillLevelStats[name as keyof typeof skillLevelStats](Math.floor(levelInfo.level))
-
-        //stats = mergeStatsLists(stats, skillLevelStats[name as keyof typeof skillLevelStats](Math.floor(levelInfo.level)))
     }
 
     return stats;
@@ -1013,32 +1044,41 @@ export async function calculateFairySoulStats(data: apiData, selectedProfile: nu
 }
 
 //NEEDS MORE TESTING; havent accounted for toggles and interface is probably wrong because i cant test around right now
-export async function calculateHotmStats(data: apiData, selectedProfile: number): Promise<statsList> {
+export async function calculateHotmStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
     if(!data.profileData) return {}
 
     var mining_core = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].mining_core;
 
-    return {
-        mining_fortune: 5*(mining_core.nodes.mining_fortune || 0) + 5*(mining_core.nodes.mining_fortune_2 || 0) + 50*(mining_core.nodes.mining_madness || 0),
-        mining_speed: 20*(mining_core.nodes.mining_speed || 0) + 40*(mining_core.nodes.mining_speed_2 || 0) + 50*(mining_core.nodes.mining_madness || 0),
-    }
+    var stats: statsCategory = {};
+
+    if(mining_core.nodes.mining_speed) stats["Mining Speed 1"] = {mining_speed: 20*mining_core.nodes.mining_speed || 0};
+    if(mining_core.nodes.mining_fortune) stats["Mining Fortune 1"] = {mining_fortune: 5*mining_core.nodes.mining_fortune || 0};
+
+    if(mining_core.nodes.mining_speed_2) stats["Mining Speed 2"] = {mining_speed: 40*mining_core.nodes.mining_speed_2 || 0};
+    if(mining_core.nodes.mining_fortune_2) stats["Mining Fortune 2"] = {mining_fortune: 5*mining_core.nodes.mining_fortune_2 || 0};
+
+    if(mining_core.nodes.mining_madness) stats["Mining Madness"] = {mining_speed: 50, mining_fortune: 50};
+
+    return stats;
 }
 
-export async function calculateEssenceStats(data: apiData, selectedProfile: number): Promise<statsList> {
+export async function calculateEssenceStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
     if(!data.profileData) return {}
 
     var perks = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].perks;
 
+    var stats: statsCategory = {};
+
     return {
-        health: (perks.permanent_health || 0)*2,
-        defense: (perks.permanent_defense || 0),
-        walk_speed: (perks.permanent_speed || 0),
-        intelligence: (perks.permanent_intelligence || 0)*2,
-        strength: (perks.permanent_strength || 0),
+        "Forbidden Health": {health: (perks.permanent_health || 0)*2},
+        "Forbidden Defense": {defense: (perks.permanent_defense || 0)*1},
+        "Forbidden Speed": {walk_speed: (perks.permanent_speed || 0)*1},
+        "Forbidden Intelligence": {intelligence: (perks.permanent_intelligence || 0)*2},
+        "Forbidden Strength": {strength: (perks.permanent_strength || 0)*1},
     }
 }
 
-export async function calculatePepperStats(data: apiData, selectedProfile: number): Promise<statsList> {
+export async function calculatePepperStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
     if(!data.profileData) return {}
 
     var peppers = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].reaper_peppers_eaten;
@@ -1046,7 +1086,7 @@ export async function calculatePepperStats(data: apiData, selectedProfile: numbe
     if(peppers == undefined) return {};
 
     return {
-        health: peppers
+        "Reaper Peppers": {health: peppers}
     }
 }
 
@@ -1153,7 +1193,7 @@ export async function calculateSlayerStats(data: apiData, selectedProfile: numbe
 
     var slayer_bosses = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].slayer_bosses;
 
-    var stats: statsList = mergeStatsLists({},{});
+    var stats: statsList = mergeStatsCategory({},{});
 
     for (let i = 0; i < Object.keys(slayerStats).length; i++) {
         var name = Object.keys(slayerStats)[i];
@@ -1531,10 +1571,10 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
 
             itemEnrichmentStats[itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
 
-            itemStatsList = mergeStatsLists(itemStatsList, itemEnrichmentStats)
+            itemStatsList = mergeStatsCategory(itemStatsList, itemEnrichmentStats)
         }
 
-        stats = mergeStatsLists(stats, itemStatsList);
+        stats = mergeStatsCategory(stats, itemStatsList);
 
         
         var rarityIndex = Object.keys(mpTable).findIndex(name => {return itemInfo?.tier == name});
@@ -1565,14 +1605,14 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
     var selectedPowerStats = accPowers[accessory_bag_storage.selected_power as keyof typeof accPowers];
 
     if(selectedPowerStats.extra) {
-        maxwellStats = mergeStatsLists(maxwellStats, selectedPowerStats.extra);
+        maxwellStats = mergeStatsCategory(maxwellStats, selectedPowerStats.extra);
     }
 
-    maxwellStats = mergeStatsLists(maxwellStats, multiplyStatsList(selectedPowerStats.per, statsMultiplier));
+    maxwellStats = mergeStatsCategory(maxwellStats, multiplyStatsList(selectedPowerStats.per, statsMultiplier));
 
     console.log(`mp: ${mp}, multiplier: ${statsMultiplier}`);
 
-    return addStatsLists([
+    return addStatsCategory([
         stats,
         maxwellStats,
         multiplyStatsList((accessory_bag_storage.tuning.slot_0 ? accessory_bag_storage.tuning.slot_0 : {}) as statsList, tuningValues)
@@ -1580,16 +1620,20 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
 }
 
 
-export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsLists> {
-    return Object.assign({},
-        await calculateSkillStats(data, selectedProfile),
-    ) 
+export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsCategories> {
+    return {
+        base: {base: baseStats},
+        skills: await calculateSkillStats(data, selectedProfile),
+        hotm: await calculateHotmStats(data, selectedProfile),
+        essence: await calculateEssenceStats(data, selectedProfile),
+        peppers: await calculatePepperStats(data, selectedProfile),
+    } 
 
 
-    //return addStatsLists([{},await calculateAccStats(data, selectedProfile)]);
+    //return addstatsCategory([{},await calculateAccStats(data, selectedProfile)]);
 
     /*
-    return addStatsLists([
+    return addstatsCategory([
         baseStats,
         await calculateSkillStats(data, selectedProfile),
         await calculateFairySoulStats(data, selectedProfile),

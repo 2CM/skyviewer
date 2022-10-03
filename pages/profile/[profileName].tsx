@@ -2,7 +2,7 @@ import { useRouter } from "next/router"
 import Head from "next/head";
 import { Context, createContext, useEffect, useState} from 'react'
 import { readFileSync } from "fs";
-import { allSkillExpInfo, baseProfile, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, item, statsList, statsLists } from "../../lib";
+import { allSkillExpInfo, baseProfile, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, item, statsList, statsCategory } from "../../lib";
 import Skills from "../../components/skills";
 import Stats from "../../components/stats";
 
@@ -15,7 +15,7 @@ export interface dataContext {
 
 export interface serverData {
 	computedData: {
-		stats: statsLists,
+		stats: statsCategory,
 		skills: allSkillExpInfo
 	}
 }
