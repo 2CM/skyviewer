@@ -1106,14 +1106,14 @@ export const harpStats = {
     pachelbel: 1,
 }
 
-export async function calculateHarpStats(data: apiData, selectedProfile: number): Promise<statsList> {
+export async function calculateHarpStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
     if(!data.profileData) return {}
 
     var harp_quest = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].harp_quest;
 
     if(Object.keys(harp_quest).length == 0) return {};
 
-    var stats: statsList = {intelligence: 0};
+    var stats: statsCategory = {};
 
     for (let i = 0; i < Object.keys(harpStats).length; i++) {
         var name = Object.keys(harpStats)[i];
@@ -1122,12 +1122,11 @@ export async function calculateHarpStats(data: apiData, selectedProfile: number)
 
 
         if(typeof perfectCompletions != "number") continue;
-        if(stats.intelligence === undefined) continue; //yeah idk
 
-        stats.intelligence += (perfectCompletions >= 1 ? 1 : 0) * harpStats[name as keyof typeof harpStats];
+        stats[name] = {intelligence: (perfectCompletions >= 1 ? 1 : 0) * harpStats[name as keyof typeof harpStats]};
     }
 
-    return stats
+    return stats;
 }
 
 export const slayerStats = {
@@ -1621,16 +1620,18 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
 
 
 export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsCategories> {
+    // return {harp: await calculateHarpStats(data, selectedProfile)};
+
     return {
         base: {base: baseStats},
         skills: await calculateSkillStats(data, selectedProfile),
         hotm: await calculateHotmStats(data, selectedProfile),
         essence: await calculateEssenceStats(data, selectedProfile),
         peppers: await calculatePepperStats(data, selectedProfile),
+        harp: await calculateHarpStats(data, selectedProfile),
     } 
 
 
-    //return addstatsCategory([{},await calculateAccStats(data, selectedProfile)]);
 
     /*
     return addstatsCategory([
