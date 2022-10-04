@@ -59,7 +59,7 @@ export default function Stat({statName, value, sources}: props) {
                     ${
                         Object.keys(additionals).map(additionalName => {
                             return `- ${additionalName.capitalize()}: ${additionals[additionalName]}`
-                        })
+                        }).join("\n")
                     }
                     `
                     .split("\n").map(line => {
