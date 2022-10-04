@@ -7,9 +7,10 @@ interface props {
     statName: statName,
     value: number,
     sources: any,
+    onClick: Function,
 }
 
-export default function Stat({statName, value, sources}: props) {
+export default function Stat({statName, value, sources, onClick}: props) {
     const springConfig = { duration: 200 };
     const opacity = useSpring(0, springConfig);
 
@@ -69,7 +70,7 @@ export default function Stat({statName, value, sources}: props) {
                 </motion.div>;
             }
         }>
-            <div>{statIdToStatName[statName]} <b>{value.addCommas(0)}</b></div>
+            <div onClick={() => {onClick(statName)}} >{statIdToStatName[statName]} <b>{value.addCommas(0)}</b></div>
             {/* <Tippy arrow={true} placement="right" duration={1} content="hello"> */}
         </Tippy>
     )
