@@ -1187,12 +1187,12 @@ export const slayerStats = {
     ],
 }
 
-export async function calculateSlayerStats(data: apiData, selectedProfile: number): Promise<statsList> {
+export async function calculateSlayerStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
     if(!data.profileData) return {}
 
     var slayer_bosses = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].slayer_bosses;
 
-    var stats: statsList = mergeStatsCategory({},{});
+    var stats: statsCategory = {};
 
     for (let i = 0; i < Object.keys(slayerStats).length; i++) {
         var name = Object.keys(slayerStats)[i];
@@ -1208,7 +1208,10 @@ export async function calculateSlayerStats(data: apiData, selectedProfile: numbe
             for(let k=0;k<Object.keys(levelStats).length;k++) {
                 var statName: statName = Object.keys(levelStats)[k] as statName;
 
-                stats[statName as string] += levelStats[statName as keyof typeof levelStats];
+                if(!stats[name]) stats[name] = {};
+                if(!stats[name][statName]) stats[name][statName] = 0;
+
+                stats[name][statName as string] += levelStats[statName as keyof typeof levelStats];
             }
         }
     }
@@ -1620,7 +1623,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
 
 
 export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsCategories> {
-    // return {harp: await calculateHarpStats(data, selectedProfile)};
+    // return {slayer: await calculateSlayerStats(data, selectedProfile)};
 
     return {
         base: {base: baseStats},
@@ -1629,6 +1632,7 @@ export async function calculateStats(data: apiData, selectedProfile: number): Pr
         essence: await calculateEssenceStats(data, selectedProfile),
         peppers: await calculatePepperStats(data, selectedProfile),
         harp: await calculateHarpStats(data, selectedProfile),
+        slayer: await calculateSlayerStats(data, selectedProfile),
     } 
 
 
