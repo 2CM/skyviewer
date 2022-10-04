@@ -53,12 +53,12 @@ export default function Stat({statName, value, sources}: props) {
 
                 return <motion.div className={styles.tippyBox} tabIndex={-1} style={{opacity} as any} {...attrs}>
                     {`
-                    Base ${statIdToStatName[statName].capitalize()}: ${base}
+                    Base ${statIdToStatName[statName]}: ${base}
                     LINEBREAK
-                    Additional ${statIdToStatName[statName].capitalize()}: ${additionalsSum}
+                    Additional ${statIdToStatName[statName]}: ${additionalsSum}
                     ${
                         Object.keys(additionals).map(additionalName => {
-                            return `- ${additionalName.capitalize()}: ${additionals[additionalName]}`
+                            return `- ${additionalName}: ${additionals[additionalName]}`
                         }).join("\n")
                     }
                     `

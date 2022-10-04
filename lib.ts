@@ -849,7 +849,7 @@ export const baseStats: statsList = {
     mending: 100,
 }
 
-export function mergeStatsCategory(list1: statsList, list2: statsList): statsList {
+export function mergeStatsLists(list1: statsList, list2: statsList): statsList {
     var newList: statsList = {};
 
     var list1Copy = Object.assign({}, list1);
@@ -867,13 +867,13 @@ export function mergeStatsCategory(list1: statsList, list2: statsList): statsLis
     return newList;
 }
 
-export function addStatsCategory(arr: statsList[]): statsList {
+export function addStatsLists(arr: statsList[]): statsList {
     if(arr.length < 2) throw new Error("needs more than 2 members")
 
     var added: statsList = arr[0];
 
     for (let i = 1; i < arr.length; i++) {
-        added = mergeStatsCategory(added, arr[i]);
+        added = mergeStatsLists(added, arr[i]);
     }
 
     return added;
@@ -915,7 +915,7 @@ export function sumStatsCategories(categories: statsCategories): statsList {
     for(let i = 0; i < Object.keys(listsMerged).length; i++) {
         var name = Object.keys(listsMerged)[i];
 
-        stats = mergeStatsCategory(stats, listsMerged[name]);
+        stats = mergeStatsLists(stats, listsMerged[name]);
     }
 
     return stats;
@@ -1530,20 +1530,120 @@ export const tuningValues: statsList = {
 }
 
 
-//gonna add maxwell stuff in here in the next commit
-export async function calculateAccStats(data: apiData, selectedProfile: number): Promise<statsList> {
-    if(!data.profileData) return {};
+// export async function calculateAccStats(data: apiData, selectedProfile: number): Promise<statsList> {
+//     if(!data.profileData) return {};
+
+//     var talisman_bag_raw = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].talisman_bag;
+//     var accessory_bag_storage = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].accessory_bag_storage;
+
+//     if(!talisman_bag_raw) return {health: 1};
+
+
+//     var stats = {};
+
+//     var taliBag = await parseContents(talisman_bag_raw) as IObjectKeys;
+//     if(taliBag.i === undefined) return {health: 2};
+
+//     var taliContents: IObjectKeys[] = taliBag.i;
+//     taliContents = taliContents.filter(value => Object.keys(value).length !== 0);
+
+//     var mp = 0;
+
+//     for (let i = 0; i < taliContents.length; i++) {
+//         var tali = taliContents[i];
+//         var itemAttributes = tali.tag.ExtraAttributes;
+//         var itemId = itemAttributes.id;
+
+//         var itemInfo = await itemIdToItem(itemId);
+//         if(itemInfo === undefined) {
+//             console.warn(`cant find item ${itemId}`);
+//             continue;
+//         }
+
+//         var itemStatsList: statsList = {};
+
+//         var itemStats = itemInfo.stats;
+//         itemStatsList = itemStatsToStatsList(itemStats || {});
+
+//         var itemEnrichment = tali.tag.ExtraAttributes.talisman_enrichment;
+
+//         if(itemEnrichment !== undefined) {
+//             var itemEnrichmentStats: statsList = {};
+
+//             itemEnrichmentStats[itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
+
+//             itemStatsList = mergeStatsLists(itemStatsList, itemEnrichmentStats)
+//         }
+
+//         stats = mergeStatsLists(stats, itemStatsList);
+
+        
+//         var rarityIndex = Object.keys(mpTable).findIndex(name => {return itemInfo?.tier == name});
+//         if(rarityIndex == -1) rarityIndex = 0;
+
+//         // !!! i dont have any recombed accs so i cant test this one !!!
+//         var rarityUpgrades = itemAttributes.rarity_upgrades;
+//         var rarity = rarityIndex + (rarityUpgrades === undefined ? 0 : rarityUpgrades == 1 ? 1 : 0);
+
+
+//         mp += mpTable[Object.keys(mpTable)[rarity] as keyof typeof mpTable];
+//     }
+
+//     if(accessory_bag_storage.selected_power === undefined) {
+//         console.warn("no selected power");
+//         return stats;
+//     }
+
+//     var maxwellStats: statsList = {};
+
+//     var statsMultiplier = 29.97 * Math.pow((Math.log(0.0019 * mp + 1)), 1.2);
+
+//     if(Object.keys(accPowers).findIndex(key => {return key == accessory_bag_storage.selected_power}) == -1) {
+//         console.error("couldnt find selected power");
+//         return stats;
+//     }
+
+//     var selectedPowerStats = accPowers[accessory_bag_storage.selected_power as keyof typeof accPowers];
+
+//     if(selectedPowerStats.extra) {
+//         maxwellStats = mergeStatsLists(maxwellStats, selectedPowerStats.extra);
+//     }
+
+//     maxwellStats = mergeStatsLists(maxwellStats, multiplyStatsList(selectedPowerStats.per, statsMultiplier));
+
+//     console.log(`mp: ${mp}, multiplier: ${statsMultiplier}`);
+
+//     return addStatsLists([
+//         stats,
+//         maxwellStats,
+//         multiplyStatsList((accessory_bag_storage.tuning.slot_0 ? accessory_bag_storage.tuning.slot_0 : {}) as statsList, tuningValues)
+//     ]);
+// }
+
+export interface accStatsInterface {
+    taliStats: statsCategory,
+    enrichments: statsCategory,
+    magicPower: statsCategory,
+    tuning: statsCategory
+}
+
+export async function calculateAccStats(data: apiData, selectedProfile: number): Promise<accStatsInterface | undefined> {
+    if(!data.profileData) return;
 
     var talisman_bag_raw = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].talisman_bag;
     var accessory_bag_storage = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].accessory_bag_storage;
 
-    if(!talisman_bag_raw) return {health: 1};
+    if(!talisman_bag_raw) return;
 
-
-    var stats = {};
+    var stats: accStatsInterface = {
+        taliStats: {},
+        enrichments: {},
+        magicPower: {},
+        tuning: {},
+    };
 
     var taliBag = await parseContents(talisman_bag_raw) as IObjectKeys;
-    if(taliBag.i === undefined) return {health: 2};
+    if(taliBag.i === undefined) return;
 
     var taliContents: IObjectKeys[] = taliBag.i;
     taliContents = taliContents.filter(value => Object.keys(value).length !== 0);
@@ -1561,23 +1661,14 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
             continue;
         }
 
-        var itemStatsList: statsList = {};
-
-        var itemStats = itemInfo.stats;
-        itemStatsList = itemStatsToStatsList(itemStats || {});
+        stats.taliStats[itemInfo.name] = itemStatsToStatsList(itemInfo.stats || {});
 
         var itemEnrichment = tali.tag.ExtraAttributes.talisman_enrichment;
 
         if(itemEnrichment !== undefined) {
-            var itemEnrichmentStats: statsList = {};
-
-            itemEnrichmentStats[itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
-
-            itemStatsList = mergeStatsCategory(itemStatsList, itemEnrichmentStats)
+            stats.enrichments[itemInfo.name] = {};
+            stats.enrichments[itemInfo.name][itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
         }
-
-        stats = mergeStatsCategory(stats, itemStatsList);
-
         
         var rarityIndex = Object.keys(mpTable).findIndex(name => {return itemInfo?.tier == name});
         if(rarityIndex == -1) rarityIndex = 0;
@@ -1595,35 +1686,30 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
         return stats;
     }
 
-    var maxwellStats: statsList = {};
-
     var statsMultiplier = 29.97 * Math.pow((Math.log(0.0019 * mp + 1)), 1.2);
 
     if(Object.keys(accPowers).findIndex(key => {return key == accessory_bag_storage.selected_power}) == -1) {
         console.error("couldnt find selected power");
         return stats;
     }
-
+    
     var selectedPowerStats = accPowers[accessory_bag_storage.selected_power as keyof typeof accPowers];
 
+    stats.magicPower.magicPower = multiplyStatsList(selectedPowerStats.per, statsMultiplier);
     if(selectedPowerStats.extra) {
-        maxwellStats = mergeStatsCategory(maxwellStats, selectedPowerStats.extra);
+        stats.magicPower.magicPower = mergeStatsLists(stats.magicPower.magicPower, selectedPowerStats.extra || {});
     }
 
-    maxwellStats = mergeStatsCategory(maxwellStats, multiplyStatsList(selectedPowerStats.per, statsMultiplier));
+    stats.tuning.tuning = multiplyStatsList((accessory_bag_storage.tuning.slot_0 ? accessory_bag_storage.tuning.slot_0 : {}) as statsList, tuningValues)
 
     console.log(`mp: ${mp}, multiplier: ${statsMultiplier}`);
 
-    return addStatsCategory([
-        stats,
-        maxwellStats,
-        multiplyStatsList((accessory_bag_storage.tuning.slot_0 ? accessory_bag_storage.tuning.slot_0 : {}) as statsList, tuningValues)
-    ]);
+    return stats;
 }
 
 
 export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsCategories> {
-    // return {slayer: await calculateSlayerStats(data, selectedProfile)};
+    // return {...await calculateAccStats(data, selectedProfile)};
 
     return {
         base: {base: baseStats},
@@ -1633,12 +1719,13 @@ export async function calculateStats(data: apiData, selectedProfile: number): Pr
         peppers: await calculatePepperStats(data, selectedProfile),
         harp: await calculateHarpStats(data, selectedProfile),
         slayer: await calculateSlayerStats(data, selectedProfile),
+        ...await calculateAccStats(data, selectedProfile),
     } 
 
 
 
     /*
-    return addstatsCategory([
+    return addStatsLists([
         baseStats,
         await calculateSkillStats(data, selectedProfile),
         await calculateFairySoulStats(data, selectedProfile),
