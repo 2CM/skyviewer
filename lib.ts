@@ -227,7 +227,11 @@ export async function parseContents(contents: contents) {
     //console.log(JSON.stringify(parsed));
 }
 
-export function sourcesToElement(sources: any) {
+export function sourcesToElement(sources: any, statName: statName) {
+    if(Object.keys(sources).length == 0) {
+        return React.createElement("h2", {}, `This profile has no ${statIdToStatName[statName]} :(`)
+    }
+
     var children: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
 
     for(let i in Object.keys(sources)) {
@@ -995,6 +999,12 @@ export function getStatSources(categories: statsCategories) {
                 sources[statName][categoryName][listName] = stat;
             }
         }
+    }
+
+    for(let i in Object.keys(statIdToStatName)) {
+        var statName = Object.keys(statIdToStatName)[i];
+
+        if(!Object.hasOwn(sources, statName)) sources[statName] = {};
     }
 
     return sources;

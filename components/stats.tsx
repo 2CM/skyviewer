@@ -24,7 +24,7 @@ export default function Stats({statValues}: props) {
 
     return (
         <>
-            <StatsPopUp statData={sources[selectedStat as keyof typeof statValues]} visible={selectedStat !== undefined} onClose={() => {
+            <StatsPopUp statName={selectedStat || "health"} statData={sources[selectedStat as keyof typeof statValues]} visible={selectedStat !== undefined} onClose={() => {
                 console.log("closing")
 
                 setSelectedStat(undefined);

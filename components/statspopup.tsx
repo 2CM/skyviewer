@@ -1,13 +1,14 @@
 import { useEffect } from "react"
-import { sourcesToElement } from "../lib";
+import { sourcesToElement, statName } from "../lib";
 
 interface props {
     onClose: Function,
     visible: boolean,
     statData: any,
+    statName: statName,
 }
 
-export default function StatsPopUp({onClose, visible, statData}: props) {
+export default function StatsPopUp({onClose, visible, statData, statName}: props) {
     var close = () => onClose();
 
     var keyupFunction = (e: KeyboardEvent) => {if(e.key == "Escape") close()};
@@ -38,12 +39,12 @@ export default function StatsPopUp({onClose, visible, statData}: props) {
                             background: "black", opacity: 0.4,
                             width: "100vw",
                             height: "100vh" 
-                        }}/>
+                        }} onClick={close}/>
                         <div style={{
                             display: "flex",
                             position: "absolute"
                         }}>
-                            {sourcesToElement(statData)}
+                            {sourcesToElement(statData, statName)}
                         </div>
                         <div style={{
                             position: "fixed",
