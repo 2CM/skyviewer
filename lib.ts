@@ -212,6 +212,7 @@ export function itemStatsToStatsList(itemStats: itemStats): statsList {
 // *** MISC ***
 
 export var mainFormatter = new Intl.NumberFormat("en-US", {maximumFractionDigits: 1});
+export var statFormatter = new Intl.NumberFormat("en-US", {maximumFractionDigits: 1, signDisplay: "always"});
 
 export function removeStringColors(string: string): string {
     return string.replaceAll(/§[0123456789abcdefklmnor]/g, "");
@@ -255,20 +256,20 @@ export function sourcesToElement(sources: any, statName: statName) {
             categorySum += source;
 
             categoryChildren.push(
-                React.createElement("li", {}, `${removeStringColors(sourceName)}: ${Math.sign(source) == -1 ? "" : "+"}${mainFormatter.format(source)}`)
+                React.createElement("li", {}, `${removeStringColors(sourceName)}: ${statFormatter.format(source)}`)
             );
         }
 
         if(Object.keys(category).length == 1 && lastSourceName == categoryName) {
             children.push(
-                React.createElement("li", {}, `${removeStringColors(lastSourceName)}: ${Math.sign(lastSource) == -1 ? "" : "+"}${mainFormatter.format(lastSource)}`)
+                React.createElement("li", {}, `${removeStringColors(lastSourceName)}: ${statFormatter.format(lastSource)}`)
             )
 
             continue;
         }
 
         children.push(
-            React.createElement("li", {}, `${categoryName}: ${Math.sign(categorySum) == -1 ? "" : "+"}${mainFormatter.format(categorySum)}`),
+            React.createElement("li", {}, `${categoryName}: ${statFormatter.format(categorySum)}`),
             React.createElement("ul", {}, categoryChildren),
         )
     }

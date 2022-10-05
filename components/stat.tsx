@@ -1,4 +1,4 @@
-import { mainFormatter, statIdToStatName, statName } from "../lib";
+import { mainFormatter, statFormatter, statIdToStatName, statName } from "../lib";
 import Tippy from "@tippyjs/react/headless"
 import styles from "../styles/stat.module.css";
 import { motion, useSpring } from "framer-motion";
@@ -59,7 +59,7 @@ export default function Stat({statName, value, sources, onClick}: props) {
                     Additional ${statIdToStatName[statName]}: ${mainFormatter.format(additionalsSum)}
                     ${
                         Object.keys(additionals).map(additionalName => {
-                            return `- ${additionalName}: ${mainFormatter.format(additionals[additionalName])}`
+                            return `- ${additionalName}: ${statFormatter.format(additionals[additionalName])}`
                         }).join("\n")
                     }
                     `
