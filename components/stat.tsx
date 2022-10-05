@@ -1,4 +1,4 @@
-import { statIdToStatName, statName } from "../lib";
+import { mainFormatter, statIdToStatName, statName } from "../lib";
 import Tippy from "@tippyjs/react/headless"
 import styles from "../styles/stat.module.css";
 import { motion, useSpring } from "framer-motion";
@@ -56,10 +56,10 @@ export default function Stat({statName, value, sources, onClick}: props) {
                     {`
                     Base ${statIdToStatName[statName]}: ${base}
                     LINEBREAK
-                    Additional ${statIdToStatName[statName]}: ${additionalsSum}
+                    Additional ${statIdToStatName[statName]}: ${mainFormatter.format(additionalsSum)}
                     ${
                         Object.keys(additionals).map(additionalName => {
-                            return `- ${additionalName}: ${additionals[additionalName]}`
+                            return `- ${additionalName}: ${mainFormatter.format(additionals[additionalName])}`
                         }).join("\n")
                     }
                     `
@@ -70,7 +70,7 @@ export default function Stat({statName, value, sources, onClick}: props) {
                 </motion.div>;
             }
         }>
-            <div onClick={() => {onClick(statName)}} >{statIdToStatName[statName]} <b>{value.addCommas(0)}</b></div>
+            <div onClick={() => {onClick(statName)}} >{statIdToStatName[statName]} <b>{mainFormatter.format(value)}</b></div>
             {/* <Tippy arrow={true} placement="right" duration={1} content="hello"> */}
         </Tippy>
     )

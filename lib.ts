@@ -63,7 +63,7 @@ Number.prototype.compact = function() {
     return formatter.format(Number(this));
 }
 
-// *** ITEMS MANAGER ***
+// *** ITEMS ***
 
 export var items: item[] = [];
 export var itemsIndex = new Map<string, number>();
@@ -211,6 +211,12 @@ export function itemStatsToStatsList(itemStats: itemStats): statsList {
 
 // *** MISC ***
 
+export var mainFormatter = new Intl.NumberFormat("en-US", {maximumFractionDigits: 1});
+
+export function removeStringColors(string: string): string {
+    return string.replaceAll(/§[0123456789abcdefklmnor]/g, "");
+}
+
 export async function parseContents(contents: contents) {
     var parsed = await parseNbt(Buffer.from(contents.data, "base64"));
 
@@ -231,31 +237,37 @@ export function sourcesToElement(sources: any) {
         var categoryChildren: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
 
         var categorySum = 0;
+        
+        var lastSourceName: string = "inital value :)";
+        var lastSource: number = -1;
 
         for(let j in Object.keys(category)) {
             var sourceName = Object.keys(category)[j];
             var source: number = category[sourceName];
 
+            lastSourceName = sourceName;
+            lastSource = source;
+
             categorySum += source;
 
             categoryChildren.push(
-                React.createElement("li", {}, `${sourceName}: ${Math.sign(source) == -1 ? "" : "+"}${Math.floor(source)}`)
+                React.createElement("li", {}, `${removeStringColors(sourceName)}: ${Math.sign(source) == -1 ? "" : "+"}${mainFormatter.format(source)}`)
             );
         }
 
+        if(Object.keys(category).length == 1 && lastSourceName == categoryName) {
+            children.push(
+                React.createElement("li", {}, `${removeStringColors(lastSourceName)}: ${Math.sign(lastSource) == -1 ? "" : "+"}${mainFormatter.format(lastSource)}`)
+            )
+
+            continue;
+        }
+
         children.push(
-            React.createElement("li", {}, `${categoryName}: ${Math.sign(categorySum) == -1 ? "" : "+"}${Math.floor(categorySum)}`),
+            React.createElement("li", {}, `${categoryName}: ${Math.sign(categorySum) == -1 ? "" : "+"}${mainFormatter.format(categorySum)}`),
             React.createElement("ul", {}, categoryChildren),
         )
     }
-
-    // var ele = React.createElement("ul", null, [
-    //     Object.keys(sources).map(categoryName => {
-    //         return React.createElement("ul", null, Object.keys(sources[categoryName]).map(listName => {
-    //             return React.createElement("li", null, categoryName)
-    //         }))
-    //     })
-    // ]);
 
     return React.createElement("ul", {}, children);
 }

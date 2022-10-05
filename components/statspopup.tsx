@@ -35,34 +35,14 @@ export default function StatsPopUp({onClose, visible, statData}: props) {
                     }}>
                         <div style={{
                             position: "absolute",
-                            background: "black", opacity: 0.2,
+                            background: "black", opacity: 0.4,
                             width: "100vw",
                             height: "100vh" 
                         }}/>
                         <div style={{
                             display: "flex",
+                            position: "absolute"
                         }}>
-                            {/* <ul>
-                                <li>base</li>
-                                <ul>
-                                    <li>base: +100</li>
-                                </ul>
-                                <li>skills</li>
-                                <ul>
-                                    <li>farming: +117</li>
-                                    <li>fishing: +59</li>
-                                </ul>
-                                <li>slayer</li>
-                                <ul>
-                                    <li>zombie: +26</li>
-                                    <li>wolf: +7</li>
-                                    <li>enderman: +5</li>
-                                </ul>
-                                <li>taliStats</li>
-                                <ul>
-                                    <li>Bat Artifact: +5</li>
-                                </ul>
-                            </ul> */}
                             {sourcesToElement(statData)}
                         </div>
                         <div style={{

@@ -1,4 +1,4 @@
-import { skillExpInfo, skillExpInfos} from "../lib";
+import { mainFormatter, skillExpInfo, skillExpInfos} from "../lib";
 import type { skillName } from "../lib";
 import Image from "next/image";
 import styles from "../styles/skillLevel.module.css";
@@ -31,19 +31,19 @@ function getExpDisplay(displayType: number, levelInfo: skillExpInfo, extrapolate
         break;
         case 0: //progress
             display = `${Math.round(levelInfo.progress).compact()} / ${Math.round(levelInfo.toLevelUp).compact()}`;
-            displayPrecise = `${Math.round(levelInfo.progress).addCommas(decimals)} / ${Math.round(levelInfo.toLevelUp).addCommas(decimals)}`;
+            displayPrecise = `${mainFormatter.format(Math.round(levelInfo.progress))} / ${mainFormatter.format(Math.round(levelInfo.toLevelUp))}`;
 
             percentage = levelInfo.level-Math.floor(levelInfo.level) || (isMaxLevel ? 1 : 0);
         break;
         case 1: //total
             display = skillExp.compact();
-            displayPrecise = skillExp.addCommas(decimals);
+            displayPrecise = mainFormatter.format(skillExp);
 
             percentage = 1;
         break;
         case 2: //extrapolated
             display = `${Math.round(extrapolatedLevelInfo.progress).compact()} / ${Math.round(extrapolatedLevelInfo.toLevelUp).compact()}`;
-            displayPrecise = `${Math.round(extrapolatedLevelInfo.progress).addCommas(decimals)} / ${Math.round(extrapolatedLevelInfo.toLevelUp).addCommas(decimals)}`;
+            displayPrecise = `${mainFormatter.format(Math.round(extrapolatedLevelInfo.progress))} / ${mainFormatter.format(Math.round(extrapolatedLevelInfo.toLevelUp))}`;
 
             percentage = extrapolatedLevelInfo.level-Math.floor(extrapolatedLevelInfo.level)
         break;
