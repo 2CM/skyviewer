@@ -13,8 +13,8 @@ export default function Stats({statValues}: props) {
 
     var [selectedStat, setSelectedStat] = useState<undefined | statName>(undefined);
     
-    //console.log(statValues)
-    //console.log(sources)
+    console.log(statValues)
+    console.log(sources)
 
     var statsArr: JSX.Element[] = Object.keys(statIdToStatName).map(key => {
         return <Stat onClick={setSelectedStat} sources={sources[key] || {}} statName={key as statName} value={summedList[key] || 0}/>

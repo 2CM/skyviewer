@@ -1,5 +1,6 @@
 import { readFileSync } from "fs";
 import nbt, { list } from "prismarine-nbt";
+import React from "react";
 import { promisify } from "util";
 import { apiData, dataContext, serverData } from "./pages/profile/[profileName]";
 
@@ -218,6 +219,45 @@ export async function parseContents(contents: contents) {
     return parsed;
 
     //console.log(JSON.stringify(parsed));
+}
+
+export function sourcesToElement(sources: any) {
+    var children: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
+
+    for(let i in Object.keys(sources)) {
+        var categoryName = Object.keys(sources)[i];
+        var category = sources[categoryName];
+
+        var categoryChildren: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
+
+        var categorySum = 0;
+
+        for(let j in Object.keys(category)) {
+            var sourceName = Object.keys(category)[j];
+            var source: number = category[sourceName];
+
+            categorySum += source;
+
+            categoryChildren.push(
+                React.createElement("li", {}, `${sourceName}: ${Math.sign(source) == -1 ? "" : "+"}${Math.floor(source)}`)
+            );
+        }
+
+        children.push(
+            React.createElement("li", {}, `${categoryName}: ${Math.sign(categorySum) == -1 ? "" : "+"}${Math.floor(categorySum)}`),
+            React.createElement("ul", {}, categoryChildren),
+        )
+    }
+
+    // var ele = React.createElement("ul", null, [
+    //     Object.keys(sources).map(categoryName => {
+    //         return React.createElement("ul", null, Object.keys(sources[categoryName]).map(listName => {
+    //             return React.createElement("li", null, categoryName)
+    //         }))
+    //     })
+    // ]);
+
+    return React.createElement("ul", {}, children);
 }
 
 
@@ -1528,97 +1568,6 @@ export const tuningValues: statsList = {
     attack_speed: 0.2,
     intelligence: 2,
 }
-
-
-// export async function calculateAccStats(data: apiData, selectedProfile: number): Promise<statsList> {
-//     if(!data.profileData) return {};
-
-//     var talisman_bag_raw = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].talisman_bag;
-//     var accessory_bag_storage = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].accessory_bag_storage;
-
-//     if(!talisman_bag_raw) return {health: 1};
-
-
-//     var stats = {};
-
-//     var taliBag = await parseContents(talisman_bag_raw) as IObjectKeys;
-//     if(taliBag.i === undefined) return {health: 2};
-
-//     var taliContents: IObjectKeys[] = taliBag.i;
-//     taliContents = taliContents.filter(value => Object.keys(value).length !== 0);
-
-//     var mp = 0;
-
-//     for (let i = 0; i < taliContents.length; i++) {
-//         var tali = taliContents[i];
-//         var itemAttributes = tali.tag.ExtraAttributes;
-//         var itemId = itemAttributes.id;
-
-//         var itemInfo = await itemIdToItem(itemId);
-//         if(itemInfo === undefined) {
-//             console.warn(`cant find item ${itemId}`);
-//             continue;
-//         }
-
-//         var itemStatsList: statsList = {};
-
-//         var itemStats = itemInfo.stats;
-//         itemStatsList = itemStatsToStatsList(itemStats || {});
-
-//         var itemEnrichment = tali.tag.ExtraAttributes.talisman_enrichment;
-
-//         if(itemEnrichment !== undefined) {
-//             var itemEnrichmentStats: statsList = {};
-
-//             itemEnrichmentStats[itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
-
-//             itemStatsList = mergeStatsLists(itemStatsList, itemEnrichmentStats)
-//         }
-
-//         stats = mergeStatsLists(stats, itemStatsList);
-
-        
-//         var rarityIndex = Object.keys(mpTable).findIndex(name => {return itemInfo?.tier == name});
-//         if(rarityIndex == -1) rarityIndex = 0;
-
-//         // !!! i dont have any recombed accs so i cant test this one !!!
-//         var rarityUpgrades = itemAttributes.rarity_upgrades;
-//         var rarity = rarityIndex + (rarityUpgrades === undefined ? 0 : rarityUpgrades == 1 ? 1 : 0);
-
-
-//         mp += mpTable[Object.keys(mpTable)[rarity] as keyof typeof mpTable];
-//     }
-
-//     if(accessory_bag_storage.selected_power === undefined) {
-//         console.warn("no selected power");
-//         return stats;
-//     }
-
-//     var maxwellStats: statsList = {};
-
-//     var statsMultiplier = 29.97 * Math.pow((Math.log(0.0019 * mp + 1)), 1.2);
-
-//     if(Object.keys(accPowers).findIndex(key => {return key == accessory_bag_storage.selected_power}) == -1) {
-//         console.error("couldnt find selected power");
-//         return stats;
-//     }
-
-//     var selectedPowerStats = accPowers[accessory_bag_storage.selected_power as keyof typeof accPowers];
-
-//     if(selectedPowerStats.extra) {
-//         maxwellStats = mergeStatsLists(maxwellStats, selectedPowerStats.extra);
-//     }
-
-//     maxwellStats = mergeStatsLists(maxwellStats, multiplyStatsList(selectedPowerStats.per, statsMultiplier));
-
-//     console.log(`mp: ${mp}, multiplier: ${statsMultiplier}`);
-
-//     return addStatsLists([
-//         stats,
-//         maxwellStats,
-//         multiplyStatsList((accessory_bag_storage.tuning.slot_0 ? accessory_bag_storage.tuning.slot_0 : {}) as statsList, tuningValues)
-//     ]);
-// }
 
 export interface accStatsInterface {
     taliStats: statsCategory,

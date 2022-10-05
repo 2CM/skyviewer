@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import { sourcesToElement } from "../lib";
 
 interface props {
     onClose: Function,
@@ -41,16 +42,28 @@ export default function StatsPopUp({onClose, visible, statData}: props) {
                         <div style={{
                             display: "flex",
                         }}>
-                            <p>
+                            {/* <ul>
+                                <li>base</li>
                                 <ul>
-                                    <li>yes</li>
-                                    <ul>
-                                        <li>no</li>
-                                    </ul>
-                                    <li>gamer</li>
+                                    <li>base: +100</li>
                                 </ul>
-                                {JSON.stringify(statData)}
-                            </p>
+                                <li>skills</li>
+                                <ul>
+                                    <li>farming: +117</li>
+                                    <li>fishing: +59</li>
+                                </ul>
+                                <li>slayer</li>
+                                <ul>
+                                    <li>zombie: +26</li>
+                                    <li>wolf: +7</li>
+                                    <li>enderman: +5</li>
+                                </ul>
+                                <li>taliStats</li>
+                                <ul>
+                                    <li>Bat Artifact: +5</li>
+                                </ul>
+                            </ul> */}
+                            {sourcesToElement(statData)}
                         </div>
                         <div style={{
                             position: "fixed",
