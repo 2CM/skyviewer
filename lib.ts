@@ -26,7 +26,9 @@ declare global {
     }
 }
 
-String.prototype.capitalize = function() {
+String.prototype.capitalize = function(split: boolean = true) {
+    if(split) return this.split(" ").map(str => str[0].toUpperCase() + str.slice(1).toLowerCase()).join(" ");
+
     return this[0].toUpperCase() + this.slice(1).toLowerCase();
 }
 
@@ -277,6 +279,26 @@ export function sourcesToElement(sources: any, statName: statName) {
     return React.createElement("ul", {}, children);
 }
 
+export const colorChar = "§";
+
+export const colorCodeToHex: IObjectKeys = {
+    "0": "#000000",
+    "1": "#0000AA",
+    "2": "#00AA00",
+    "3": "#00AAAA",
+    "4": "#AA0000",
+    "5": "#AA00AA",
+    "6": "#FFAA00",
+    "7": "#AAAAAA",
+    "8": "#555555",
+    "9": "#5555FF",
+    "a": "#55FF55",
+    "b": "#55FFFF",
+    "c": "#FF5555",
+    "d": "#FF55FF",
+    "e": "#FFFF55",
+    "f": "#FFFFFF",
+}
 
 // *** PROFILES ***
 
@@ -1011,8 +1033,82 @@ export function getStatSources(categories: statsCategories) {
     return sources;
 }
 
+export const statColors: IObjectKeys = {
+    health: "c",
+    defense: "a",
+    walk_speed: "f",
+    strength: "c",
+    intelligence: "b",
+    critical_chance: "9",
+    critical_damage: "9",
+    ability_damage: "c",
+    magic_find: "b",
+    pet_luck: "d",
+    true_defense: "f",
+    ferocity: "c",
+    mining_speed: "6",
+    mining_fortune: "6",
+    farming_fortune: "6",
+    foraging_fortune: "6",
+    pristine: "5",
+    fishing_speed: "b",
+    health_regen: "c",
+    vitality: "4",
+    sea_creature_chance: "3",
+    attack_speed: "e",
+    breaking_power: "2",
+    mending: "a",
+    combat_wisdom: "3",
+    mining_wisdom: "3",
+    farming_wisdom: "3",
+    foraging_wisdom: "3",
+    fishing_wisdom: "3",
+    enchanting_wisdom: "3",
+    alchemy_wisdom: "3",
+    carpentry_wisdom: "3",
+    runecrafting_wisdom: "3",
+    social_wisdom: "3",
+}
 
-var skillLevelStats = {
+export const statChars: IObjectKeys = {
+    health: "❤",
+    defense: "❈",
+    walk_speed: "✦",
+    strength: "❁",
+    intelligence: "✎",
+    critical_chance: "☣",
+    critical_damage: "☠",
+    ability_damage: "๑",
+    magic_find: "✯",
+    pet_luck: "♣",
+    true_defense: "❂",
+    ferocity: "⫽",
+    mining_speed: "⸕",
+    mining_fortune: "☘",
+    farming_fortune: "☘",
+    foraging_fortune: "☘",
+    pristine: "✧",
+    fishing_speed: "☂",
+    health_regen: "❣",
+    vitality: "♨",
+    sea_creature_chance: "α",
+    attack_speed: "⚔",
+    breaking_power: "?",
+    mending: "?",
+    combat_wisdom: "?",
+    mining_wisdom: "?",
+    farming_wisdom: "?",
+    foraging_wisdom: "?",
+    fishing_wisdom: "?",
+    enchanting_wisdom: "?",
+    alchemy_wisdom: "?",
+    carpentry_wisdom: "?",
+    runecrafting_wisdom: "?",
+    social_wisdom: "?",
+}
+
+
+export const skillLevelStats = {
     farming: function(level: number): statsList {
         return {
             health: 2*level+Math.max(level-14,0)+Math.max(level-19,0)+Math.max(level-25,0),

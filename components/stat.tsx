@@ -1,4 +1,4 @@
-import { mainFormatter, statFormatter, statIdToStatName, statName } from "../lib";
+import { colorCodeToHex, mainFormatter, statChars, statColors, statFormatter, statIdToStatName, statName } from "../lib";
 import Tippy from "@tippyjs/react/headless"
 import styles from "../styles/stat.module.css";
 import { motion, useSpring } from "framer-motion";
@@ -70,7 +70,7 @@ export default function Stat({statName, value, sources, onClick}: props) {
                 </motion.div>;
             }
         }>
-            <div onClick={() => {onClick(statName)}} >{statIdToStatName[statName]} <b>{mainFormatter.format(value)}</b></div>
+            <div onClick={() => {onClick(statName)}} style={{color: colorCodeToHex[statColors[statName || "health"] || "0"]}}><b>{statChars[statName] || "?"} {statIdToStatName[statName].capitalize()} <span style={{color: "white"}}>{mainFormatter.format(value)}</span></b></div>
             {/* <Tippy arrow={true} placement="right" duration={1} content="hello"> */}
         </Tippy>
     )

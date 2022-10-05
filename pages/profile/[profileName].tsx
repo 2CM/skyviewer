@@ -50,7 +50,7 @@ export default function profileViewer(props: serverData) {
 		var doAsyncStuff = async () => {
 			setData({
 				data: {
-					selectedProfile: 2
+					selectedProfile: 3
 				}
 			});
 		}
@@ -91,7 +91,7 @@ export async function getServerSideProps(): Promise<serverSideProps> {
 
 	if(!apiData.profileData) throw new Error("eeeeee")
 	
-	var selectedProfile = 2;
+	var selectedProfile = 3;
 
 	await initItems(apiData);
 
