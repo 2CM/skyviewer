@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+import { readFileSync, stat } from "fs";
 import nbt, { list } from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
@@ -25,7 +25,11 @@ declare global {
         compact(): string,
         addCommas(fixedLength?: number): string,
     }
+    // interface Object {
+    //     mapKeys(callbackfn: (value: any, index: number, array: any[]) => unknown): object
+    // }
 }
+
 
 String.prototype.capitalize = function(split: boolean = true) {
     if(split) return this.split(" ").map(str => str[0].toUpperCase() + str.slice(1).toLowerCase()).join(" ");
@@ -64,6 +68,19 @@ Number.prototype.compact = function() {
     });
 
     return formatter.format(Number(this));
+}
+
+function mapObjectKeys<Type extends object>(obj: Type, callbackfn: (value: string, index: number, array: any[]) => string): Type {
+    var newObj: Type | any = {};
+
+    for(let i = 0; i < Object.keys(obj).length; i++) {
+        var name = Object.keys(obj)[i]
+        var newName = callbackfn(name, i, Object.keys(obj))
+
+        newObj[newName] = obj[name as keyof typeof obj];
+    }
+
+    return newObj
 }
 
 // *** ITEMS ***
@@ -231,6 +248,18 @@ export async function parseContents(contents: contents) {
     //console.log(JSON.stringify(parsed));
 }
 
+export const rarityColors: IObjectKeys = {
+    COMMON: "f",
+    UNCOMMON: "a",
+    RARE: "9",
+    EPIC: "5",
+    LEGENDARY: "6",
+    MYTHIC: "d",
+    DIVINE: "b",
+    SPECIAL: "c",
+    VERY_SPECIAL: "c",
+}
+
 export function sourcesToElement(sources: any, statName: statName) {
     if(Object.keys(sources).length == 0) {
         return React.createElement("h2", {style: {textAlign: "center", fontSize: "20px"}}, `This player has no ${statIdToStatName[statName]} :(`)
@@ -259,20 +288,31 @@ export function sourcesToElement(sources: any, statName: statName) {
             categorySum += source;
 
             categoryChildren.push(
-                React.createElement("li", {className: statStyles.statValue}, `${removeStringColors(sourceName)}: ${statFormatter.format(source)}`)
+                React.createElement(
+                    "li",
+                    {
+                        className: statStyles.statValue,
+                        style: {
+                            color: sourceName.startsWith(colorChar) ? colorCodeToHex[sourceName[1]] : "unset"
+                        },
+                    },
+                    [
+                        `${sourceName.startsWith(colorChar) ? sourceName.slice(2) : sourceName}: `, React.createElement("span", {style: {color: "white"}}, statFormatter.format(source))
+                    ]
+                )
             );
         }
 
         if(Object.keys(category).length == 1 && lastSourceName == categoryName) {
             children.push(
-                React.createElement("li", {className: statStyles.statValue}, `${removeStringColors(lastSourceName)}: ${statFormatter.format(lastSource)}`)
+                React.createElement("li", {className: statStyles.statsCategory, style: {color: colorCodeToHex[statCategoryColors[categoryName]]}}, `${statCategoryNames[categoryName]}: ${statFormatter.format(categorySum)}`),
             )
 
             continue;
         }
 
         children.push(
-            React.createElement("li", {className: statStyles.statsCategory}, `${categoryName}: ${statFormatter.format(categorySum)}`),
+            React.createElement("li", {className: statStyles.statsCategory, style: {color: colorCodeToHex[statCategoryColors[categoryName]]}}, `${statCategoryNames[categoryName]}: ${statFormatter.format(categorySum)}`),
             React.createElement("ul", {className: statStyles.statValue}, categoryChildren),
         )
     }
@@ -856,40 +896,40 @@ export interface statsList extends IObjectKeys {
 }
 
 export const statIdToStatName = {
-    health: "health",
-    defense: "defense",
-    true_defense: "true defense",
-    strength: "strength",
-    walk_speed: "speed",
-    critical_chance: "crit chance",
-    critical_damage: "crit damage",
-    intelligence: "intelligence",
-    mining_speed: "mining speed",
+    health: "Health",
+    defense: "Defense",
+    true_defense: "True Defense",
+    strength: "Strength",
+    walk_speed: "Speed",
+    critical_chance: "Crit Chance",
+    critical_damage: "Crit Damage",
+    intelligence: "Intelligence",
+    mining_speed: "Mining Speed",
     sea_creature_chance: "SCC",
-    magic_find: "magic find",
-    pet_luck: "pet luck",
-    attack_speed: "attack speed",
-    ability_damage: "ability damage",
-    ferocity: "ferocity",
-    mining_fortune: "mining fortune",
-    farming_fortune: "farming fortune",
-    foraging_fortune: "foraging fortune",
+    magic_find: "Magic Find",
+    pet_luck: "Pet Luck",
+    attack_speed: "Attack Speed",
+    ability_damage: "Ability Damage",
+    ferocity: "Ferocity",
+    mining_fortune: "Mining Fortune",
+    farming_fortune: "Farming Fortune",
+    foraging_fortune: "Foraging Fortune",
     breaking_power: "breaking power",
-    pristine: "pristine",
-    combat_wisdom: "combat wisdom",
-    mining_wisdom: "mining wisdom",
-    farming_wisdom: "farming wisdom",
-    foraging_wisdom: "foraging wisdom",
-    fishing_wisdom: "fishing wisdom",
-    enchanting_wisdom: "enchanting wisdom",
-    alchemy_wisdom: "alchemy wisdom",
-    carpentry_wisdom: "carpentry wisdom",
-    runecrafting_wisdom: "runecrafting wisdom",
-    social_wisdom: "social wisdom",
-    fishing_speed: "fishing speed",
-    health_regen: "health regen",
-    vitality: "vitality",
-    mending: "mending",
+    pristine: "Pristine",
+    combat_wisdom: "Combat Wisdom",
+    mining_wisdom: "Mining Wisdom",
+    farming_wisdom: "Farming Wisdom",
+    foraging_wisdom: "Foraging Wisdom",
+    fishing_wisdom: "Fishing Wisdom",
+    enchanting_wisdom: "Enchanting Wisdom",
+    alchemy_wisdom: "Alchemy Wisdom",
+    carpentry_wisdom: "Carpentry Wisdom",
+    runecrafting_wisdom: "Runecrafting Wisdom",
+    social_wisdom: "Social Wisdom",
+    fishing_speed: "Fishing Speed",
+    health_regen: "Health Regen",
+    vitality: "Vitality",
+    mending: "Mending",
 }
 
 export const baseStats: statsList = {
@@ -1108,7 +1148,6 @@ export const statChars: IObjectKeys = {
     social_wisdom: "?",
 }
 
-
 export const skillLevelStats = {
     farming: function(level: number): statsList {
         return {
@@ -1266,6 +1305,38 @@ export const harpStats = {
     pachelbel: 1,
 }
 
+export const harpNames: IObjectKeys = {
+    hymn_joy: "Hymn to the Joy",
+    frere_jacques: "Frère Jacques",
+    amazing_grace: "Amazing Grace",
+    brahms: "Brahm's Lullaby",
+    happy_birthday: "Happy Birthday to You",
+    greensleeves: "Greensleeves",
+    jeopardy: "Geothermy?",
+    minuet: "Minuet",
+    joy_world: "Joy to the World",
+    pure_imagination: "Godly Imagination",
+    vie_en_rose: "La Vie en Rose",
+    fire_and_flames: "Through the Campfire",
+    pachelbel: "Pachelbel",
+}
+
+export const harpColors: IObjectKeys = {
+    hymn_joy: "a",
+    frere_jacques: "a",
+    amazing_grace: "a",
+    brahms: "c",
+    happy_birthday: "c",
+    greensleeves: "c",
+    jeopardy: "5",
+    minuet: "5",
+    joy_world: "5",
+    pure_imagination: "d",
+    vie_en_rose: "d",
+    fire_and_flames: "b",
+    pachelbel: "b",
+}
+
 export async function calculateHarpStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
     if(!data.profileData) return {}
 
@@ -1345,6 +1416,14 @@ export const slayerStats = {
         {true_defense: 2},
         {health: 7},
     ],
+}
+
+export const slayerColors: IObjectKeys = {
+    zombie: "2",
+    spider: "4",
+    wolf: "7",
+    enderman: "5",
+    blaze: "6",
 }
 
 export async function calculateSlayerStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
@@ -1730,7 +1809,14 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
             continue;
         }
 
-        stats.taliStats[itemInfo.name] = itemStatsToStatsList(itemInfo.stats || {});
+        var rarityIndex = Object.keys(mpTable).findIndex(name => {return itemInfo?.tier == name});
+        if(rarityIndex == -1) rarityIndex = 0;
+
+        // !!! i dont have any recombed accs so i cant test this one !!!
+        var rarityUpgrades = itemAttributes.rarity_upgrades;
+        var rarity = rarityIndex + (rarityUpgrades === undefined ? 0 : rarityUpgrades == 1 ? 1 : 0);
+
+        stats.taliStats[colorChar + Object.values(rarityColors)[rarity] + removeStringColors(itemInfo.name)] = itemStatsToStatsList(itemInfo.stats || {});
 
         var itemEnrichment = tali.tag.ExtraAttributes.talisman_enrichment;
 
@@ -1738,13 +1824,6 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
             stats.enrichments[itemInfo.name] = {};
             stats.enrichments[itemInfo.name][itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
         }
-        
-        var rarityIndex = Object.keys(mpTable).findIndex(name => {return itemInfo?.tier == name});
-        if(rarityIndex == -1) rarityIndex = 0;
-
-        // !!! i dont have any recombed accs so i cant test this one !!!
-        var rarityUpgrades = itemAttributes.rarity_upgrades;
-        var rarity = rarityIndex + (rarityUpgrades === undefined ? 0 : rarityUpgrades == 1 ? 1 : 0);
 
 
         mp += mpTable[Object.keys(mpTable)[rarity] as keyof typeof mpTable];
@@ -1776,20 +1855,53 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
     return stats;
 }
 
+export const statCategoryNames: IObjectKeys = {
+    base: "Base",
+    skills: "Skills",
+    hotm: "HoTM",
+    essence: "Essence Shop",
+    peppers: "Reaper Peppers",
+    harp: "Harp",
+    slayer: "Slayer",
+    taliStats: "Accessory Stats",
+    magicPower: "Magic Power",
+    tuning: "Tuning",
+    enrichments: "Enrichments",
+}
+
+export const statCategoryColors: IObjectKeys = {
+    base: "f",
+    skills: "6",
+    hotm: "5",
+    essence: "7",
+    peppers: "c",
+    harp: "d",
+    slayer: "2",
+    taliStats: "9",
+    magicPower: "b",
+    tuning: "e",
+    enrichments: "b",
+}
 
 export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsCategories> {
     // return {...await calculateAccStats(data, selectedProfile)};
 
     return {
         base: {base: baseStats},
-        skills: await calculateSkillStats(data, selectedProfile),
+        skills: mapObjectKeys(
+            await calculateSkillStats(data, selectedProfile), value => value.capitalize()
+        ),
         hotm: await calculateHotmStats(data, selectedProfile),
         essence: await calculateEssenceStats(data, selectedProfile),
         peppers: await calculatePepperStats(data, selectedProfile),
-        harp: await calculateHarpStats(data, selectedProfile),
-        slayer: await calculateSlayerStats(data, selectedProfile),
+        harp: mapObjectKeys(
+            await calculateHarpStats(data, selectedProfile), value => colorChar+harpColors[value]+harpNames[value]
+        ),
+        slayer: mapObjectKeys(
+            await calculateSlayerStats(data, selectedProfile), value => colorChar+slayerColors[value]+value.capitalize()
+        ),
         ...await calculateAccStats(data, selectedProfile),
-    } 
+    }
 
 
 

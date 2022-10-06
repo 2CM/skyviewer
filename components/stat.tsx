@@ -1,4 +1,4 @@
-import { colorCodeToHex, mainFormatter, statChars, statColors, statFormatter, statIdToStatName, statName } from "../lib";
+import { colorCodeToHex, mainFormatter, statChars, statColors, statFormatter, statIdToStatName, statName, statCategoryColors, statCategoryNames } from "../lib";
 import Tippy from "@tippyjs/react/headless"
 import styles from "../styles/stat.module.css";
 import { motion, useSpring } from "framer-motion";
@@ -52,16 +52,18 @@ export default function Stat({statName, value, sources, onClick}: props) {
                     additionalsSum += additionals[name];
                 }
 
-                return <motion.div className={styles.tippyBox} tabIndex={-1} style={{opacity} as any} {...attrs}>
+                return <motion.div className={styles.tippyBox} tabIndex={-1} style={{opacity} as any} {...attrs}> {/* NEED TO MAKE THIS INTO HTML */}
                     {`
                     Base ${statIdToStatName[statName]}: ${base}
                     LINEBREAK
                     Additional ${statIdToStatName[statName]}: ${mainFormatter.format(additionalsSum)}
                     ${
                         Object.keys(additionals).map(additionalName => {
-                            return `- ${additionalName}: ${statFormatter.format(additionals[additionalName])}`
+                            return `- ${statCategoryNames[additionalName]}: ${statFormatter.format(additionals[additionalName])}`
                         }).join("\n")
                     }
+                    LINEBREAK
+                    Click for more info!
                     `
                     .split("\n").map(line => {
                         if(line.includes("LINEBREAK")) return <br/>
@@ -76,7 +78,7 @@ export default function Stat({statName, value, sources, onClick}: props) {
                 className={styles.stat}
             >
                 <b>
-                    {statChars[statName] || "?"} <span className={styles.statName}>{statIdToStatName[statName].capitalize()}</span> <span style={{color: "white"}}>{mainFormatter.format(value)}</span>
+                    {statChars[statName] || "?"} <span className={styles.statName}>{statIdToStatName[statName]}</span> <span style={{color: "white"}}>{mainFormatter.format(value)}</span>
                 </b>
             </div>
         </Tippy>
