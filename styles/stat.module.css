@@ -5,3 +5,11 @@
     border-radius: 5px;
     background: grey;
 }
+
+.stat:hover .statName {
+    text-decoration: underline;
+}
+
+.stat {
+    cursor: pointer;
+}

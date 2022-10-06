@@ -70,8 +70,15 @@ export default function Stat({statName, value, sources, onClick}: props) {
                 </motion.div>;
             }
         }>
-            <div onClick={() => {onClick(statName)}} style={{color: colorCodeToHex[statColors[statName || "health"] || "0"]}}><b>{statChars[statName] || "?"} {statIdToStatName[statName].capitalize()} <span style={{color: "white"}}>{mainFormatter.format(value)}</span></b></div>
-            {/* <Tippy arrow={true} placement="right" duration={1} content="hello"> */}
+            <div
+                onClick={() => {onClick(statName)}}
+                style={{color: colorCodeToHex[statColors[statName || "health"] || "0"]}}
+                className={styles.stat}
+            >
+                    <b>
+                        {statChars[statName] || "?"} <span className={styles.statName}>{statIdToStatName[statName].capitalize()}</span> <span style={{color: "white"}}>{mainFormatter.format(value)}</span>
+                    </b>
+            </div>
         </Tippy>
     )
 }
