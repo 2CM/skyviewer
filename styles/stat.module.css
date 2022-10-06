@@ -3,7 +3,7 @@
     padding: 5px;
     height: fit-content;
     border-radius: 5px;
-    background: grey;
+    background: var(--darkColor);
 }
 
 .stat:hover .statName {
@@ -12,4 +12,86 @@
 
 .stat {
     cursor: pointer;
+}
+
+.stats {
+    width: 800px;
+    height: 200px;
+    border: 1px solid red;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}
+
+.popup {
+    z-index: 100;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+}
+
+.popupBoxContainer {
+    display: flex;
+    position: fixed;
+}
+
+.nameContainer {
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.0));
+    width: 100%;
+    line-height: 300%;
+    border-radius: 10px 10px 0 0;
+    padding-bottom: 20px;
+}
+
+.popupName {
+    text-align: center;
+    margin: 0;
+}
+
+.popupClose {
+    background-color: var(--darkColor);
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    user-select: none;
+    cursor: pointer;
+}
+
+.popupBackground {
+    position: fixed;
+    background: black;
+    opacity: 0.4;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden; 
+}
+
+.popupContainer {
+    background: linear-gradient(-45deg, var(--discordDark), var(--discordLighter));
+    border-radius: 10px;
+    outline-offset: 5px;
+    height: 70vh;
+    width: 70vw;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.popupContent {
+    overflow: auto;
+    flex-grow: 1;
 }

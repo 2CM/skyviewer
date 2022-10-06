@@ -232,7 +232,7 @@ export async function parseContents(contents: contents) {
 
 export function sourcesToElement(sources: any, statName: statName) {
     if(Object.keys(sources).length == 0) {
-        return React.createElement("h2", {}, `This profile has no ${statIdToStatName[statName]} :(`)
+        return React.createElement("h2", {style: {textAlign: "center", fontSize: "20px"}}, `This player has no ${statIdToStatName[statName]} :(`)
     }
 
     var children: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];

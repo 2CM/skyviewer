@@ -2,6 +2,7 @@ import { useState } from "react";
 import { statIdToStatName, statName, statsList, statsCategories} from "../lib";
 import StatsPopUp from "./statspopup";
 import Stat from "./stat";
+import styles from "../styles/stat.module.css";
 
 interface props {
     statValues: statsCategories,
@@ -19,12 +20,18 @@ export default function Stats({statValues, summedList, sources}: props) {
 
     return (
         <>
-            <StatsPopUp statName={selectedStat || "health"} statData={sources[selectedStat as keyof typeof statValues]} visible={selectedStat !== undefined} onClose={() => {
-                console.log("closing")
+            <StatsPopUp
+                statName={selectedStat || "health"}
+                statData={sources[selectedStat as keyof typeof statValues]}
+                visible={selectedStat !== undefined}
+                summed={summedList[selectedStat || "health"] || 0}
+                onClose={() => {
+                    console.log("closing")
 
-                setSelectedStat(undefined);
-            }}/>
-            <div style={{width: "200px", borderRight: "1px solid red"}}>
+                    setSelectedStat(undefined);
+                }}
+            />
+            <div className={styles.stats}>
                 {statsArr}
             </div>
         </>

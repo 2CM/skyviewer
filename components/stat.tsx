@@ -75,9 +75,9 @@ export default function Stat({statName, value, sources, onClick}: props) {
                 style={{color: colorCodeToHex[statColors[statName || "health"] || "0"]}}
                 className={styles.stat}
             >
-                    <b>
-                        {statChars[statName] || "?"} <span className={styles.statName}>{statIdToStatName[statName].capitalize()}</span> <span style={{color: "white"}}>{mainFormatter.format(value)}</span>
-                    </b>
+                <b>
+                    {statChars[statName] || "?"} <span className={styles.statName}>{statIdToStatName[statName].capitalize()}</span> <span style={{color: "white"}}>{mainFormatter.format(value)}</span>
+                </b>
             </div>
         </Tippy>
     )
