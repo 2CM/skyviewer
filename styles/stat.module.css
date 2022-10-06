@@ -95,3 +95,11 @@
     overflow: auto;
     flex-grow: 1;
 }
+
+.statsCategory {
+    list-style-type: "";
+}
+
+.statValue {
+    list-style-type: "- ";
+}

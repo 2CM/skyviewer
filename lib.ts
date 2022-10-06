@@ -3,6 +3,7 @@ import nbt, { list } from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData, dataContext, serverData } from "./pages/profile/[profileName]";
+import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse)
 
@@ -258,21 +259,21 @@ export function sourcesToElement(sources: any, statName: statName) {
             categorySum += source;
 
             categoryChildren.push(
-                React.createElement("li", {}, `${removeStringColors(sourceName)}: ${statFormatter.format(source)}`)
+                React.createElement("li", {className: statStyles.statValue}, `${removeStringColors(sourceName)}: ${statFormatter.format(source)}`)
             );
         }
 
         if(Object.keys(category).length == 1 && lastSourceName == categoryName) {
             children.push(
-                React.createElement("li", {}, `${removeStringColors(lastSourceName)}: ${statFormatter.format(lastSource)}`)
+                React.createElement("li", {className: statStyles.statValue}, `${removeStringColors(lastSourceName)}: ${statFormatter.format(lastSource)}`)
             )
 
             continue;
         }
 
         children.push(
-            React.createElement("li", {}, `${categoryName}: ${statFormatter.format(categorySum)}`),
-            React.createElement("ul", {}, categoryChildren),
+            React.createElement("li", {className: statStyles.statsCategory}, `${categoryName}: ${statFormatter.format(categorySum)}`),
+            React.createElement("ul", {className: statStyles.statValue}, categoryChildren),
         )
     }
 
