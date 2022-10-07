@@ -260,6 +260,8 @@ export const rarityColors: IObjectKeys = {
     VERY_SPECIAL: "c",
 }
 
+export const recombEmoji = "https://cdn.discordapp.com/emojis/827593781879898142"; //from skyhelper discord bot
+
 export function sourcesToElement(sources: any, statName: statName) {
     if(Object.keys(sources).length == 0) {
         return React.createElement("h2", {style: {textAlign: "center", fontSize: "20px"}}, `This player has no ${statIdToStatName[statName]} :(`)
@@ -282,7 +284,22 @@ export function sourcesToElement(sources: any, statName: statName) {
             var sourceName = Object.keys(category)[j];
             var source: number = category[sourceName];
 
-            lastSourceName = sourceName;
+            var formattedName = sourceName + "";
+
+            var color: string = "unset";
+            var hasRecomb: boolean = false;
+
+            if(formattedName.startsWith("RECOMB")) {
+                hasRecomb = true;
+                formattedName = formattedName.slice("RECOMB".length);
+            }
+
+            if(formattedName.startsWith(colorChar)) {
+                color = colorCodeToHex[formattedName[1]];
+                formattedName = formattedName.slice(2);
+            }
+
+            lastSourceName = formattedName;
             lastSource = source;
 
             categorySum += source;
@@ -293,11 +310,13 @@ export function sourcesToElement(sources: any, statName: statName) {
                     {
                         className: statStyles.statValue,
                         style: {
-                            color: sourceName.startsWith(colorChar) ? colorCodeToHex[sourceName[1]] : "unset"
+                            color: color
                         },
                     },
                     [
-                        `${sourceName.startsWith(colorChar) ? sourceName.slice(2) : sourceName}: `, React.createElement("span", {style: {color: "white"}}, statFormatter.format(source))
+                        hasRecomb ? React.createElement("img", {src: recombEmoji, style: {height: "1em", width: "auto"}}, null) : null,
+                        ` ${formattedName.startsWith(colorChar) ? formattedName.slice(2) : formattedName}: `,
+                        React.createElement("span", {style: {color: "white"}}, statFormatter.format(source))
                     ]
                 )
             );
@@ -1830,15 +1849,15 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
         var rarityUpgrades = itemAttributes.rarity_upgrades;
         var rarity = rarityIndex + (rarityUpgrades === undefined ? 0 : rarityUpgrades == 1 ? 1 : 0);
 
-        var coloredName = colorChar + Object.values(rarityColors)[rarity] + removeStringColors(itemInfo.name);
+        var formattedName = (rarityUpgrades === undefined ? "" : rarityUpgrades == 1 ? "RECOMB" : "") + colorChar + Object.values(rarityColors)[rarity] + removeStringColors(itemInfo.name);
 
-        stats.taliStats[coloredName] = itemStatsToStatsList(itemInfo.stats || {});
+        stats.taliStats[formattedName] = itemStatsToStatsList(itemInfo.stats || {});
 
         var itemEnrichment = tali.tag.ExtraAttributes.talisman_enrichment;
 
         if(itemEnrichment !== undefined) {
-            stats.enrichments[coloredName] = {};
-            stats.enrichments[coloredName][itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
+            stats.enrichments[formattedName] = {};
+            stats.enrichments[formattedName][itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
         }
 
 
