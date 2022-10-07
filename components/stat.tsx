@@ -52,7 +52,7 @@ export default function Stat({statName, value, sources, onClick}: props) {
                     additionalsSum += additionals[name];
                 }
 
-                return <motion.div className={styles.tippyBox} tabIndex={-1} style={{opacity} as any} {...attrs}> {/* NEED TO MAKE THIS INTO HTML */}
+                return <motion.div className={styles.tippyBox} tabIndex={-1} style={{opacity} as any} {...attrs}>
                     {`
                     Base ${statIdToStatName[statName]}: ${base}
                     LINEBREAK
@@ -62,13 +62,13 @@ export default function Stat({statName, value, sources, onClick}: props) {
                             return `- ${statCategoryNames[additionalName]}: ${statFormatter.format(additionals[additionalName])}`
                         }).join("\n")
                     }
-                    LINEBREAK
-                    Click for more info!
                     `
                     .split("\n").map(line => {
                         if(line.includes("LINEBREAK")) return <br/>
                         return <div>{line}</div>
                     })}
+                    <br/>
+                    <span style={{textDecoration: "underline"}}>Click for more info!</span>
                 </motion.div>;
             }
         }>
