@@ -40,7 +40,7 @@ export default function StatsPopUp({onClose, visible, statData, statName, summed
                         <div className={styles.popupBoxContainer}>
                             <main className={styles.popupContainer} style={{outlineColor: colorCodeToHex[statColors[statName]]}}>
                                 <div className={styles.popupNameContainer}>
-                                    <h2 className={styles.popupName} style={{color: colorCodeToHex[statColors[statName]]}}>{statChars[statName]} {statIdToStatName[statName].capitalize()} <span style={{color: "white"}}>{statFormatter.format(summed)}</span></h2>
+                                    <h2 className={styles.popupName} style={{color: colorCodeToHex[statColors[statName]]}}>{statChars[statName]} {statIdToStatName[statName]} <span style={{color: "white"}}>{statFormatter.format(summed)}</span></h2>
                                 </div>
                                 <main className={styles.popupContent}>
                                     {sourcesToElement(statData, statName)}
@@ -53,7 +53,7 @@ export default function StatsPopUp({onClose, visible, statData, statName, summed
 
                                         <div style={{textDecorationColor: "white"}}>More info / ways to gain</div>
                                         <div>
-                                            <b style={{color: colorCodeToHex[statColors[statName]], textDecorationColor: colorCodeToHex[statColors[statName]]}}>{statChars[statName]} {statIdToStatName[statName].capitalize()}</b>
+                                            <b style={{color: colorCodeToHex[statColors[statName]], textDecorationColor: colorCodeToHex[statColors[statName]]}}>{statChars[statName]} {statIdToStatName[statName]}</b>
                                         </div>
                                     </a>
                                 </div>
