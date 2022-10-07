@@ -47,7 +47,7 @@ export default function StatsPopUp({onClose, visible, statData, statName, summed
                                 </main>
                             </main>
                         </div>
-                        <div onClick={close}>
+                        <div className={styles.popupClose} onClick={close}>
                             <span style={{}}>{"X"}</span>
                         </div>
                     </div> : null

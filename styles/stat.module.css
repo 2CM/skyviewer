@@ -55,7 +55,7 @@
 }
 
 .popupClose {
-    background-color: var(--darkColor);
+    background-color: var(--discordLighter);
     position: fixed;
     top: 20px;
     left: 20px;
@@ -69,6 +69,14 @@
     font-size: 30px;
     user-select: none;
     cursor: pointer;
+}
+
+.popupClose:hover {
+    background-color: var(--discordLight);
+}
+
+.popupClose:active {
+    background-color: var(--discordLighter);
 }
 
 .popupBackground {

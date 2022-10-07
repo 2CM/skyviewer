@@ -914,7 +914,7 @@ export const statIdToStatName = {
     mining_fortune: "Mining Fortune",
     farming_fortune: "Farming Fortune",
     foraging_fortune: "Foraging Fortune",
-    breaking_power: "breaking power",
+    breaking_power: "Breaking Power",
     pristine: "Pristine",
     combat_wisdom: "Combat Wisdom",
     mining_wisdom: "Mining Wisdom",
@@ -1134,18 +1134,18 @@ export const statChars: IObjectKeys = {
     vitality: "♨",
     sea_creature_chance: "α",
     attack_speed: "⚔",
-    breaking_power: "?",
-    mending: "?",
-    combat_wisdom: "?",
-    mining_wisdom: "?",
-    farming_wisdom: "?",
-    foraging_wisdom: "?",
-    fishing_wisdom: "?",
-    enchanting_wisdom: "?",
-    alchemy_wisdom: "?",
-    carpentry_wisdom: "?",
-    runecrafting_wisdom: "?",
-    social_wisdom: "?",
+    breaking_power: "Ⓟ",
+    mending: "☄",
+    combat_wisdom: "☯",
+    mining_wisdom: "☯",
+    farming_wisdom: "☯",
+    foraging_wisdom: "☯",
+    fishing_wisdom: "☯",
+    enchanting_wisdom: "☯",
+    alchemy_wisdom: "☯",
+    carpentry_wisdom: "☯",
+    runecrafting_wisdom: "☯",
+    social_wisdom: "☯",
 }
 
 export const skillLevelStats = {
@@ -1199,6 +1199,19 @@ export const skillLevelStats = {
     }
 }
 
+export const skillColors: IObjectKeys = { //from NEU pv
+    farming: "e",
+    mining: "7",
+    combat: "c",
+    foraging: "2",
+    fishing: "b",
+    enchanting: "a",
+    alchemy: "9",
+    taming: "d",
+    carpentry: "4",
+    runecrafting: "5",
+    social: "2",
+}
 
 export async function calculateSkillStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
     if(!data.profileData) return {}
@@ -1208,7 +1221,8 @@ export async function calculateSkillStats(data: apiData, selectedProfile: number
     for (let i = 0; i < Object.keys(skillCaps).length; i++) {
         let name: skillName = Object.keys(skillCaps)[i] as skillName;
 
-        if(skillLevelStats[name as keyof typeof skillLevelStats] === undefined) break;
+        if(name == "dungeoneering") continue;
+        if(skillLevelStats[name as keyof typeof skillLevelStats] === undefined) continue;
 
         var levelInfo = skillExpToLevel(data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"][skillNameToApiName[name]], name)
 
@@ -1816,13 +1830,15 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
         var rarityUpgrades = itemAttributes.rarity_upgrades;
         var rarity = rarityIndex + (rarityUpgrades === undefined ? 0 : rarityUpgrades == 1 ? 1 : 0);
 
-        stats.taliStats[colorChar + Object.values(rarityColors)[rarity] + removeStringColors(itemInfo.name)] = itemStatsToStatsList(itemInfo.stats || {});
+        var coloredName = colorChar + Object.values(rarityColors)[rarity] + removeStringColors(itemInfo.name);
+
+        stats.taliStats[coloredName] = itemStatsToStatsList(itemInfo.stats || {});
 
         var itemEnrichment = tali.tag.ExtraAttributes.talisman_enrichment;
 
         if(itemEnrichment !== undefined) {
-            stats.enrichments[itemInfo.name] = {};
-            stats.enrichments[itemInfo.name][itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
+            stats.enrichments[coloredName] = {};
+            stats.enrichments[coloredName][itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
         }
 
 
@@ -1889,7 +1905,7 @@ export async function calculateStats(data: apiData, selectedProfile: number): Pr
     return {
         base: {base: baseStats},
         skills: mapObjectKeys(
-            await calculateSkillStats(data, selectedProfile), value => value.capitalize()
+            await calculateSkillStats(data, selectedProfile), value => colorChar+skillColors[value]+value.capitalize()
         ),
         hotm: await calculateHotmStats(data, selectedProfile),
         essence: await calculateEssenceStats(data, selectedProfile),
@@ -1920,24 +1936,28 @@ export async function calculateStats(data: apiData, selectedProfile: number): Pr
     */
 
     /*
+
+    (Y) == done
+    (M) == needs testing / work
+
     sources
-        base stats
+        base stats (Y)
 
         holdable
             armor
             equipment
 
-        accessories
-            accessory power
-            enrichments
-            accessory stats
-            tuning points
+        accessories (M)
+            accessory power (Y)
+            enrichments (Y)
+            accessory stats (Y)
+            tuning points (Y)
 
         milestone stats
-            skill stats
+            skill stats (Y)
             bestiary milestone
-            slayers
-            harp intelligence
+            slayers (Y)
+            harp intelligence (Y)
 
         temp effects
             cake souls
@@ -1950,11 +1970,11 @@ export async function calculateStats(data: apiData, selectedProfile: number): Pr
             pet score
             
         pickable
-            wither esssence shop
-            hotm
+            wither esssence shop (Y)
+            hotm (M)
             
-        misc  
-            peppers
+        misc 
+            peppers (Y)
             fairy souls
     */
 }
