@@ -39,12 +39,24 @@ export default function StatsPopUp({onClose, visible, statData, statName, summed
                         <div className={styles.popupBackground} onClick={close}/>
                         <div className={styles.popupBoxContainer}>
                             <main className={styles.popupContainer} style={{outlineColor: colorCodeToHex[statColors[statName]]}}>
-                                <div className={styles.nameContainer}>
+                                <div className={styles.popupNameContainer}>
                                     <h2 className={styles.popupName} style={{color: colorCodeToHex[statColors[statName]]}}>{statChars[statName]} {statIdToStatName[statName].capitalize()} <span style={{color: "white"}}>{statFormatter.format(summed)}</span></h2>
                                 </div>
                                 <main className={styles.popupContent}>
-                                {sourcesToElement(statData, statName)}
+                                    {sourcesToElement(statData, statName)}
                                 </main>
+                                <div className={styles.popupFooter}>
+                                    <a
+                                        href={"https://hypixel-skyblock.fandom.com/wiki/"+statName.replaceAll("_", " ").capitalize().replaceAll(" ", "_")}
+                                        target="_blank"
+                                    >
+
+                                        <div style={{textDecorationColor: "white"}}>More info / ways to gain</div>
+                                        <div>
+                                            <b style={{color: colorCodeToHex[statColors[statName]], textDecorationColor: colorCodeToHex[statColors[statName]]}}>{statChars[statName]} {statIdToStatName[statName].capitalize()}</b>
+                                        </div>
+                                    </a>
+                                </div>
                             </main>
                         </div>
                         <div className={styles.popupClose} onClick={close}>
