@@ -324,14 +324,20 @@ export function sourcesToElement(sources: any, statName: statName) {
 
         if(Object.keys(category).length == 1 && lastSourceName == categoryName) {
             children.push(
-                React.createElement("li", {className: statStyles.statsCategory, style: {color: colorCodeToHex[statCategoryColors[categoryName]]}}, `${statCategoryNames[categoryName]}: ${statFormatter.format(categorySum)}`),
+                React.createElement("li", {className: statStyles.statsCategory, style: {color: colorCodeToHex[statCategoryColors[categoryName]]}}, [
+                    `${statCategoryNames[categoryName]}: `,
+                    React.createElement("span", {style: {color: "white"}}, `${statFormatter.format(categorySum)}`)
+                ]),
             )
 
             continue;
         }
 
         children.push(
-            React.createElement("li", {className: statStyles.statsCategory, style: {color: colorCodeToHex[statCategoryColors[categoryName]]}}, `${statCategoryNames[categoryName]}: ${statFormatter.format(categorySum)}`),
+            React.createElement("li", {className: statStyles.statsCategory, style: {color: colorCodeToHex[statCategoryColors[categoryName]]}}, [
+                `${statCategoryNames[categoryName]}: `,
+                React.createElement("span", {style: {color: "white"}}, `${statFormatter.format(categorySum)}`)
+            ]),
             React.createElement("ul", {className: statStyles.statValue}, categoryChildren),
         )
     }
@@ -596,6 +602,12 @@ export interface active_effect {
     infinite: boolean,
 }
 
+export interface cake_buff {
+    stat: number,
+    key: string,
+    amount: number,
+    expire_at: number
+}
 
 export interface profileMember extends IObjectKeys { //all objects can be expanded upon; all any[] | any need more info
     //misc important
@@ -787,7 +799,7 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
     active_effects: active_effect[],
     paused_effects?: any[],
     disabled_potion_effects?: effectName[],
-    temp_stat_buffs?: any[],
+    temp_stat_buffs?: cake_buff[],
     
     //essence
     essence_undead?: number,
@@ -1059,24 +1071,28 @@ export interface statsList extends IObjectKeys {
 export const statIdToStatName = {
     health: "Health",
     defense: "Defense",
-    true_defense: "True Defense",
-    strength: "Strength",
     walk_speed: "Speed",
+    strength: "Strength",
+    intelligence: "Intelligence",
     critical_chance: "Crit Chance",
     critical_damage: "Crit Damage",
-    intelligence: "Intelligence",
-    mining_speed: "Mining Speed",
-    sea_creature_chance: "SCC",
-    magic_find: "Magic Find",
-    pet_luck: "Pet Luck",
     attack_speed: "Attack Speed",
     ability_damage: "Ability Damage",
+    magic_find: "Magic Find",
+    pet_luck: "Pet Luck",
+    true_defense: "True Defense",
+    sea_creature_chance: "SCC",
     ferocity: "Ferocity",
+    mining_speed: "Mining Speed",
     mining_fortune: "Mining Fortune",
     farming_fortune: "Farming Fortune",
     foraging_fortune: "Foraging Fortune",
     breaking_power: "Breaking Power",
     pristine: "Pristine",
+    fishing_speed: "Fishing Speed",
+    health_regen: "Health Regen",
+    vitality: "Vitality",
+    mending: "Mending",
     combat_wisdom: "Combat Wisdom",
     mining_wisdom: "Mining Wisdom",
     farming_wisdom: "Farming Wisdom",
@@ -1087,10 +1103,6 @@ export const statIdToStatName = {
     carpentry_wisdom: "Carpentry Wisdom",
     runecrafting_wisdom: "Runecrafting Wisdom",
     social_wisdom: "Social Wisdom",
-    fishing_speed: "Fishing Speed",
-    health_regen: "Health Regen",
-    vitality: "Vitality",
-    mending: "Mending",
 }
 
 export const baseStats: statsList = {
@@ -2169,6 +2181,47 @@ export async function calculatePotionStats(data: apiData, selectedProfile: numbe
     return stats;
 }
 
+export interface cakeStatNumberToStat {
+    [key: string]: statName
+}
+
+export const cakeStatNumberToStat: cakeStatNumberToStat = {
+    "0": "health",
+    "1": "defense",
+    "2": "walk_speed",
+    //"3": it doesnt exist ._. ight whos gonna make the 20 minute video essay on why cake stat number 3 doesnt exist?
+    "4": "strength",
+    "5": "intelligence",
+    //missing 6-11
+    "11": "magic_find",
+    "12": "pet_luck",
+    //"13" .-.
+    "14": "sea_creature_chance",
+    "15": "ferocity",
+    //"16" .-------.
+    "17": "mining_fortune",
+    "18": "mining_speed",
+    "19": "foraging_fortune",
+}
+
+export async function calculateCakeStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
+    if(!data.profileData) return {};
+
+    var temp_stat_buffs = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].temp_stat_buffs;
+
+    if(!temp_stat_buffs) return {};
+
+    var stats: statsList = {};
+
+    for(let i in temp_stat_buffs) {
+        var statBuff = temp_stat_buffs[i];
+
+        stats[cakeStatNumberToStat[statBuff.stat]] = statBuff.amount;
+    }
+
+    return {cake: stats}
+}
+
 export const statCategoryNames: IObjectKeys = {
     base: "Base",
     skills: "Skills",
@@ -2182,6 +2235,7 @@ export const statCategoryNames: IObjectKeys = {
     tuning: "Tuning",
     enrichments: "Enrichments",
     potions: "Effects",
+    cake: "Cake"
 }
 
 export const statCategoryColors: IObjectKeys = {
@@ -2196,7 +2250,8 @@ export const statCategoryColors: IObjectKeys = {
     magicPower: "b",
     tuning: "e",
     enrichments: "b",
-    potions: "5"
+    potions: "5",
+    cake: "d"
 }
 
 export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsCategories> {
@@ -2219,6 +2274,9 @@ export async function calculateStats(data: apiData, selectedProfile: number): Pr
         ...await calculateAccStats(data, selectedProfile),
         potions: mapObjectKeys(
             await calculatePotionStats(data, selectedProfile), value => colorChar+effectColors[value.slice(0,-2)]+value.replaceAll("_", " ").capitalize()
+        ),
+        cake: mapObjectKeys(
+            await calculateCakeStats(data, selectedProfile), value => value
         )
     }
 
@@ -2263,7 +2321,7 @@ export async function calculateStats(data: apiData, selectedProfile: number): Pr
             harp intelligence (Y)
 
         temp effects
-            cake souls
+            cake souls (Y)
             potions (M)
             booster cookie
 
