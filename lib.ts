@@ -1342,6 +1342,7 @@ export const skillLevelStats = {
     foraging: function(level: number): statsList {
         return {
             strength: 1*level+Math.max(level-14,0),
+            foraging_fortune: 4*level,
         }
     },
     fishing: function(level: number): statsList {
