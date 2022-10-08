@@ -455,6 +455,148 @@ export interface tuningSlot {
     intelligence: number
 }
 
+type effectName = //missing ones that dont give you stats. ill add them later or something
+    "speed" | "jump_boost" | "poison" | "water_breathing" | "fire_resistance" | "night_vision" | "strength" | "invisibility" | "regeneration" | "weakness" | "slowness" | "haste" | "rabbit" | "burning" | "knockback" | "venomous" | "stun" | "archery" | "adrenaline" | "critical" | "dodge" | "agility" | "wounded" | "experience" | "resistance" | "mana" | "blindness" | "true_defense" | "pet_luck" | "spelunker" |
+    "spirit" | "magic_find" | "dungeon" | "king's_scent" | "wisp's_ice-flavored_water" | "coldfusion" | "mushed_glowy_tonic" | "jerry_candy" |
+    "farming_xp_boost" | "mining_xp_boost" | "combat_xp_boost" | "foraging_xp_boost" | "fishing_xp_boost" | "enchanting_xp_boost" | "alchemy_xp_boost";
+
+type effectStats = {
+    [key in effectName]: (level: number) => statsList;
+};
+
+export const effectStats: effectStats = { // ...{} for minimizing different potion categories (brewable, non brewable, exp boosts)
+    ...{ //brewable
+        "speed": level => ({
+            walk_speed: 5*level
+        }),
+        "jump_boost": level => ({}),
+        "poison": level => ({}),
+        "water_breathing": level => ({}),
+        "fire_resistance": level => ({}),
+        "night_vision": level => ({}),
+        "strength": level => ({
+            strength: [5, 12.5, 20, 30, 40, 50, 60, 75][level-1]
+        }),
+        "invisibility": level => ({}),
+        "regeneration": level => ({
+            health_regen: [5, 10, 15, 20, 25, 30, 40, 50, 60][level-1]
+        }),
+        "weakness": level => ({}),
+        "slowness": level => ({
+            walk_speed: -5*level
+        }),
+        "haste": level => ({
+            mining_speed: 20*level
+        }),
+        "rabbit": level => ({
+            walk_speed: 10*level
+        }),
+        "burning": level => ({}),
+        "knockback": level => ({}),
+        "venomous": level => ({
+            walk_speed: -5*level
+        }),
+        "stun": level => ({}),
+        "archery": level => ({}),
+        "adrenaline": level => ({
+            //health: [20, 40, 60, 80, 100, 150, 200, 300][level-1],
+            walk_speed: 5*level
+        }),
+        "critical": level => ({
+            critical_chance: 5*level+5,
+            critical_damage: 10*level
+        }),
+        "dodge": level => ({}),
+        "agility": level => ({
+            walk_speed: 10*level
+        }),
+        "wounded": level => ({}),
+        "experience": level => ({}),
+        "resistance": level => ({
+            defense: [5, 10, 15, 20, 30, 40, 50, 60][level-1]
+        }),
+        "mana": level => ({}),
+        "blindness": level => ({}),
+        "true_defense": level => ({
+            true_defense: 5*level
+        }),
+        "pet_luck": level => ({
+            pet_luck: 5*level
+        }),
+        "spelunker": level => ({
+            mining_fortune: 5*level
+        })
+    },
+    ...{ //non-brewable
+        "spirit": level => ({
+            walk_speed: 10*level,
+            critical_damage: 10*level
+        }),
+        "magic_find": level => ({
+            magic_find: [10, 25, 50, 75][level-1]
+        }),
+        "dungeon": level => ({}),
+        "king's_scent": level => ({}),
+        "wisp's_ice-flavored_water": level => ({
+            vitality: 10, // to quote the wiki: "Gain +10% incoming healing" so i think this is correct
+            true_defense: 25,
+        }),
+        "coldfusion": level => ({ // !!! only works with wisp equipped !!! i will add a thing for that
+            strength: 75,
+            critical_damage: 55,
+        }),
+        "mushed_glowy_tonic": level => ({
+            fishing_speed: 30
+        }),
+        "jerry_candy": level => ({ //yes, its technically an effect
+            health: 100,
+            strength: 20,
+            ferocity: 2,
+            intelligence: 100,
+            magic_find: 3
+        })
+    },
+    ...{ //exp boosts
+        "farming_xp_boost": level => ({
+            farming_wisdom: [5, 10, 20][level-1],
+        }),
+        "mining_xp_boost": level => ({
+            mining_wisdom: [5, 10, 20][level-1],
+        }),
+        "combat_xp_boost": level => ({
+            combat_wisdom: [5, 10, 20][level-1],
+        }),
+        "foraging_xp_boost": level => ({
+            foraging_wisdom: [5, 10, 20][level-1],
+        }),
+        "fishing_xp_boost": level => ({
+            fishing_wisdom: [5, 10, 20][level-1],
+        }),
+        "enchanting_xp_boost": level => ({
+            enchanting_wisdom: [5, 10, 20][level-1],
+        }),
+        "alchemy_xp_boost": level => ({
+            alchemy_wisdom: [5, 10, 20][level-1],
+        }),
+    }
+}
+
+export type effectModifier = "cola" | "juice" | "res" | "tutti_frutti" | "slayer_energy" | "tear_filled" | "dr_paper" | "caffeinated";
+
+export interface active_effect_modifier {
+    key: effectModifier,
+    amp: number,
+}
+
+export interface active_effect {
+    effect: keyof typeof effectStats,
+    level: number,
+    modifiers: active_effect_modifier[],
+    ticks_remaining: number,
+    infinite: boolean,
+}
+
+
 export interface profileMember extends IObjectKeys { //all objects can be expanded upon; all any[] | any need more info
     //misc important
     last_save: number,
@@ -642,9 +784,9 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
     soulflow?: number,
     
     //effects / buffs
-    active_effects: object[],
+    active_effects: active_effect[],
     paused_effects?: any[],
-    disabled_potion_effects?: string[],
+    disabled_potion_effects?: effectName[],
     temp_stat_buffs?: any[],
     
     //essence
@@ -1890,6 +2032,143 @@ export async function calculateAccStats(data: apiData, selectedProfile: number):
     return stats;
 }
 
+export const effectColors: IObjectKeys = { //will add non stat effects later
+    ...{ //brewable
+        "speed": "9",
+        "jump_boost": "b",
+        "poison": "2",
+        "water_breathing": "9",
+        "fire_resistance": "c",
+        "night_vision": "5",
+        "strength": "4",
+        "invisibility": "8",
+        "regeneration": "4",
+        "weakness": "7",
+        "slowness": "7",
+        "haste": "e",
+        "rabbit": "a",
+        "burning": "6",
+        "knockback": "4",
+        "venomous": "5",
+        "adrenaline": "c",
+        "critical": "4",
+        "dodge": "9",
+        "agility": "5",
+        "wounded": "4",
+        "experience": "9",
+        "resistance": "a",
+        "mana": "9",
+        "blindness": "f",
+        "true_defense": "f",
+        "pet_luck": "b", // WHY IS IT CYAN PET LUCK IS PINK AAAAAAAAAA
+        "spelunker": "b", // this one too? isnt mining fortune supposed to be orange?
+    },
+    ...{ //non-brewable
+        "spirit": "b",
+        "magic_find": "b",
+        "dungeon": "7",
+        "king's_scent": "2",
+        "wisp's_ice-flavoted_water": "b",
+        "coldfusion": "b",
+        "mushed_glowy_tonic": "2",
+
+        "jerry_candy": "a"
+    },
+    ...{ //exp boosts
+        "farming_xp_boost": "a",
+        "mining_xp_boost": "a",
+        "combat_xp_boost": "a",
+        "foraging_xp_boost": "a",
+        "fishing_xp_boost": "a",
+        "enchanting_xp_boost": "a",
+        "alchemy_xp_boost": "a",
+    }
+}
+
+export async function calculatePotionStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
+    if(!data.profileData) return {};
+
+    var active_effects = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].active_effects;
+    var disabled_effects = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].disabled_potion_effects || [];
+
+    var stats: statsCategory = {};
+
+    for(let i in active_effects) {
+        var effect = active_effects[i];
+
+        if(typeof effectStats[effect.effect] !== "function") {
+            console.warn(`${effect.effect} is not a function`);
+            continue;
+        }
+
+        if(new Set(disabled_effects).has(effect.effect)) {
+            console.warn(`${effect.effect} has been disabled`);
+            continue;
+        }
+
+        if(effect.effect == "coldfusion" && false) { //coldfusion only works when a wisp is equipped. this is the gaurd for it. ill make it work when i do pet stuffs
+            continue;
+        }
+
+        if(effect.effect == "dungeon") {
+            stats.dungeon.health_regen = effectStats.regeneration([1, 2, 3, 3, 3, 4, 4][effect.level]).health_regen;
+
+            stats.dungeon.strength = effectStats.strength([3, 3, 3, 4, 4, 4, 5][effect.level]).strength
+
+            stats.dungeon.critical_chance = effectStats.critical([1, 1, 2, 2, 3, 3, 3][effect.level]).critical_chance;
+            stats.dungeon.critical_damage = effectStats.critical([1, 1, 2, 2, 3, 3, 3][effect.level]).critical_damage;
+
+            stats.dungeon.walk_speed = effectStats.speed([1, 2, 2, 2, 2, 3, 3][effect.level]).walk_speed;
+
+            stats.dungeon.defense = effectStats.resistance([1, 1, 2, 2, 3, 3, 4][effect.level]).defense;
+
+            continue;
+        }
+
+        var effectStatsList = effectStats[effect.effect](effect.level); //variable naming ;-;
+
+        for(let j in effect.modifiers) {
+            var modifier = effect.modifiers[j];
+
+            switch(modifier.key) { //because there are some modifers that increase stat on effect by a percentage
+                case "caffeinated":
+                    effectStatsList.walk_speed = effectStatsList.walk_speed || 0;
+                    effectStatsList.walk_speed += [5, 8, 12][modifier.amp];
+                break
+                case "cola":
+                    effectStatsList.strength = effectStatsList.strength || 0;
+                    effectStatsList.strength *= 1.05;
+                break;
+                case "juice":
+                    effectStatsList.health = effectStatsList.health || 0;
+                    effectStatsList.health *= 1.05;
+                break;
+                case "dr_paper":
+                    effectStatsList.health = effectStatsList.health || 0;
+                    effectStatsList.health += 75;
+                break;
+                case "slayer_energy":
+                    effectStatsList.magic_find = effectStatsList.magic_find || 0;
+                    effectStatsList.magic_find += 10;
+                break;
+                case "tear_filled":
+                    effectStatsList.combat_wisdom = effectStatsList.combat_wisdom || 0;
+                    effectStatsList.combat_wisdom += 10;
+                    //apparently, it also gives "+10❤ per second" but skyblock doesnt say i got any from it so i wont add it
+                break;
+                case "res":
+                    effectStatsList.defense = effectStatsList.defense || 0;
+                    effectStatsList.defense *= 1.1;
+                break;
+            }
+        }
+
+        stats[`${effect.effect} ${effect.level}`] = effectStatsList;
+    }
+
+    return stats;
+}
+
 export const statCategoryNames: IObjectKeys = {
     base: "Base",
     skills: "Skills",
@@ -1902,6 +2181,7 @@ export const statCategoryNames: IObjectKeys = {
     magicPower: "Magic Power",
     tuning: "Tuning",
     enrichments: "Enrichments",
+    potions: "Effects",
 }
 
 export const statCategoryColors: IObjectKeys = {
@@ -1916,6 +2196,7 @@ export const statCategoryColors: IObjectKeys = {
     magicPower: "b",
     tuning: "e",
     enrichments: "b",
+    potions: "5"
 }
 
 export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsCategories> {
@@ -1936,6 +2217,9 @@ export async function calculateStats(data: apiData, selectedProfile: number): Pr
             await calculateSlayerStats(data, selectedProfile), value => colorChar+slayerColors[value]+value.capitalize()
         ),
         ...await calculateAccStats(data, selectedProfile),
+        potions: mapObjectKeys(
+            await calculatePotionStats(data, selectedProfile), value => colorChar+effectColors[value.slice(0,-2)]+value.replaceAll("_", " ").capitalize()
+        )
     }
 
 
@@ -1980,7 +2264,7 @@ export async function calculateStats(data: apiData, selectedProfile: number): Pr
 
         temp effects
             cake souls
-            potions
+            potions (M)
             booster cookie
 
         pets
