@@ -236,8 +236,11 @@ export function itemStatsToStatsList(itemStats: itemStats): statsList {
 
     for (let i = 0; i < Object.keys(itemStats).length; i++) {
         var name = Object.keys(itemStats)[i];
+        var newName = name.toLowerCase();
 
-        stats[name.toLowerCase() as keyof typeof stats] = itemStats[name as keyof typeof itemStats];
+        if(newName == "ability_damage_percent") newName = "ability_damage";
+    
+        stats[newName as keyof typeof stats] = itemStats[name as keyof typeof itemStats];
     }
 
     return stats;
@@ -2058,6 +2061,25 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
         stats[`${colorChar + gemstoneColors[gemInfo.gemstone]}${(gemInfo.tier as string).capitalize()} ${(gemInfo.gemstone as string).capitalize()} Gemstone`] = recievedStats;
     }
 
+    //star stats
+        // okay so, this area was completely undocumented on the wiki so i had to figure it out myself :)
+
+        // basically, the item gains extra stats based on star count.
+        // for example, a hype has 30 base ferocity but if its 5 starred it gets 33 ferocity. same with every dungeon item.
+        // extra = base stat * 0.1 * (stars / 5)
+
+        // hope i got it right :D
+    var starCount = Math.min(item.tag.ExtraAttributes.dungeon_item_level || 0, 5) //because master stars dont do it;
+    stats.starStats = {};
+
+    for(let i in Object.keys(stats.baseStats)) {
+        var statName = Object.keys(stats.baseStats)[i];
+        var statValue = stats.baseStats[statName];
+
+        stats.starStats[statName] = statValue * 0.1 * (starCount / 5);
+    }
+
+
     return stats;
 }
 
@@ -2967,12 +2989,14 @@ export const armorStatNames: IObjectKeys = {
     hpbs: "Hot Potato Books",
     reforge: "Reforge",
     baseStats: "Base Value",
+    starStats: "Stars"
 }
 
 export const armorStatColors: IObjectKeys = {
     hpbs: "6",
     reforge: "5",
     baseStats: "f",
+    starStats: "6"
 }
 
 export async function calculateArmorStats(data: apiData, selectedProfile: number): Promise<statsCategories> {
@@ -2996,6 +3020,9 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
             console.warn("piece baseItem is undefined");
             continue;
         }
+
+        // console.log(JSON.stringify(piece));
+        // console.log(JSON.stringify(baseItem));
 
         var category = baseItem.category;
 
