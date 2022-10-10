@@ -1952,6 +1952,14 @@ export const gemstoneColors: IObjectKeys = {
     opal: "f",
 }
 
+export const gemstoneRarities: IObjectKeys = {
+    rough: "COMMON",
+    flawed: "UNCOMMON",
+    fine: "RARE",
+    flawless: "EPIC",
+    perfect: "LEGENDARY"
+}
+
 export function calculateItemStats(item: any, baseItem: item): statsCategory {
     var stats: statsCategory = {};
 
@@ -1960,14 +1968,13 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
 
     /*
     sources
-        base stats
-        gems
-        reforge
-        hpbs
-        enchants
-        art of peace
-        art of war
-        attributes
+        base stats (Y)
+        gems (Y)
+        reforge (Y)
+        hpbs (Y)
+        enchants (Y)
+        art of peace (N)
+        attributes (N)
     */
 
     var rarity = Object.keys(mpTable).findIndex(name => {return baseItem?.tier == name}) + (item.tag.ExtraAttributes.rarity_upgrades || 0);
@@ -2010,7 +2017,7 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
 
             stats[`${colorChar}${statColors[Object.keys(recievedStats)[0] || "f"]}${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`] = recievedStats;
         } else {
-            console.warn(`couldnt find enchant ${enchantName}`)
+            // console.warn(`couldnt find enchant ${enchantName}`)
         }
     }
 
@@ -2058,7 +2065,7 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
 
         var recievedStats = gemstoneStats[gemInfo.gemstone][gemInfo.tier](rarity); // :))))))))) variable naming
 
-        stats[`${colorChar + gemstoneColors[gemInfo.gemstone]}${(gemInfo.tier as string).capitalize()} ${(gemInfo.gemstone as string).capitalize()} Gemstone`] = recievedStats;
+        stats[`${colorChar + rarityColors[gemstoneRarities[gemInfo.tier]]}${(gemInfo.tier as string).capitalize()} ${(gemInfo.gemstone as string).capitalize()} Gemstone`] = recievedStats;
     }
 
     //star stats
@@ -3026,12 +3033,8 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         var category = baseItem.category;
 
-        console.log(category.toLowerCase())
-
         stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem);
     }
-
-    console.log(stats);
 
     return stats;
 }
@@ -3121,7 +3124,7 @@ export async function calculateStats(data: apiData, selectedProfile: number): Pr
         base stats (Y)
 
         holdable
-            armor
+            armor (M)
             equipment
 
         accessories (M)
