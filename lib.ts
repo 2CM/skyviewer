@@ -961,7 +961,7 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
     
     //storage / inventory
     inv_armor: contents,
-    equipment_contents: object,
+    equippment_contents: contents, //they misspelled it in the api lol
     inv_contents: object,
     ender_chest_contents?: object,
     backpack_contents?: object,
@@ -1960,6 +1960,14 @@ export const gemstoneRarities: IObjectKeys = {
     perfect: "LEGENDARY"
 }
 
+export interface attributeStats {
+    [key: string]: (level: number) => statsList
+}
+
+export const attributeStats: attributeStats = {
+
+}
+
 export function calculateItemStats(item: any, baseItem: item): statsCategory {
     var stats: statsCategory = {};
 
@@ -1982,7 +1990,7 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
 
     //base stats
     stats.baseStats = itemStatsToStatsList(baseItem.stats || {});
-    
+
     //hpbs
     if(new Set(["HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"]).has(baseItem.category)) { //its an armor piece
         stats.hpbs = {
@@ -1996,20 +2004,24 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
     }
 
     //reforge
-    var reforge: string = item.tag.ExtraAttributes.modifier;
+    var reforge: string | undefined = item.tag.ExtraAttributes.modifier;
 
-    if(reforgeStats[reforge] !== undefined) {
-        stats[`${colorChar}5${reforge.capitalize()}`] = reforgeStats[reforge](Math.min(rarity, 5));
-    } else {
-        console.warn(`${reforge} is not in reforgeStats`);
+    if(reforge !== undefined) {
+        if(reforgeStats[reforge] !== undefined) {
+            stats[`${colorChar}5${reforge.capitalize()}`] = reforgeStats[reforge](Math.min(rarity, 5));
+        } else {
+            console.warn(`${reforge} is not in reforgeStats`);
+        }
     }
 
     //enchants
-    for(let i in Object.keys(item.tag.ExtraAttributes.enchantments)) {
-        var enchantName: string = Object.keys(item.tag.ExtraAttributes.enchantments)[i];
+    var enchantsList = item.tag.ExtraAttributes.enchantments || {};
+
+    for(let i in Object.keys(enchantsList)) {
+        var enchantName: string = Object.keys(enchantsList)[i];
         if(!enchantName) continue;
 
-        var enchantLevel = item.tag.ExtraAttributes.enchantments[enchantName];
+        var enchantLevel = enchantsList[enchantName];
 
 
         if(enchantStats[enchantName] !== undefined) {
@@ -2021,12 +2033,27 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
         }
     }
 
-    var gemstones: gemstoneSlots = {};
+    //attributes
+    var attributesList = item.tag.ExtraAttributes.attributes || {};
 
-    if(item.tag.ExtraAttributes.gems !== undefined) {
-        for(let i in Object.keys(item.tag.ExtraAttributes.gems)) {
-            var key: string = Object.keys(item.tag.ExtraAttributes.gems)[i];
-            var value: string = item.tag.ExtraAttributes.gems[key];
+    for(let i in Object.keys(attributesList)) {
+        var attributeName: keyof typeof attributeStats = Object.keys(attributesList)[i];
+        var attributeLevel: number = attributesList[attributeName];
+
+        if(attributeStats[attributeName]) {
+            var recievedAttributeStats = attributeStats[attributeName](attributeLevel);
+        } else {
+            console.warn(`couldnt find attribute ${attributeName}`);
+        }
+    }
+
+    var gemstones: gemstoneSlots = {};
+    var itemGems = item.tag.ExtraAttributes.gems;
+
+    if(itemGems !== undefined) {
+        for(let i in Object.keys(itemGems)) {
+            var key: string = Object.keys(itemGems)[i];
+            var value: string = itemGems[key];
     
             for(let j in specialGemstoneSlots) {
                 if(key.includes(specialGemstoneSlots[j])) {
@@ -3039,6 +3066,41 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     return stats;
 }
 
+export async function calculateEquipmentStats(data: apiData, selectedProfile: number): Promise<statsCategories> {
+    if(!data.profileData) return {};
+
+    var equippment_contents_raw = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].equippment_contents;
+
+    var stats: statsCategories = {};
+
+    var equipment = await parseContents(equippment_contents_raw) as IObjectKeys;
+    if(equipment.i === undefined) return {};
+
+    var equipmentContents: IObjectKeys[] = equipment.i;
+
+
+    for(let i in equipmentContents) {
+        var piece = equipmentContents[i];
+
+        if(Object.keys(piece).length == 0) continue;
+
+        var baseItem = await itemIdToItem(piece.tag.ExtraAttributes.id);
+        if(!baseItem) {
+            console.warn("piece baseItem is undefined");
+            continue;
+        }
+
+        // console.log(JSON.stringify(piece));
+        // console.log(JSON.stringify(baseItem));
+
+        var category = baseItem.category;
+
+        stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem);
+    }
+
+    return stats;
+}
+
 export const statCategoryNames: IObjectKeys = {
     base: "Base",
     skills: "Skills",
@@ -3096,7 +3158,8 @@ export async function calculateStats(data: apiData, selectedProfile: number): Pr
             await calculateCakeStats(data, selectedProfile), value => value
         ),
 
-        ...(mapObjectValues(await calculateArmorStats(data, selectedProfile), value => mapObjectKeys(value, value => armorStatNames[value] === undefined ? value : colorChar+armorStatColors[value]+armorStatNames[value])))
+        ...(mapObjectValues(await calculateArmorStats(data, selectedProfile), value => mapObjectKeys(value, value => armorStatNames[value] === undefined ? value : colorChar+armorStatColors[value]+armorStatNames[value]))),
+        ...await calculateEquipmentStats(data, selectedProfile)
     }
 
 
