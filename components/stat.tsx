@@ -1,4 +1,4 @@
-import { colorCodeToHex, mainFormatter, statChars, statColors, statFormatter, statIdToStatName, statName, statCategoryColors, statCategoryNames } from "../lib";
+import { colorCodeToHex, mainFormatter, statChars, statColors, statFormatter, statIdToStatName, statName, statCategoryColors, statCategoryNames, removeStringColors } from "../lib";
 import Tippy from "@tippyjs/react/headless"
 import styles from "../styles/stat.module.css";
 import { motion, useSpring } from "framer-motion";
@@ -59,7 +59,7 @@ export default function Stat({statName, value, sources, onClick}: props) {
                     Additional ${statIdToStatName[statName]}: ${mainFormatter.format(additionalsSum)}
                     ${
                         Object.keys(additionals).map(additionalName => {
-                            return `- ${statCategoryNames[additionalName]}: ${statFormatter.format(additionals[additionalName])}`
+                            return `- ${statCategoryNames[additionalName] || removeStringColors(additionalName)}: ${statFormatter.format(additionals[additionalName])}`
                         }).join("\n")
                     }
                     `

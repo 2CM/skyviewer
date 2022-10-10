@@ -83,6 +83,20 @@ function mapObjectKeys<Type extends object>(obj: Type, callbackfn: (value: strin
     return newObj
 }
 
+function mapObjectValues<Type extends object>(obj: Type, callbackfn: (value: Type[keyof Type], index: number, array: any[]) => Type[keyof Type]): Type {
+    var newObj: Type | any = {};
+
+    for(let i = 0; i < Object.keys(obj).length; i++) {
+        var name = Object.keys(obj)[i];
+        var value = obj[name as keyof typeof obj];
+        var newValue = callbackfn(value, i, Object.keys(obj))
+
+        newObj[name] = newValue;
+    }
+
+    return newObj
+}
+
 // *** ITEMS ***
 
 export var items: item[] = [];
@@ -158,7 +172,7 @@ export interface itemUpgradeCost {
 export type itemGemstoneSlotType = "JADE" | "AMBER" | "TOPAZ" | "SAPPHIRE" | "AMETHYST" | "JASPER" | "RUBY" | "MINING" | "COMBAT" | "DEFENSIVE" | "OFFENSIVE" | "UNIVERSAL";
 
 export interface itemGemstoneSlot {
-    type: itemGemstoneSlot
+    slot_type: itemGemstoneSlot
 }
 
 export interface item {
@@ -262,6 +276,101 @@ export const rarityColors: IObjectKeys = {
 
 export const recombEmoji = "https://cdn.discordapp.com/emojis/827593781879898142"; //from skyhelper discord bot
 
+export interface coloredStringToElementChar {
+    char: string,
+    color: string,
+    modifier: string,
+}
+
+export interface coloredStringToElementSegment {
+    chars: string,
+    color: string,
+    modifier: string,
+}
+
+export function coloredStringToElement(string: string, element: keyof React.ReactHTML = "span", parentElement: keyof React.ReactHTML = "span") {
+    var children: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
+    var chars: coloredStringToElementChar[] = [];
+    var segments: coloredStringToElementSegment[] = []
+
+    var color: string = "f";
+    var modifier: string = "r";
+
+    var primedForCode: boolean = false;
+
+    //split up
+    for(let i = 0; i < string.length; i++) {
+        var currentStringChar = string[i];
+
+        if(currentStringChar == colorChar) {
+            primedForCode = true;
+            continue;
+        }
+
+        if(primedForCode) {
+            if(new Set(Object.keys(colorCodeToHex)).has(currentStringChar)) { //its a color
+                color = currentStringChar;
+            } else { //its a modifer or something else that i dont want to deal with
+                modifier = currentStringChar;
+            }
+
+            primedForCode = false;
+
+            continue;
+        }
+
+        chars.push({char: currentStringChar, color: color, modifier: modifier});
+    }
+
+    //segments
+    for(let i = 0; i < chars.length; i++) {
+        var currentChar = chars[i];
+        var lastChar: coloredStringToElementChar = i == 0 ? {char: "none", color: "none", modifier: "none"} : chars[i-1]
+
+        if(
+            currentChar.color == lastChar.color &&
+            currentChar.modifier == lastChar.modifier
+        ) {
+            segments[segments.length-1].chars += currentChar.char;
+        } else {
+            segments.push(
+                {color: currentChar.color, modifier: currentChar.modifier, chars: currentChar.char}
+            )
+        }
+    }
+
+    for(let i = 0; i < segments.length; i++) {
+        var currentSegment = segments[i];
+
+        var style: React.CSSProperties = {
+            color: colorCodeToHex[currentSegment.color],
+        }
+
+        switch(currentSegment.modifier) {
+            case "k":
+                //magic one. will maybe do later
+            break;
+            case "l":
+                style.fontWeight = "bold";
+            break;
+            case "m":
+                style.textDecoration = "line-through";
+            break;
+            case "n":
+                style.textDecoration = "underline";
+            break;
+            case "o":
+                style.fontStyle = "italic";
+            break;
+        }
+
+        children.push(React.createElement(element, {style}, currentSegment.chars))
+    }
+
+    return React.createElement(parentElement, {}, children)
+}
+
+
 export function sourcesToElement(sources: any, statName: statName) {
     if(Object.keys(sources).length == 0) {
         return React.createElement("h2", {style: {textAlign: "center", fontSize: "20px"}}, `This player has no ${statIdToStatName[statName]} :(`)
@@ -286,7 +395,7 @@ export function sourcesToElement(sources: any, statName: statName) {
 
             var formattedName = sourceName + "";
 
-            var color: string = "unset";
+            // var color: string = "unset";
             var hasRecomb: boolean = false;
 
             if(formattedName.startsWith("RECOMB")) {
@@ -294,10 +403,10 @@ export function sourcesToElement(sources: any, statName: statName) {
                 formattedName = formattedName.slice("RECOMB".length);
             }
 
-            if(formattedName.startsWith(colorChar)) {
-                color = colorCodeToHex[formattedName[1]];
-                formattedName = formattedName.slice(2);
-            }
+            // if(formattedName.startsWith(colorChar)) {
+            //     color = colorCodeToHex[formattedName[1]];
+            //     formattedName = formattedName.slice(2);
+            // }
 
             lastSourceName = formattedName;
             lastSource = source;
@@ -309,14 +418,14 @@ export function sourcesToElement(sources: any, statName: statName) {
                     "li",
                     {
                         className: statStyles.statValue,
-                        style: {
-                            color: color
-                        },
+                        // style: {
+                        //     color: color
+                        // },
                     },
                     [
                         hasRecomb ? React.createElement("img", {src: recombEmoji, style: {height: "1em", width: "auto"}}, null) : null,
-                        ` ${formattedName.startsWith(colorChar) ? formattedName.slice(2) : formattedName}: `,
-                        React.createElement("span", {style: {color: "white"}}, statFormatter.format(source))
+                        coloredStringToElement(` ${formattedName}`),
+                        React.createElement("span", {style: {color: "white"}}, `: ${statFormatter.format(source)}`)
                     ]
                 )
             );
@@ -324,21 +433,27 @@ export function sourcesToElement(sources: any, statName: statName) {
 
         if(Object.keys(category).length == 1 && lastSourceName == categoryName) {
             children.push(
-                React.createElement("li", {className: statStyles.statsCategory, style: {color: colorCodeToHex[statCategoryColors[categoryName]]}}, [
-                    `${statCategoryNames[categoryName]}: `,
-                    React.createElement("span", {style: {color: "white"}}, `${statFormatter.format(categorySum)}`)
+                React.createElement("li", {className: statStyles.statsCategory}, [ //style: {color: colorCodeToHex[statCategoryColors[categoryName]]}
+                    coloredStringToElement(`${
+                        statCategoryNames[categoryName] === undefined ? categoryName : colorChar+statCategoryColors[categoryName]+statCategoryNames[categoryName]
+                    }`),
+                    React.createElement("span", {style: {color: "white"}}, `: ${statFormatter.format(categorySum)}`)
                 ]),
+                React.createElement("br")
             )
 
             continue;
         }
 
         children.push(
-            React.createElement("li", {className: statStyles.statsCategory, style: {color: colorCodeToHex[statCategoryColors[categoryName]]}}, [
-                `${statCategoryNames[categoryName]}: `,
-                React.createElement("span", {style: {color: "white"}}, `${statFormatter.format(categorySum)}`)
+            React.createElement("li", {className: statStyles.statsCategory}, [
+                coloredStringToElement(`${
+                    statCategoryNames[categoryName] === undefined ? categoryName : colorChar+statCategoryColors[categoryName]+statCategoryNames[categoryName]
+                }`),
+                React.createElement("span", {style: {color: "white"}}, `: ${statFormatter.format(categorySum)}`)
             ]),
             React.createElement("ul", {className: statStyles.statValue}, categoryChildren),
+            React.createElement("br")
         )
     }
 
@@ -842,7 +957,7 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
     backpack_icons?: object,
     
     //storage / inventory
-    inv_armor: object
+    inv_armor: contents,
     equipment_contents: object,
     inv_contents: object,
     ender_chest_contents?: object,
@@ -1203,12 +1318,14 @@ export interface statsCategories {
 export function sumStatsCategories(categories: statsCategories): statsList {
     var stats: statsList = {};
 
-    var listsMerged = Object.assign({}, ...Object.values(categories));
+    for(let i = 0; i < Object.keys(categories).length; i++) {
+        var categoryName = Object.keys(categories)[i];
 
-    for(let i = 0; i < Object.keys(listsMerged).length; i++) {
-        var name = Object.keys(listsMerged)[i];
-
-        stats = mergeStatsLists(stats, listsMerged[name]);
+        for(let j = 0; j < Object.keys(categories[categoryName]).length; j++) {
+            var listName = Object.keys(categories[categoryName])[j];
+            
+            stats = mergeStatsLists(stats, categories[categoryName][listName]);
+        }
     }
 
     return stats;
@@ -1319,6 +1436,629 @@ export const statChars: IObjectKeys = {
     carpentry_wisdom: "☯",
     runecrafting_wisdom: "☯",
     social_wisdom: "☯",
+}
+
+export interface reforgeStats {
+    [key: string]: (tier: number) => statsList
+}
+
+export const reforgeStats: reforgeStats = {
+    ...{ //melee (sword and fishing rod)
+        gentle: tier => ({
+            strength: [3,5,7,10,15,20][tier],
+            attack_speed: [8,10,15,20,25,30][tier],
+        }),
+        odd: tier => ({
+            critical_chance: [12,15,15,20,25,30][tier],
+            critical_damage: [10,15,15,22,30,40][tier],
+            intelligence: [-5,-10,-18,-32,50,-75][tier],
+        }),
+        fast: tier => ({
+            attack_speed: [10,20,30,40,50,60][tier],
+        }),
+        fair: tier => ({
+            strength: [2,3,4,7,10,12][tier],
+            critical_chance: [2,3,4,7,10,12][tier],
+            critical_damage: [2,3,4,7,10,12][tier],
+            intelligence: [2,3,4,7,10,12][tier],
+            attack_speed: [2,3,4,7,10,12][tier],
+        }),
+        epic: tier => ({
+            strength: [15,20,25,32,40,50][tier],
+            critical_damage: [10,15,20,27,35,45][tier],
+            attack_speed: [1,2,4,7,10,15][tier],
+        }),
+        sharp: tier => ({
+            critical_chance: [10,12,14,17,20,25][tier],
+            critical_damage: [20,30,40,55,75,90][tier],
+        }),
+        heroic: tier => ({
+            strength: [15,20,25,32,40,50][tier],
+            intelligence: [40,50,65,80,100,125][tier],
+            attack_speed: [1,2,2,3,5,7][tier],
+        }),
+        spicy: tier => ({
+            strength: [2,3,4,7,10,12][tier],
+            critical_chance: 1,
+            critical_damage: [25,35,45,60,80,100][tier],
+            attack_speed: [1,2,4,7,10,15][tier],
+        }),
+        legendary: tier => ({
+            strength: [3,7,12,18,25,32][tier],
+            critical_chance: [5,7,9,12,15,28][tier],
+            critical_damage: [5,10,15,22,28,36][tier],
+            intelligence: [5,8,12,18,25,35][tier],
+            attack_speed: [2,3,5,7,10,15][tier],
+        }),
+
+
+    },
+    ...{ //sword
+        dirty: tier => ({
+            strength: [2,4,6,10,12,15][tier],
+            attack_speed: [2,3,5,10,15,20][tier],
+            ferocity: [2,3,6,9,12,15][tier],
+        }),
+        fabled: tier => ({
+            strength: [30,35,40,50,60,75][tier],
+            critical_damage: [15,20,25,32,40,50][tier],
+        }),
+        suspicious: tier => ({ // +15 weapon damage
+            critical_chance: [1,2,3,5,7,10][tier],
+            critical_damage: [30,40,50,65,85,110][tier],
+        }),
+        gilded: tier => ({
+            strength: [0,0,0,0,75,90][tier],
+        }),
+        warped: tier => ({
+            strength: tier >= 2 ? 165 : 0,
+            intelligence: tier == 4 ? 65 : 0,
+        }),
+        withered: tier => ({
+            strength: [60,75,90,110,135,170][tier] // +1 str per cata level
+        }),
+        bulky: tier => ({
+            health: [4,6,9,12,15,20][tier],
+            defense: [2,3,5,8,13,21][tier],
+        }),
+    },
+    ...{ //fishing rod
+        salty: tier => ({
+            sea_creature_chance: [1,2,2,3,5,7][tier],
+        }),
+        treacherous: tier => ({
+            sea_creature_chance: [1,2,2,3,5,7][tier],
+            strength: 5*(tier+1),
+        }),
+        stiff: tier => ({
+            sea_creature_chance: [1,2,2,3,5,7][tier],
+            strength: 2*(tier+1),
+        }),
+        lucky: tier => ({
+            sea_creature_chance: [1,2,2,3,5,7][tier],
+            magic_find: tier+1,
+        }),
+        pichin: tier => ({ //could be pitchin' idk
+            sea_creature_chance: [1,2,2,3,5,7][tier],
+            fishing_speed: [1,2,4,6,8,10][tier],
+        }),
+    },
+    ...{ //ranged weapon
+        deadly: tier => ({
+            critical_chance: [10,13,16,19,22,25][tier],
+            critical_damage: [5,10,18,32,50,78][tier],
+        }),
+        fine: tier => ({
+            strength: [3,7,12,18,25,33][tier],
+            critical_chance: [5,7,9,12,15,18][tier],
+            critical_damage: [2,4,7,10,15,20][tier],
+        }),
+        grand: tier => ({
+            strength: [25,32,40,50,60,75][tier],
+        }),
+        hasty: tier => ({
+            strength: [3,5,7,10,15,20][tier],
+            critical_chance: [20,25,30,40,50,75][tier],
+        }),
+        neat: tier => ({
+            critical_chance: [10,12,14,17,20,15][tier],
+            critical_damage: [4,8,14,20,30,40][tier],
+            intelligence: [3,6,10,15,20,25][tier],
+        }),
+        rapid: tier => ({
+            strength: [2,3,4,7,10,15][tier],
+            critical_damage: [35,45,55,65,75,90][tier],
+        }),
+        unreal: tier => ({
+            strength: [3,7,12,18,25,34][tier],
+            critical_chance: [8,9,10,11,13,15][tier],
+            critical_damage: [5,10,18,30,50,70][tier],
+        }),
+        awkward: tier => ({
+            critical_chance: [10,12,15,20,25,30][tier],
+            critical_damage: [5,10,15,22,30,35][tier],
+            intelligence: [-5,-10,-18,-32,-50,-72][tier],
+        }),
+        rich: tier => ({
+            strength: [2,3,4,7,10,15][tier],
+            critical_chance: [10,12,14,17,20,25][tier],
+            critical_damage: [1,2,4,7,10,15][tier],
+            intelligence: [20,25,30,40,50,60][tier],
+        }),
+
+        precise: tier => ({
+            strength: [3,7,12,18,25,34][tier],
+            critical_chance: [8,9,10,11,13,15][tier],
+            critical_damage: [5,10,18,32,50,70][tier],
+        }),
+        spritual: tier => ({
+            strength: [4,8,14,20,28,38][tier],
+            critical_chance: [7,8,9,10,12,14][tier],
+            critical_damage: [10,15,23,37,55,75][tier],
+        }),
+        headstrong: tier => ({
+            strength: [2,5,10,16,23,33][tier],
+            critical_chance: [10,11,12,13,15,17][tier],
+            critical_damage: [4,8,16,18,42,60][tier],
+        }),
+    },
+    ...{ //armor
+        clean: tier => ({
+            health: [5,7,10,15,20,25][tier],
+            defense: [5,7,10,15,20,25][tier],
+            critical_chance: 2*(tier+1),
+        }),
+        fierce: tier => ({
+            strength: 2*(tier+1),
+            critical_chance: [2,3,4,5,6,8][tier],
+            critical_damage: [4,7,10,14,18,24][tier],
+        }),
+        heavy: tier => ({
+            defense: [25,35,50,65,80,110][tier],
+            walk_speed: -1,
+            critical_damage: [-1,-2,-2,-3,-5,-7][tier],
+        }),
+        light: tier => ({
+            health: [5,7,10,15,20,25][tier],
+            defense: [1,2,3,4,5,6][tier],
+            walk_speed: tier+1,
+            critical_chance: Math.ceil(0.5*tier+0.5),
+            critical_damage: (tier+1),
+        }),
+        mythic: tier => ({
+            health: 2*(tier+1),
+            defense: 2*(tier+1),
+            strength: 2*(tier+1),
+            walk_speed: 2,
+            critical_chance: tier+1,
+            intelligence: [20,25,30,40,50,60][tier],
+        }),
+        pure: tier => ({
+            health: [2,3,4,6,8,10][tier],
+            defense: [2,3,4,6,8,10][tier],
+            strength: [2,3,4,6,8,10][tier],
+            walk_speed: 1,
+            critical_chance: 2*tier+1,
+            critical_damage: [2,3,4,6,8,8][tier],
+            attack_speed: tier || 1, //  s h o r t   h a n d   :)
+            intelligence: [2,3,4,6,8,10][tier],
+        }),
+        smart: tier => ({
+            health: [4,6,9,12,15,20][tier],
+            defense: [4,6,9,12,15,20][tier],
+            intelligence: 20*(tier+1),
+        }),
+        titanic: tier => ({
+            health: [10,15,20,25,35,50][tier],
+            defense: [10,15,20,25,35,50][tier],
+        }),
+        wise: tier => ({
+            health: [6,8,10,12,15,20][tier],
+            walk_speed: [1,1,1,2,2,3][tier],
+            intelligence: [25,50,75,100,125,150][tier],
+        }),
+
+        perfect: tier => ({ //+2% def
+            defense: [25,35,50,65,80,110][tier],
+        }),
+        necrotic: tier => ({
+            intelligence: [30,60,90,120,150,200][tier],
+        }),
+        ancient: tier => ({ //+1 cd per cata level
+            health: 7,
+            defense: 7,
+            strength: [4,8,12,18,25,35][tier],
+            critical_chance: [3,5,7,9,12,15][tier],
+            intelligence: [6,9,12,16,20,25][tier],
+        }),
+        spiked: tier => ({
+            health: [2,3,4,6,8,10][tier],
+            defense: [2,3,4,6,8,10][tier],
+            strength: [3,4,6,8,10,12][tier],
+            walk_speed: 1,
+            critical_chance: 2*(tier+1),
+            critical_damage: [3,4,6,8,10,12][tier],
+            attack_speed: [1,1,2,3,4,5][tier],
+            intelligence: [3,4,6,8,10,12][tier],
+        }),
+        renowned: tier => ({ //all stats increased by +1%
+            health: tier+2,
+            defense: tier+2,
+            strength: [3,4,6,8,10,12][tier],
+            walk_speed: 1,
+            critical_chance: 2*(tier+1),
+            critical_damage: [3,4,6,8,10,12][tier],
+            attack_speed: [1,1,2,3,4,5][tier],
+            intelligence: [3,4,6,8,10,12][tier],
+        }),
+        cubic: tier => ({ // -2% damage from nether mobs
+            strength: [3,5,7,10,12,15][tier],
+            health: [5,7,10,15,20,25][tier],
+        }),
+        hyper: tier => ({
+            strength: [2,4,6,7,10,12][tier],
+            attack_speed: tier+2,
+            walk_speed: Math.ceil(0.5*tier+0.5),
+        }),
+        reinforced: tier => ({
+            defense: [25,35,50,65,80,110][tier],
+        }),
+        loving: tier => ({
+            health: [4,5,6,8,10,14][tier],
+            defense: [4,5,6,7,10,14][tier],
+            intelligence: 20*(tier+1),
+            ability_damage: 5,
+        }),
+        ridiculous: tier => ({
+            health: [10,15,20,25,35,50][tier],
+            defense: [10,15,20,25,35,50][tier],
+            critical_chance: tier+1,
+        }),
+        empowered: tier => ({
+            health: [10,15,20,25,35,50][tier], //why are there so many of these
+            defense: [10,15,20,25,35,50][tier],
+        }),
+        giant: tier => ({
+            health: [50,60,80,120,180,240][tier],
+        }),
+        submerged: tier => ({
+            critical_chance: 2*(tier+1),
+            sea_creature_chance: 0.5+tier,
+        }),
+        jaded: tier => ({
+            mining_speed: [5,12,20,30,45,60][tier],
+            mining_fortune: 5*(tier+1),
+        })
+    },
+    ...{ //tool (im really tired of doing these so ill do this one later)
+
+    },
+    ...{ //equipment (im so glad theres only 4 of these AAAAAAAAA)
+        waxed: tier => ({
+            health: [5,6,8,10,12,15][tier],
+            critical_chance: tier+2,
+        }),
+        fortified: tier => ({
+            defense: [12,14,17,20,25,30][tier],
+        }),
+        strengthened: tier => ({
+            defense: [3,4,5,6,8,10][tier],
+            strength: tier+2,
+        }),
+        glistening: tier => ({
+            intelligence: tier+2,
+            mining_fortune: [5,6,8,10,12,15][tier],
+        }),
+    }
+}
+
+export interface enchantStats {
+    [key: string]: (level: number) => statsList
+}
+
+export const enchantStats: enchantStats = { //doing this without a 2nd monitor and youtube is impossible AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    ...{ //armor
+        big_brain: level => ({
+            intelligence: 5*level,
+        }),
+        growth: level => ({
+            health: 15*level,
+        }),
+        protection: level => ({
+            defense: [4,8,12,16,20,25,30][level],
+        }),
+        rejuvenate: level => ({
+            health_regen: 2*level,
+        }),
+        true_protection: level => ({
+            true_defense: 5,
+        }),
+        smarty_pants: level => ({
+            intelligence: 5*level,
+        }),
+        sugar_rush: level => ({
+            walk_speed: 2*level,
+        }),
+    },
+}
+
+export interface gemstoneStats {
+    [key: string]: {
+        [key: string]: (tier: number) => statsList
+    }
+}
+
+export const gemstoneStats: gemstoneStats = {
+    ruby: { //ruby my beloved
+        rough: tier => ({
+            health: [1,2,3,4,5,7,7][tier]
+        }),
+        flawed: tier => ({
+            health: [3,4,5,6,8,10,10][tier]
+        }),
+        fine: tier => ({
+            health: [4,5,6,8,10,14,14][tier]
+        }),
+        flawless: tier => ({
+            health: [5,7,10,14,18,22,22][tier]
+        }),
+        perfect: tier => ({
+            health: [6,9,13,18,24,30,30][tier]
+        }),
+    },
+    amethyst: {
+        rough: tier => ({
+            defense: tier+1
+        }),
+        flawed: tier => ({
+            defense: [3,4,5,6,8,10,10][tier]
+        }),
+        fine: tier => ({
+            defense: [4,5,6,8,10,14,14][tier]
+        }),
+        flawless: tier => ({
+            defense: [5,7,10,14,18,22,22][tier]
+        }),
+        perfect: tier => ({
+            defense: [6,9,13,18,24,30,30][tier]
+        }),
+    },
+    jade: {
+        rough: tier => ({
+            mining_fortune: 2*(tier+1)
+        }),
+        flawed: tier => ({
+            mining_fortune: [3,5,7,10,14,18,22][tier]
+        }),
+        fine: tier => ({
+            mining_fortune: [5,7,10,15,20,25,30][tier]
+        }),
+        flawless: tier => ({
+            mining_fortune: [7,10,15,20,27,35,44][tier]
+        }),
+        perfect: tier => ({
+            mining_fortune: [10,14,20,30,40,50,30][tier]
+        }),
+    },
+    sapphire: {
+        rough: tier => ({
+            intelligence: [2,3,4,5,6,7,7][tier]
+        }),
+        flawed: tier => ({
+            intelligence: [5,5,6,7,8,10,10][tier]
+        }),
+        fine: tier => ({
+            intelligence: [7,8,9,10,11,12,12][tier]
+        }),
+        flawless: tier => ({
+            intelligence: [10,11,12,14,17,20,20][tier]
+        }),
+        perfect: tier => ({
+            intelligence: [12,14,17,20,24,30,30][tier]
+        }),
+    },
+    amber: {
+        rough: tier => ({
+            mining_speed: 4*(tier+1)
+        }),
+        flawed: tier => ({
+            mining_speed: [6,10,14,18,24,30,36][tier]
+        }),
+        fine: tier => ({
+            mining_speed: [10,14,20,28,36,45,54][tier]
+        }),
+        flawless: tier => ({
+            mining_speed: [14,20,30,44,58,75,92][tier]
+        }),
+        perfect: tier => ({
+            mining_speed: [20,28,40,60,80,100,120][tier]
+        }),
+    },
+    topaz: {
+        rough: tier => ({
+            pristine: (tier <= 5) ? 0.4 : 0.5
+        }),
+        flawed: tier => ({
+            pristine: (tier <= 5) ? 0.8 : 0.9
+        }),
+        fine: tier => ({
+            pristine: (tier <= 5) ? 1.2 : 1.3
+        }),
+        flawless: tier => ({
+            pristine: (tier <= 5) ? 1.6 : 1.8
+        }),
+        perfect: tier => ({
+            pristine: (tier <= 5) ? 2.0 : 2.2
+        }),
+    },
+    jasper: {
+        rough: tier => ({
+            strength: [1,1,1,2,3,4,4][tier]
+        }),
+        flawed: tier => ({
+            strength: [2,2,3,4,4,5,5][tier]
+        }),
+        fine: tier => ({
+            strength: [3,3,4,5,6,7,7][tier]
+        }),
+        flawless: tier => ({
+            strength: [5,6,7,8,10,12,12][tier]
+        }),
+        perfect: tier => ({
+            strength: [6,7,8,11,13,16,16][tier]
+        }),
+    },
+    opal: { // divine rarity opal doesnt exist (at least on wiki) so i just assumed
+        rough: tier => ({
+            true_defense: [1,1,1,2,3,4,4][tier],
+        }),
+        flawed: tier => ({
+            true_defense: [2,2,2,3,3,4,4][tier]
+        }),
+        fine: tier => ({
+            true_defense: [3,3,3,4,4,5,5][tier]
+        }),
+        flawless: tier => ({
+            true_defense: [4,4,5,6,8,9,9][tier]
+        }),
+        perfect: tier => ({
+            true_defense: [5,6,7,9,11,13][tier]
+        }),
+    },
+}
+
+export const specialGemstoneSlots = ["COMBAT", "OFFENSIVE", "DEFENSIVE", "MINING", "UNIVERSAL"];
+
+export interface gemstoneSlotContents {
+    tier?: keyof typeof gemstoneStats.ruby,
+    gemstone?: keyof typeof gemstoneStats,
+}
+
+export interface gemstoneSlots {
+    [key: string]: gemstoneSlotContents
+}
+
+export const gemstoneColors: IObjectKeys = {
+    ruby: "c",
+    amethyst: "5",
+    jade: "a",
+    sapphire: "b",
+    amber: "7",
+    topaz: "e",
+    jasper: "d",
+    opal: "f",
+}
+
+export function calculateItemStats(item: any, baseItem: item): statsCategory {
+    var stats: statsCategory = {};
+
+    // console.log(JSON.stringify(item));
+    // console.log(JSON.stringify(baseItem));
+
+    /*
+    sources
+        base stats
+        gems
+        reforge
+        hpbs
+        enchants
+        art of peace
+        art of war
+        attributes
+    */
+
+    var rarity = Object.keys(mpTable).findIndex(name => {return baseItem?.tier == name}) + (item.tag.ExtraAttributes.rarity_upgrades || 0);
+
+
+    //base stats
+    stats.baseStats = itemStatsToStatsList(baseItem.stats || {});
+    
+    //hpbs
+    if(new Set(["HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"]).has(baseItem.category)) { //its an armor piece
+        stats.hpbs = {
+            health: 4*item.tag.ExtraAttributes.hot_potato_count || 0,
+            defense: 2*item.tag.ExtraAttributes.hot_potato_count || 0,
+        }
+    } else { //its probably some type of damager
+        stats.hpbs = {
+            strength: 2*item.tag.ExtraAttributes.hot_potato_count || 0,
+        }
+    }
+
+    //reforge
+    var reforge: string = item.tag.ExtraAttributes.modifier;
+
+    if(reforgeStats[reforge] !== undefined) {
+        stats[`${colorChar}5${reforge.capitalize()}`] = reforgeStats[reforge](Math.min(rarity, 5));
+    } else {
+        console.warn(`${reforge} is not in reforgeStats`);
+    }
+
+    //enchants
+    for(let i in Object.keys(item.tag.ExtraAttributes.enchantments)) {
+        var enchantName: string = Object.keys(item.tag.ExtraAttributes.enchantments)[i];
+        if(!enchantName) continue;
+
+        var enchantLevel = item.tag.ExtraAttributes.enchantments[enchantName];
+
+
+        if(enchantStats[enchantName] !== undefined) {
+            var recievedStats = enchantStats[enchantName](enchantLevel); //variable naming :)
+
+            stats[`${colorChar}${statColors[Object.keys(recievedStats)[0] || "f"]}${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`] = recievedStats;
+        } else {
+            console.warn(`couldnt find enchant ${enchantName}`)
+        }
+    }
+
+    var gemstones: gemstoneSlots = {};
+
+    if(item.tag.ExtraAttributes.gems !== undefined) {
+        for(let i in Object.keys(item.tag.ExtraAttributes.gems)) {
+            var key: string = Object.keys(item.tag.ExtraAttributes.gems)[i];
+            var value: string = item.tag.ExtraAttributes.gems[key];
+    
+            for(let j in specialGemstoneSlots) {
+                if(key.includes(specialGemstoneSlots[j])) {
+                    if(key.includes("_gem")) { //its the gemstone in the slot
+                        if(gemstones[key.slice(0, -"_gem".length)] === undefined) gemstones[key.slice(0, -"_gem".length)] = {};
+
+                        gemstones[key.slice(0, -"_gem".length)].gemstone = value.toLowerCase();
+                    } else { //its the tier of it
+                        if(gemstones[key] === undefined) gemstones[key] = {};
+    
+                        gemstones[key].tier = value.toLowerCase();
+                    }
+
+                    break;
+                } else {
+                    gemstones[key] = {gemstone: key.slice(0, -"_0".length).toLowerCase(), tier: value.toLowerCase()}
+
+                    break;
+                }
+            }
+        }
+    }
+
+    for(let i in Object.values(gemstones)) {
+        var gemInfo = Object.values(gemstones)[i];
+
+        if(gemInfo.gemstone === undefined) {
+            console.warn("gemstone.gemstone was undefined");
+            continue;
+        }
+
+        if(gemInfo.tier === undefined) {
+            console.warn("gemstone.tier was undefined");
+            continue;
+        }
+
+        var recievedStats = gemstoneStats[gemInfo.gemstone][gemInfo.tier](rarity); // :))))))))) variable naming
+
+        stats[`${colorChar + gemstoneColors[gemInfo.gemstone]}${(gemInfo.tier as string).capitalize()} ${(gemInfo.gemstone as string).capitalize()} Gemstone`] = recievedStats;
+    }
+
+    return stats;
 }
 
 export const skillLevelStats = {
@@ -2223,6 +2963,52 @@ export async function calculateCakeStats(data: apiData, selectedProfile: number)
     return {cake: stats}
 }
 
+export const armorStatNames: IObjectKeys = {
+    hpbs: "Hot Potato Books",
+    reforge: "Reforge",
+    baseStats: "Base Value",
+}
+
+export const armorStatColors: IObjectKeys = {
+    hpbs: "6",
+    reforge: "5",
+    baseStats: "f",
+}
+
+export async function calculateArmorStats(data: apiData, selectedProfile: number): Promise<statsCategories> {
+    if(!data.profileData) return {};
+
+    var inv_armor_raw = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].inv_armor;
+
+    var stats: statsCategories = {};
+
+    var armor = await parseContents(inv_armor_raw) as IObjectKeys;
+    if(armor.i === undefined) return {};
+
+    var armorContents: IObjectKeys[] = armor.i;
+
+
+    for(let i in armorContents) {
+        var piece = armorContents[i];
+
+        var baseItem = await itemIdToItem(piece.tag.ExtraAttributes.id);
+        if(!baseItem) {
+            console.warn("piece baseItem is undefined");
+            continue;
+        }
+
+        var category = baseItem.category;
+
+        console.log(category.toLowerCase())
+
+        stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem);
+    }
+
+    console.log(stats);
+
+    return stats;
+}
+
 export const statCategoryNames: IObjectKeys = {
     base: "Base",
     skills: "Skills",
@@ -2236,7 +3022,7 @@ export const statCategoryNames: IObjectKeys = {
     tuning: "Tuning",
     enrichments: "Enrichments",
     potions: "Effects",
-    cake: "Cake"
+    cake: "Cake",
 }
 
 export const statCategoryColors: IObjectKeys = {
@@ -2278,7 +3064,9 @@ export async function calculateStats(data: apiData, selectedProfile: number): Pr
         ),
         cake: mapObjectKeys(
             await calculateCakeStats(data, selectedProfile), value => value
-        )
+        ),
+
+        ...(mapObjectValues(await calculateArmorStats(data, selectedProfile), value => mapObjectKeys(value, value => armorStatNames[value] === undefined ? value : colorChar+armorStatColors[value]+armorStatNames[value])))
     }
 
 

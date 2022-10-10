@@ -17,7 +17,6 @@ export default function Stats({statValues, summedList, sources}: props) {
         return <Stat onClick={setSelectedStat} sources={sources[key] || {}} statName={key as statName} value={summedList[key] || 0}/>
     });
 
-
     return (
         <>
             <StatsPopUp

@@ -45,3 +45,5 @@ testContent/refractionprofile.json
 #other test content
 testContent/parsedAccBag.json
 testContent/items.json
+testContent/item.json
+testContent/baseItem.json
