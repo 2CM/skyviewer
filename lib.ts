@@ -720,6 +720,17 @@ export interface cake_buff {
     expire_at: number
 }
 
+export interface pet {
+    uuid: string,
+    type: string,
+    exp: number,
+    active: boolean,
+    tier: string,
+    heldItem: string | null,
+    candyUsed: number,
+    skin: string | null
+}
+
 export interface profileMember extends IObjectKeys { //all objects can be expanded upon; all any[] | any need more info
     //misc important
     last_save: number,
@@ -804,7 +815,7 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
     trapper_quest?: object,
 
     //pets
-    pets: object[],
+    pets: pet[],
     autopet: object,
 
     //slayer
@@ -3164,6 +3175,50 @@ export async function calculateEquipmentStats(data: apiData, selectedProfile: nu
     return stats;
 }
 
+export const petScores = [
+    10,
+    25,
+    50,
+    75,
+    100,
+    130,
+    175,
+    225,
+    275,
+    325,
+]
+
+export async function calculatePetScoreStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
+    if(!data.profileData) return {};
+
+    var pets = data.profileData.profiles[selectedProfile].members[playerUUID].pets;
+
+    var petScore = 0;
+    var mf = 0;
+
+    for(let i in pets) {
+        var pet = pets[i];
+
+        var rarity = Object.keys(mpTable).findIndex(name => {return pet.tier == name});
+
+        petScore += rarity;
+    }
+
+    for(let i in petScores) {
+        let num = petScores[i];
+
+        if(petScore < num) break;
+
+        mf++;
+    }
+
+    var stats: statsCategory = {};
+
+    stats[colorChar+"bPet Score ("+petScore+")"] = {magic_find: mf};
+
+    return stats;
+}
+
 export const statCategoryNames: IObjectKeys = {
     base: "Base",
     skills: "Skills",
@@ -3195,13 +3250,13 @@ export const statCategoryColors: IObjectKeys = {
     tuning: "e",
     enrichments: "b",
     potions: "5",
-    cake: "d"
+    cake: "d",
 }
 
 export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
     // return {...await calculateAccStats(data, selectedProfile)};
 
-    return {
+    var returnValue: statsCategories = {
         base: {base: baseStats},
         skills: await calculateSkillStats(data, selectedProfile, playerUUID),
         hotm: await calculateHotmStats(data, selectedProfile, playerUUID),
@@ -3221,8 +3276,13 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
             await calculateCakeStats(data, selectedProfile, playerUUID), value => value
         ),
         ...(mapObjectValues(await calculateArmorStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => armorStatNames[value] === undefined ? value : colorChar+armorStatColors[value]+armorStatNames[value]))),
-        ...(mapObjectValues(await calculateEquipmentStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => armorStatNames[value] === undefined ? value : colorChar+armorStatColors[value]+armorStatNames[value]))),
+        ...(mapObjectValues(await calculateEquipmentStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => armorStatNames[value] === undefined ? value : colorChar+armorStatColors[value]+armorStatNames[value])))
     }
+
+    var petScore = await calculatePetScoreStats(data, selectedProfile, playerUUID);
+    returnValue[Object.keys(petScore)[0] || "error"] = petScore;
+
+    return returnValue;
 
 
 
