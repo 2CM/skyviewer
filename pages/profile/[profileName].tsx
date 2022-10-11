@@ -5,6 +5,7 @@ import { readFileSync } from "fs";
 import { allSkillExpInfo, baseProfile, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, item, statsList, statsCategory, sumStatsCategories, getStatSources } from "../../lib";
 import Skills from "../../components/skills";
 import Stats from "../../components/stats";
+import { GetServerSideProps } from "next";
 
 
 export interface dataContext {
@@ -77,9 +78,23 @@ export default function profileViewer(props: serverData) {
 }
 
 
-export async function getServerSideProps(): Promise<serverSideProps> {
+export const getServerSideProps: GetServerSideProps = async (context) => {
+	console.log("-----------------------------------------------------------------------")
+
+	var staticFileName =
+		context.params?.profileName == "2CGI" ? "skyblockprofile.json" :
+		context.params?.profileName == "breefing" ? "breefingprofile.json" :
+		// context.params?.profileName == "refraction" ? "refractionprofile.json" :
+		"skyblockprofile.json"
+
+	var playerUUID =
+		context.params?.profileName == "2CGI" ? "86a6f490bf424769a625a266aa89e8d0" :
+		context.params?.profileName == "breefing" ? "6d2564e80798417c877f799e9727e2bd" :
+		// "refraction" ? "28667672039044989b0019b14a2c34d6" :
+		"86a6f490bf424769a625a266aa89e8d0";
+
 	var apiData: apiData = {
-		profileData: JSON.parse(readFileSync("testContent/skyblockprofile.json", "utf8")),
+		profileData: JSON.parse(readFileSync("testContent/"+staticFileName, "utf8")),
 		itemsData: JSON.parse(readFileSync("testContent/items.json", "utf8")),
 	}
 
@@ -93,13 +108,14 @@ export async function getServerSideProps(): Promise<serverSideProps> {
 	}
 
 	if(!apiData.profileData) throw new Error("eeeeee")
+	if(apiData.profileData.success === false) throw new Error("eefe")
 	
-	var selectedProfile = 3;
+	var selectedProfile = getMostRecentProfile(apiData.profileData.profiles, playerUUID);
 
 	await initItems(apiData);
 
-	returnValue.props.computedData.skills = calculateAllSkillExp(apiData, selectedProfile);
-	returnValue.props.computedData.stats = await calculateStats(apiData, selectedProfile);
+	returnValue.props.computedData.skills = calculateAllSkillExp(apiData, selectedProfile, playerUUID);
+	returnValue.props.computedData.stats = await calculateStats(apiData, selectedProfile, playerUUID);
 
 	return returnValue;
 }

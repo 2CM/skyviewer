@@ -1,0 +1,1 @@
+- exceptions in calculateItemStats()
