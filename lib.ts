@@ -2214,7 +2214,7 @@ export async function calculateSkillStats(data: apiData, selectedProfile: number
 
         var levelInfo = skillExpToLevel(data.profileData.profiles[selectedProfile].members[playerUUID][skillNameToApiName[name]], name)
 
-        stats[colorChar+skillColors[name]+name.capitalize()+" "+levelInfo.level] = skillLevelStats[name as keyof typeof skillLevelStats](Math.floor(levelInfo.level))
+        stats[colorChar+skillColors[name]+name.capitalize()+" "+Math.floor(levelInfo.level)] = skillLevelStats[name as keyof typeof skillLevelStats](Math.floor(levelInfo.level))
     }
 
     return stats;
