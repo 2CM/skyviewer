@@ -2068,8 +2068,10 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
     if(itemGems !== undefined) {
         for(let i in Object.keys(itemGems)) {
             var key: string = Object.keys(itemGems)[i];
-            var value: string = itemGems[key];
+            var value: string | {uuid: string, quality: string} = itemGems[key];
     
+            if(typeof value === "object") value = value.quality;
+
             if(key == "unlocked_slots") continue;
 
             for(let j in specialGemstoneSlots) {
@@ -2131,6 +2133,27 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
     }
 
     //exceptions here
+    /*
+    
+    exceptions include
+        enchants
+            bit shop enchants
+        armor
+            bulwark sets
+        abilities
+            equipment
+                vanq magma necklace
+                    needs research
+                vanq glowstone gauntlet
+                    needs research
+                synthesizers
+                    needs research
+                vanq ghast cloak
+                    needs research
+                vanq blaze belt
+                    needs research
+
+    */
 
     return stats;
 }
@@ -2774,7 +2797,8 @@ export interface accStatsInterface {
     taliStats: statsCategory,
     enrichments: statsCategory,
     magicPower: statsCategory,
-    tuning: statsCategory
+    tuning: statsCategory,
+    gems: statsCategory,
 }
 
 export async function calculateAccStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<accStatsInterface | undefined> {
@@ -2791,6 +2815,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
         enrichments: {},
         magicPower: {},
         tuning: {},
+        gems: {},
     };
 
     var taliBag = await parseContents(talisman_bag_raw) as IObjectKeys;
@@ -2800,7 +2825,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
     if(inv.i === undefined) return;
 
     var taliContents: IObjectKeys[] = inv.i.concat(taliBag.i);
-    taliContents = taliContents.filter(value => Object.keys(value).length !== 0);
+    taliContents = taliContents.filter(value => Object.keys(value).length);
 
     var mp = 0;
 
@@ -2814,6 +2839,8 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
             console.warn(`cant find item ${itemId}`);
             continue;
         }
+
+        if(itemInfo.category !== "ACCESSORY") continue;
 
         var rarityIndex = Object.keys(mpTable).findIndex(name => {return itemInfo?.tier == name});
         if(rarityIndex == -1) rarityIndex = 0;
@@ -2833,6 +2860,20 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
             stats.enrichments[formattedName][itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
         }
 
+        if(itemAttributes.gems) {
+            for(let j in Object.keys(itemAttributes.gems)) {
+                var gemName: string = Object.keys(itemAttributes.gems)[j];
+                var gemValue: string | {uuid: string, quality: string} = itemAttributes.gems[gemName];
+
+                if(typeof gemValue === "object") gemValue = gemValue.quality;
+
+                if(gemName.endsWith("_0")) {
+                    var recievedGemstoneStats = multiplyStatsList(gemstoneStats[gemName.slice(0,-"_0".length).toLowerCase()][gemValue.toLowerCase()](5), 0.5);
+
+                    stats.gems[formattedName] = mergeStatsLists(stats.gems[formattedName], recievedGemstoneStats);
+                }
+            }
+        }
 
         mp += mpTable[Object.keys(mpTable)[rarity] as keyof typeof mpTable];
     }
@@ -3132,6 +3173,7 @@ export const statCategoryNames: IObjectKeys = {
     harp: "Harp",
     slayer: "Slayer",
     taliStats: "Accessory Stats",
+    gems: "Accessory Gems",
     magicPower: "Magic Power",
     tuning: "Tuning",
     enrichments: "Enrichments",
@@ -3148,6 +3190,7 @@ export const statCategoryColors: IObjectKeys = {
     harp: "d",
     slayer: "2",
     taliStats: "9",
+    gems: "d",
     magicPower: "b",
     tuning: "e",
     enrichments: "b",
