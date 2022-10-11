@@ -955,7 +955,7 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
     //storage / inventory
     inv_armor: contents,
     equippment_contents: contents, //they misspelled it in the api lol
-    inv_contents: object,
+    inv_contents: contents,
     ender_chest_contents?: object,
     backpack_contents?: object,
     personal_vault_contents: object,
@@ -2781,6 +2781,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
     if(!data.profileData) return;
 
     var talisman_bag_raw = data.profileData.profiles[selectedProfile].members[playerUUID].talisman_bag;
+    var inv_raw = data.profileData.profiles[selectedProfile].members[playerUUID].inv_contents
     var accessory_bag_storage = data.profileData.profiles[selectedProfile].members[playerUUID].accessory_bag_storage;
 
     if(!talisman_bag_raw) return;
@@ -2795,7 +2796,10 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
     var taliBag = await parseContents(talisman_bag_raw) as IObjectKeys;
     if(taliBag.i === undefined) return;
 
-    var taliContents: IObjectKeys[] = taliBag.i;
+    var inv = await parseContents(inv_raw) as IObjectKeys;
+    if(inv.i === undefined) return;
+
+    var taliContents: IObjectKeys[] = inv.i.concat(taliBag.i);
     taliContents = taliContents.filter(value => Object.keys(value).length !== 0);
 
     var mp = 0;
@@ -3203,7 +3207,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
 
         holdable
             armor (M)
-            equipment
+            equipment (M)
 
         accessories (M)
             accessory power (Y)
