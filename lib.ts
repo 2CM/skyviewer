@@ -2058,7 +2058,7 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
 
             stats[`${colorChar}b${attributeName.replaceAll("_", " ").capitalize()} ${attributeLevel}`] = recievedAttributeStats;
         } else {
-            console.warn(`couldnt find attribute ${attributeName}`);
+            // console.warn(`couldnt find attribute ${attributeName}`);
         }
     }
 
