@@ -486,20 +486,12 @@ export const colorCodeToHex: IObjectKeys = {
 
 // *** PROFILES ***
 
-export function getMostRecentProfile(apiData: any): number {
-    var highest = 0;
-    var highestIndex = 0;
-
-    for (let i = 0; i < apiData.profiles.length; i++) {
-        var last_save = apiData.profiles[i].last_save
-
-        if(last_save > highest) {
-            highest = last_save;
-            highestIndex = i;
-        }
+export function getMostRecentProfile(profiles: baseProfile[], playerUUID: string): number {
+    for(let i = 0; i < profiles.length; i++) {
+        if(profiles[i].selected === true) return i; 
     }
 
-    return highestIndex;
+    return -1;
 }
 
 export interface membersList {
@@ -512,6 +504,7 @@ export interface baseProfile { //base profile. all profile types can be derived 
     community_upgrades: object
     last_save: number,
     cute_name: string,
+    selected: boolean,
 }
 
 export interface profile extends baseProfile { //normal profile
@@ -961,7 +954,7 @@ export interface profileMember extends IObjectKeys { //all objects can be expand
     
     //storage / inventory
     inv_armor: contents,
-    equipment_contents: object,
+    equippment_contents: contents, //they misspelled it in the api lol
     inv_contents: object,
     ender_chest_contents?: object,
     backpack_contents?: object,
@@ -1119,7 +1112,7 @@ export function skillExpToLevel(exp: number, skill: skillName, extrapolate: bool
     }
 }
 
-export function calculateAllSkillExp(apiData: apiData, selectedProfile: number): allSkillExpInfo {
+export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, playerUUID: string): allSkillExpInfo {
     if(apiData.profileData === undefined) {
         console.error("profileData is undefined");
         return {};
@@ -1132,7 +1125,7 @@ export function calculateAllSkillExp(apiData: apiData, selectedProfile: number):
 
 		if(name == "dungeoneering") continue;
 
-		var skillExp = apiData.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"][skillNameToApiName[name as keyof typeof skillNameToApiName] as keyof typeof apiData.profileData] as number;
+		var skillExp = apiData.profileData.profiles[selectedProfile].members[playerUUID][skillNameToApiName[name as keyof typeof skillNameToApiName] as keyof typeof apiData.profileData] as number;
 
 
 		skills[name as keyof typeof skills] = {
@@ -1960,6 +1953,34 @@ export const gemstoneRarities: IObjectKeys = {
     perfect: "LEGENDARY"
 }
 
+export interface attributeStats {
+    [key: string]: (level: number) => statsList
+}
+
+export const attributeStats: attributeStats = {
+    attack_speed: level => ({
+        attack_speed: level
+    }),
+    speed: level => ({
+        walk_speed: 5*level
+    }),
+    life_regeneration: level => ({
+        health_regen: 1.25*level
+    }),
+    mana_pool: level => ({
+        intelligence: 20*level
+    }),
+    fishing_experience: level => ({
+        fishing_wisdom: 0.5*level
+    }),
+    fishing_speed: level => ({
+        fishing_speed: 3*level
+    }),
+    hunter: level => ({
+        sea_creature_chance: 0.1*level
+    }),
+}
+
 export function calculateItemStats(item: any, baseItem: item): statsCategory {
     var stats: statsCategory = {};
 
@@ -1982,7 +2003,7 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
 
     //base stats
     stats.baseStats = itemStatsToStatsList(baseItem.stats || {});
-    
+
     //hpbs
     if(new Set(["HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"]).has(baseItem.category)) { //its an armor piece
         stats.hpbs = {
@@ -1996,38 +2017,61 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
     }
 
     //reforge
-    var reforge: string = item.tag.ExtraAttributes.modifier;
+    var reforge: string | undefined = item.tag.ExtraAttributes.modifier;
 
-    if(reforgeStats[reforge] !== undefined) {
-        stats[`${colorChar}5${reforge.capitalize()}`] = reforgeStats[reforge](Math.min(rarity, 5));
-    } else {
-        console.warn(`${reforge} is not in reforgeStats`);
+    if(reforge !== undefined) {
+        if(reforgeStats[reforge] !== undefined) {
+            stats[`${colorChar}5${reforge.capitalize()}`] = reforgeStats[reforge](Math.min(rarity, 5));
+        } else {
+            console.warn(`${reforge} is not in reforgeStats`);
+        }
     }
 
     //enchants
-    for(let i in Object.keys(item.tag.ExtraAttributes.enchantments)) {
-        var enchantName: string = Object.keys(item.tag.ExtraAttributes.enchantments)[i];
+    var enchantsList = item.tag.ExtraAttributes.enchantments || {};
+
+    for(let i in Object.keys(enchantsList)) {
+        var enchantName: string = Object.keys(enchantsList)[i];
         if(!enchantName) continue;
 
-        var enchantLevel = item.tag.ExtraAttributes.enchantments[enchantName];
+        var enchantLevel = enchantsList[enchantName];
 
 
         if(enchantStats[enchantName] !== undefined) {
-            var recievedStats = enchantStats[enchantName](enchantLevel); //variable naming :)
+            var recievedEnchantStats = enchantStats[enchantName](enchantLevel); //variable naming :)
 
-            stats[`${colorChar}${statColors[Object.keys(recievedStats)[0] || "f"]}${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`] = recievedStats;
+            stats[`${colorChar}${statColors[Object.keys(recievedEnchantStats)[0] || "f"]}${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`] = recievedEnchantStats;
         } else {
             // console.warn(`couldnt find enchant ${enchantName}`)
         }
     }
 
-    var gemstones: gemstoneSlots = {};
+    //attributes
+    var attributesList = item.tag.ExtraAttributes.attributes || {};
 
-    if(item.tag.ExtraAttributes.gems !== undefined) {
-        for(let i in Object.keys(item.tag.ExtraAttributes.gems)) {
-            var key: string = Object.keys(item.tag.ExtraAttributes.gems)[i];
-            var value: string = item.tag.ExtraAttributes.gems[key];
+    for(let i in Object.keys(attributesList)) {
+        var attributeName: keyof typeof attributeStats = Object.keys(attributesList)[i];
+        var attributeLevel: number = attributesList[attributeName];
+
+        if(attributeStats[attributeName]) {
+            var recievedAttributeStats = attributeStats[attributeName](attributeLevel);
+
+            stats[`${colorChar}b${attributeName.replaceAll("_", " ").capitalize()} ${attributeLevel}`] = recievedAttributeStats;
+        } else {
+            // console.warn(`couldnt find attribute ${attributeName}`);
+        }
+    }
+
+    var gemstones: gemstoneSlots = {};
+    var itemGems = item.tag.ExtraAttributes.gems;
+
+    if(itemGems !== undefined) {
+        for(let i in Object.keys(itemGems)) {
+            var key: string = Object.keys(itemGems)[i];
+            var value: string = itemGems[key];
     
+            if(key == "unlocked_slots") continue;
+
             for(let j in specialGemstoneSlots) {
                 if(key.includes(specialGemstoneSlots[j])) {
                     if(key.includes("_gem")) { //its the gemstone in the slot
@@ -2086,6 +2130,7 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
         stats.starStats[statName] = statValue * 0.1 * (starCount / 5);
     }
 
+    //exceptions here
 
     return stats;
 }
@@ -2156,7 +2201,7 @@ export const skillColors: IObjectKeys = { //from NEU pv
     social: "2",
 }
 
-export async function calculateSkillStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
+export async function calculateSkillStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
     if(!data.profileData) return {}
 
     var stats: statsCategory = {};
@@ -2167,9 +2212,9 @@ export async function calculateSkillStats(data: apiData, selectedProfile: number
         if(name == "dungeoneering") continue;
         if(skillLevelStats[name as keyof typeof skillLevelStats] === undefined) continue;
 
-        var levelInfo = skillExpToLevel(data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"][skillNameToApiName[name]], name)
+        var levelInfo = skillExpToLevel(data.profileData.profiles[selectedProfile].members[playerUUID][skillNameToApiName[name]], name)
 
-        stats[name] = skillLevelStats[name as keyof typeof skillLevelStats](Math.floor(levelInfo.level))
+        stats[colorChar+skillColors[name]+name.capitalize()+" "+Math.floor(levelInfo.level)] = skillLevelStats[name as keyof typeof skillLevelStats](Math.floor(levelInfo.level))
     }
 
     return stats;
@@ -2183,10 +2228,10 @@ export const fairySoulStats = {
 }
 
 //yes i know they got revamped ill do that later
-export async function calculateFairySoulStats(data: apiData, selectedProfile: number): Promise<statsList> {
+export async function calculateFairySoulStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsList> {
     if(!data.profileData) return {}
 
-    var exchanges = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].fairy_exchanges;
+    var exchanges = data.profileData.profiles[selectedProfile].members[playerUUID].fairy_exchanges;
 
     if(exchanges === undefined) return {};
 
@@ -2200,10 +2245,10 @@ export async function calculateFairySoulStats(data: apiData, selectedProfile: nu
 }
 
 //NEEDS MORE TESTING; havent accounted for toggles and interface is probably wrong because i cant test around right now
-export async function calculateHotmStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
+export async function calculateHotmStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
     if(!data.profileData) return {}
 
-    var mining_core = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].mining_core;
+    var mining_core = data.profileData.profiles[selectedProfile].members[playerUUID].mining_core;
 
     var stats: statsCategory = {};
 
@@ -2218,10 +2263,10 @@ export async function calculateHotmStats(data: apiData, selectedProfile: number)
     return stats;
 }
 
-export async function calculateEssenceStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
+export async function calculateEssenceStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
     if(!data.profileData) return {}
 
-    var perks = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].perks;
+    var perks = data.profileData.profiles[selectedProfile].members[playerUUID].perks;
 
     var stats: statsCategory = {};
 
@@ -2234,10 +2279,10 @@ export async function calculateEssenceStats(data: apiData, selectedProfile: numb
     }
 }
 
-export async function calculatePepperStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
+export async function calculatePepperStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
     if(!data.profileData) return {}
 
-    var peppers = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].reaper_peppers_eaten;
+    var peppers = data.profileData.profiles[selectedProfile].members[playerUUID].reaper_peppers_eaten;
 
     if(peppers == undefined) return {};
 
@@ -2294,10 +2339,10 @@ export const harpColors: IObjectKeys = {
     pachelbel: "b",
 }
 
-export async function calculateHarpStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
+export async function calculateHarpStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
     if(!data.profileData) return {}
 
-    var harp_quest = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].harp_quest;
+    var harp_quest = data.profileData.profiles[selectedProfile].members[playerUUID].harp_quest;
 
     if(Object.keys(harp_quest).length == 0) return {};
 
@@ -2383,10 +2428,10 @@ export const slayerColors: IObjectKeys = {
     blaze: "6",
 }
 
-export async function calculateSlayerStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
+export async function calculateSlayerStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
     if(!data.profileData) return {}
 
-    var slayer_bosses = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].slayer_bosses;
+    var slayer_bosses = data.profileData.profiles[selectedProfile].members[playerUUID].slayer_bosses;
 
     var stats: statsCategory = {};
 
@@ -2732,11 +2777,11 @@ export interface accStatsInterface {
     tuning: statsCategory
 }
 
-export async function calculateAccStats(data: apiData, selectedProfile: number): Promise<accStatsInterface | undefined> {
+export async function calculateAccStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<accStatsInterface | undefined> {
     if(!data.profileData) return;
 
-    var talisman_bag_raw = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].talisman_bag;
-    var accessory_bag_storage = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].accessory_bag_storage;
+    var talisman_bag_raw = data.profileData.profiles[selectedProfile].members[playerUUID].talisman_bag;
+    var accessory_bag_storage = data.profileData.profiles[selectedProfile].members[playerUUID].accessory_bag_storage;
 
     if(!talisman_bag_raw) return;
 
@@ -2867,11 +2912,11 @@ export const effectColors: IObjectKeys = { //will add non stat effects later
     }
 }
 
-export async function calculatePotionStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
+export async function calculatePotionStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
     if(!data.profileData) return {};
 
-    var active_effects = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].active_effects;
-    var disabled_effects = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].disabled_potion_effects || [];
+    var active_effects = data.profileData.profiles[selectedProfile].members[playerUUID].active_effects;
+    var disabled_effects = data.profileData.profiles[selectedProfile].members[playerUUID].disabled_potion_effects || [];
 
     var stats: statsCategory = {};
 
@@ -2974,10 +3019,10 @@ export const cakeStatNumberToStat: cakeStatNumberToStat = {
     "19": "foraging_fortune",
 }
 
-export async function calculateCakeStats(data: apiData, selectedProfile: number): Promise<statsCategory> {
+export async function calculateCakeStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
     if(!data.profileData) return {};
 
-    var temp_stat_buffs = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].temp_stat_buffs;
+    var temp_stat_buffs = data.profileData.profiles[selectedProfile].members[playerUUID].temp_stat_buffs;
 
     if(!temp_stat_buffs) return {};
 
@@ -3006,10 +3051,10 @@ export const armorStatColors: IObjectKeys = {
     starStats: "6"
 }
 
-export async function calculateArmorStats(data: apiData, selectedProfile: number): Promise<statsCategories> {
+export async function calculateArmorStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
     if(!data.profileData) return {};
 
-    var inv_armor_raw = data.profileData.profiles[selectedProfile].members["86a6f490bf424769a625a266aa89e8d0"].inv_armor;
+    var inv_armor_raw = data.profileData.profiles[selectedProfile].members[playerUUID].inv_armor;
 
     var stats: statsCategories = {};
 
@@ -3021,6 +3066,41 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
     for(let i in armorContents) {
         var piece = armorContents[i];
+
+        var baseItem = await itemIdToItem(piece.tag.ExtraAttributes.id);
+        if(!baseItem) {
+            console.warn("piece baseItem is undefined");
+            continue;
+        }
+
+        // console.log(JSON.stringify(piece));
+        // console.log(JSON.stringify(baseItem));
+
+        var category = baseItem.category;
+
+        stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem);
+    }
+
+    return stats;
+}
+
+export async function calculateEquipmentStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
+    if(!data.profileData) return {};
+
+    var equippment_contents_raw = data.profileData.profiles[selectedProfile].members[playerUUID].equippment_contents;
+
+    var stats: statsCategories = {};
+
+    var equipment = await parseContents(equippment_contents_raw) as IObjectKeys;
+    if(equipment.i === undefined) return {};
+
+    var equipmentContents: IObjectKeys[] = equipment.i;
+
+
+    for(let i in equipmentContents) {
+        var piece = equipmentContents[i];
+
+        if(Object.keys(piece).length == 0) continue;
 
         var baseItem = await itemIdToItem(piece.tag.ExtraAttributes.id);
         if(!baseItem) {
@@ -3071,32 +3151,30 @@ export const statCategoryColors: IObjectKeys = {
     cake: "d"
 }
 
-export async function calculateStats(data: apiData, selectedProfile: number): Promise<statsCategories> {
+export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
     // return {...await calculateAccStats(data, selectedProfile)};
 
     return {
         base: {base: baseStats},
-        skills: mapObjectKeys(
-            await calculateSkillStats(data, selectedProfile), value => colorChar+skillColors[value]+value.capitalize()
-        ),
-        hotm: await calculateHotmStats(data, selectedProfile),
-        essence: await calculateEssenceStats(data, selectedProfile),
-        peppers: await calculatePepperStats(data, selectedProfile),
+        skills: await calculateSkillStats(data, selectedProfile, playerUUID),
+        hotm: await calculateHotmStats(data, selectedProfile, playerUUID),
+        essence: await calculateEssenceStats(data, selectedProfile, playerUUID),
+        peppers: await calculatePepperStats(data, selectedProfile, playerUUID),
         harp: mapObjectKeys(
-            await calculateHarpStats(data, selectedProfile), value => colorChar+harpColors[value]+harpNames[value]
+            await calculateHarpStats(data, selectedProfile, playerUUID), value => colorChar+harpColors[value]+harpNames[value]
         ),
         slayer: mapObjectKeys(
-            await calculateSlayerStats(data, selectedProfile), value => colorChar+slayerColors[value]+value.capitalize()
+            await calculateSlayerStats(data, selectedProfile, playerUUID), value => colorChar+slayerColors[value]+value.capitalize()
         ),
-        ...await calculateAccStats(data, selectedProfile),
+        ...await calculateAccStats(data, selectedProfile, playerUUID),
         potions: mapObjectKeys(
-            await calculatePotionStats(data, selectedProfile), value => colorChar+effectColors[value.slice(0,-2)]+value.replaceAll("_", " ").capitalize()
+            await calculatePotionStats(data, selectedProfile, playerUUID), value => colorChar+effectColors[value.slice(0,-2)]+value.replaceAll("_", " ").capitalize()
         ),
         cake: mapObjectKeys(
-            await calculateCakeStats(data, selectedProfile), value => value
+            await calculateCakeStats(data, selectedProfile, playerUUID), value => value
         ),
-
-        ...(mapObjectValues(await calculateArmorStats(data, selectedProfile), value => mapObjectKeys(value, value => armorStatNames[value] === undefined ? value : colorChar+armorStatColors[value]+armorStatNames[value])))
+        ...(mapObjectValues(await calculateArmorStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => armorStatNames[value] === undefined ? value : colorChar+armorStatColors[value]+armorStatNames[value]))),
+        ...(mapObjectValues(await calculateEquipmentStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => armorStatNames[value] === undefined ? value : colorChar+armorStatColors[value]+armorStatNames[value]))),
     }
 
 
