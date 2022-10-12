@@ -1,4 +1,4 @@
-import { colorCodeToHex, mainFormatter, statChars, statColors, statFormatter, statIdToStatName, statName, statCategoryColors, statCategoryNames, removeStringColors } from "../lib";
+import { colorCodeToHex, mainFormatter, statChars, statColors, statFormatter, statIdToStatName, statName, statCategoryColors, statCategoryNames, removeStringColors, multiplierFormatter } from "../lib";
 import Tippy from "@tippyjs/react/headless"
 import styles from "../styles/stat.module.css";
 import { motion, useSpring } from "framer-motion";
@@ -29,6 +29,32 @@ export default function Stat({statName, value, sources, onClick}: props) {
         opacity.set(0);
     }
 
+    var base = sources[statName].base?.base || 0;
+
+    var additionals: any = {};
+    var additionalsSum: number = 0;
+
+    var multiplicatives: any = {};
+    var multiplicativesSum: number = 0;
+
+    var multiplicativeStatName = "m_" + statName;
+    
+    for(let i in Object.keys(sources[statName])) {
+        var name = Object.keys(sources[statName])[i];
+
+        if(name == "base") continue;
+
+        additionals[name] = (Object.values(sources[statName][name]) as number[]).reduce((prev: number, curr: number) => prev+curr, 0);
+        additionalsSum += additionals[name];
+    }
+
+    for(let i in Object.keys(sources[multiplicativeStatName] || {})) {
+        var name = Object.keys(sources[multiplicativeStatName])[i];
+
+        multiplicatives[name] = (Object.values(sources[multiplicativeStatName][name]) as number[]).reduce((prev: number, curr: number) => prev+curr, 0);
+        multiplicativesSum += multiplicatives[name];
+    }
+
     return (
         <Tippy
             placement="right"
@@ -37,29 +63,21 @@ export default function Stat({statName, value, sources, onClick}: props) {
             onHide={onHide}
             delay={10}
             render={attrs => {
-                var base = sources.base?.base || 0;
-
-                var additionals: any = {};
-                var additionalsSum: number = 0;
-
-                for(let i in Object.keys(sources)) {
-                    var name = Object.keys(sources)[i];
-
-                    if(name == "base") continue;
-
-                    additionals[name] = (Object.values(sources[name]) as number[]).reduce((prev: number, curr: number) => prev+curr, 0);
-
-                    additionalsSum += additionals[name];
-                }
-
                 return <motion.div className={styles.tippyBox} tabIndex={-1} style={{opacity} as any} {...attrs}>
                     {`
-                    Base ${statIdToStatName[statName]}: ${base}
+                    Base ${statIdToStatName[statName] || "error"}: ${base}
                     LINEBREAK
-                    Additional ${statIdToStatName[statName]}: ${mainFormatter.format(additionalsSum)}
+                    Additional ${statIdToStatName[statName] || "error"}: ${mainFormatter.format(additionalsSum)}
                     ${
                         Object.keys(additionals).map(additionalName => {
                             return `- ${statCategoryNames[additionalName] || removeStringColors(additionalName)}: ${statFormatter.format(additionals[additionalName])}`
+                        }).join("\n")
+                    }
+                    LINEBREAK
+                    Multiplicative ${statIdToStatName[statName] || "error"}: ${multiplierFormatter.format(multiplicativesSum || 1)}x
+                    ${
+                        Object.keys(multiplicatives).map(multiplicativeName => {
+                            return `- ${statCategoryNames[multiplicativeName] || removeStringColors(multiplicativeName)}: ${statFormatter.format(multiplicatives[multiplicativeName])}`
                         }).join("\n")
                     }
                     `
@@ -78,7 +96,7 @@ export default function Stat({statName, value, sources, onClick}: props) {
                 className={styles.stat}
             >
                 <b>
-                    {statChars[statName] || "?"} <span className={styles.statName}>{statIdToStatName[statName]}</span> <span style={{color: "white"}}>{mainFormatter.format(value)}</span>
+                    {statChars[statName] || "?"} <span className={styles.statName}>{statIdToStatName[statName] || "error"}</span> <span style={{color: "white"}}>{mainFormatter.format(value*(multiplicativesSum || 1))}</span>
                 </b>
             </div>
         </Tippy>

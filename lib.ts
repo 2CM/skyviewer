@@ -1,4 +1,4 @@
-import { readFileSync, stat } from "fs";
+import { readFileSync, stat, unlink } from "fs";
 import nbt, { list } from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
@@ -250,6 +250,7 @@ export function itemStatsToStatsList(itemStats: itemStats): statsList {
 
 export var mainFormatter = new Intl.NumberFormat("en-US", {maximumFractionDigits: 1});
 export var statFormatter = new Intl.NumberFormat("en-US", {maximumFractionDigits: 1, signDisplay: "always"});
+export var multiplierFormatter = new Intl.NumberFormat("en-US", {maximumFractionDigits: 1, minimumFractionDigits: 1, signDisplay: "always"});
 
 export function removeStringColors(string: string): string {
     return string.replaceAll(/§[0123456789abcdefklmnor]/g, "");
@@ -375,89 +376,108 @@ export function coloredStringToElement(string: string, element: keyof React.Reac
 
 
 export function sourcesToElement(sources: any, statName: statName) {
-    if(Object.keys(sources).length == 0) {
-        return React.createElement("h2", {style: {textAlign: "center", fontSize: "20px"}}, `This player has no ${statIdToStatName[statName]} :(`)
+    if(Object.keys(sources[statName]).length == 0) {
+        return React.createElement("h2", {style: {textAlign: "center", fontSize: "20px"}}, `This player has no ${statIdToStatName[statName] || "error"} :(`)
     }
+
+    var multiplicativeStatName = "m_"+statName;
 
     var children: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
 
-    for(let i in Object.keys(sources)) {
-        var categoryName = Object.keys(sources)[i];
-        var category = sources[categoryName];
+    for(let k = 0; k < 2; k++) {
+        var currentSources: any;
 
-        var categoryChildren: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
+        var typeChildren: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
 
-        var categorySum = 0;
-        
-        var lastSourceName: string = "inital value :)";
-        var lastSource: number = -1;
-
-        for(let j in Object.keys(category)) {
-            var sourceName = Object.keys(category)[j];
-            var source: number = category[sourceName];
-
-            var formattedName = sourceName + "";
-
-            // var color: string = "unset";
-            var hasRecomb: boolean = false;
-
-            if(formattedName.startsWith("RECOMB")) {
-                hasRecomb = true;
-                formattedName = formattedName.slice("RECOMB".length);
-            }
-
-            // if(formattedName.startsWith(colorChar)) {
-            //     color = colorCodeToHex[formattedName[1]];
-            //     formattedName = formattedName.slice(2);
-            // }
-
-            lastSourceName = formattedName;
-            lastSource = source;
-
-            categorySum += source;
-
-            categoryChildren.push(
-                React.createElement(
-                    "li",
-                    {
-                        className: statStyles.statValue,
-                        // style: {
-                        //     color: color
-                        // },
-                    },
-                    [
-                        hasRecomb ? React.createElement("img", {src: recombEmoji, style: {height: "1em", width: "auto"}}, null) : null,
-                        coloredStringToElement(` ${formattedName}`),
-                        React.createElement("span", {style: {color: "white"}}, `: ${statFormatter.format(source)}`)
-                    ]
-                )
-            );
+        if(k == 0) {
+            currentSources = sources[statName];
+            // children.push(React.createElement("span", {}, "Additive Stats: "))
+        }
+        if(k == 1) {
+            currentSources = sources[multiplicativeStatName];
+            // children.push(React.createElement("span", {}, "Multiplicative Stats: "))
         }
 
-        if(Object.keys(category).length == 1 && lastSourceName == categoryName) {
-            children.push(
-                React.createElement("li", {className: statStyles.statsCategory}, [ //style: {color: colorCodeToHex[statCategoryColors[categoryName]]}
+        for(let i in Object.keys(currentSources)) {
+            var categoryName = Object.keys(currentSources)[i];
+            var category = currentSources[categoryName];
+
+            var categoryChildren: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
+
+            var categorySum = 0;
+            
+            var lastSourceName: string = "inital value :)";
+            var lastSource: number = -1;
+
+            for(let j in Object.keys(category)) {
+                var sourceName = Object.keys(category)[j];
+                var source: number = category[sourceName];
+
+                var formattedName = sourceName + "";
+
+                // var color: string = "unset";
+                var hasRecomb: boolean = false;
+
+                if(formattedName.startsWith("RECOMB")) {
+                    hasRecomb = true;
+                    formattedName = formattedName.slice("RECOMB".length);
+                }
+
+                // if(formattedName.startsWith(colorChar)) {
+                //     color = colorCodeToHex[formattedName[1]];
+                //     formattedName = formattedName.slice(2);
+                // }
+
+                lastSourceName = formattedName;
+                lastSource = source;
+
+                categorySum += source;
+
+                categoryChildren.push(
+                    React.createElement(
+                        "li",
+                        {
+                            className: statStyles.statValue,
+                            // style: {
+                            //     color: color
+                            // },
+                        },
+                        [
+                            hasRecomb ? React.createElement("img", {src: recombEmoji, style: {height: "1em", width: "auto"}}, null) : null,
+                            coloredStringToElement(` ${formattedName}`),
+                            React.createElement("span", {style: {color: "white"}}, `: ${k == 1 ? multiplierFormatter.format(source)+"x" : statFormatter.format(source)}`)
+                        ]
+                    )
+                );
+            }
+
+            if(Object.keys(category).length == 1 && lastSourceName == categoryName) {
+                typeChildren.push(
+                    React.createElement("li", {className: statStyles.statsCategory}, [ //style: {color: colorCodeToHex[statCategoryColors[categoryName]]}
+                        coloredStringToElement(`${
+                            statCategoryNames[categoryName] === undefined ? categoryName : colorChar+statCategoryColors[categoryName]+statCategoryNames[categoryName]
+                        }`),
+                        React.createElement("span", {style: {color: "white"}}, `: ${k == 1 ? multiplierFormatter.format(categorySum)+"x" : statFormatter.format(categorySum)}`)
+                    ]),
+                    React.createElement("br")
+                )
+
+                continue;
+            }
+
+            typeChildren.push(
+                React.createElement("li", {className: statStyles.statsCategory}, [
                     coloredStringToElement(`${
                         statCategoryNames[categoryName] === undefined ? categoryName : colorChar+statCategoryColors[categoryName]+statCategoryNames[categoryName]
                     }`),
-                    React.createElement("span", {style: {color: "white"}}, `: ${statFormatter.format(categorySum)}`)
+                    React.createElement("span", {style: {color: "white"}}, `: ${k == 1 ? multiplierFormatter.format(categorySum)+"x" : statFormatter.format(categorySum)}`)
                 ]),
+                React.createElement("ul", {className: statStyles.statValue}, categoryChildren),
                 React.createElement("br")
             )
-
-            continue;
         }
 
-        children.push(
-            React.createElement("li", {className: statStyles.statsCategory}, [
-                coloredStringToElement(`${
-                    statCategoryNames[categoryName] === undefined ? categoryName : colorChar+statCategoryColors[categoryName]+statCategoryNames[categoryName]
-                }`),
-                React.createElement("span", {style: {color: "white"}}, `: ${statFormatter.format(categorySum)}`)
-            ]),
-            React.createElement("ul", {className: statStyles.statValue}, categoryChildren),
-            React.createElement("br")
-        )
+        children.push(React.createElement("div", {}, typeChildren));
     }
 
     return React.createElement("ul", {}, children);
@@ -1151,7 +1171,77 @@ export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, 
 
 // *** STATS ***
 
-export type statName = "health" | "defense" | "true_defense" | "strength" | "walk_speed" | "critical_chance" | "critical_damage" | "intelligence" | "mining_speed" | "sea_creature_chance" | "magic_find" | "pet_luck" | "attack_speed" | "ability_damage" | "ferocity" | "mining_fortune" | "farming_fortune" | "foraging_fortune" | "breaking_power" | "pristine" | "combat_wisdom" | "mining_wisdom" | "farming_wisdom" | "foraging_wisdom" | "fishing_wisdom" | "enchanting_wisdom" | "alchemy_wisdom" | "carpentry_wisdom" | "runecrafting_wisdom" | "social_wisdom" | "fishing_speed" | "health_regen" | "vitality" | "mending";
+export type statName = "health" |
+"defense" |
+"true_defense" |
+"strength" |
+"walk_speed" |
+"critical_chance" |
+"critical_damage" |
+"intelligence" |
+"mining_speed" |
+"sea_creature_chance" |
+"magic_find" |
+"pet_luck" |
+"attack_speed" |
+"ability_damage" |
+"ferocity" |
+"mining_fortune" |
+"farming_fortune" |
+"foraging_fortune" |
+"breaking_power" |
+"pristine" |
+"combat_wisdom" |
+"mining_wisdom" |
+"farming_wisdom" |
+"foraging_wisdom" |
+"fishing_wisdom" |
+"enchanting_wisdom" |
+"alchemy_wisdom" |
+"carpentry_wisdom" |
+"runecrafting_wisdom" |
+"social_wisdom" |
+"fishing_speed" |
+"health_regen" |
+"vitality" |
+"mending" |
+
+//multiplicative
+"m_health" |
+"m_defense" |
+"m_true_defense" |
+"m_strength" |
+"m_walk_speed" |
+"m_critical_chance" |
+"m_critical_damage" |
+"m_intelligence" |
+"m_mining_speed" |
+"m_sea_creature_chance" |
+"m_magic_find" |
+"m_pet_luck" |
+"m_attack_speed" |
+"m_ability_damage" |
+"m_ferocity" |
+"m_mining_fortune" |
+"m_farming_fortune" |
+"m_foraging_fortune" |
+"m_breaking_power" |
+"m_pristine" |
+"m_combat_wisdom" |
+"m_mining_wisdom" |
+"m_farming_wisdom" |
+"m_foraging_wisdom" |
+"m_fishing_wisdom" |
+"m_enchanting_wisdom" |
+"m_alchemy_wisdom" |
+"m_carpentry_wisdom" |
+"m_runecrafting_wisdom" |
+"m_social_wisdom" |
+"m_fishing_speed" |
+"m_health_regen" |
+"m_vitality" |
+"m_mending";
+
 
 export interface statsList extends IObjectKeys {
     health?: number,
@@ -1188,9 +1278,45 @@ export interface statsList extends IObjectKeys {
     health_regen?: number,
     vitality?: number,
     mending?: number,
+
+    //multiplicative 
+    m_health?: number,
+    m_defense?: number,
+    m_true_defense?: number,
+    m_strength?: number,
+    m_walk_speed?: number,
+    m_critical_chance?: number,
+    m_critical_damage?: number,
+    m_intelligence?: number,
+    m_mining_speed?: number,
+    m_sea_creature_chance?: number,
+    m_magic_find?: number,
+    m_pet_luck?: number,
+    m_attack_speed?: number,
+    m_ability_damage?: number,
+    m_ferocity?: number,
+    m_mining_fortune?: number,
+    m_farming_fortune?: number,
+    m_foraging_fortune?: number,
+    m_breaking_power?: number,
+    m_pristine?: number,
+    m_combat_wisdom?: number,
+    m_mining_wisdom?: number,
+    m_farming_wisdom?: number,
+    m_foraging_wisdom?: number,
+    m_fishing_wisdom?: number,
+    m_enchanting_wisdom?: number,
+    m_alchemy_wisdom?: number,
+    m_carpentry_wisdom?: number,
+    m_runecrafting_wisdom?: number,
+    m_social_wisdom?: number,
+    m_fishing_speed?: number,
+    m_health_regen?: number,
+    m_vitality?: number,
+    m_mending?: number,
 }
 
-export const statIdToStatName = {
+export const statIdToStatName: IObjectKeys = {
     health: "Health",
     defense: "Defense",
     walk_speed: "Speed",
@@ -1367,6 +1493,8 @@ export function getStatSources(categories: statsCategories) {
 
         if(!Object.hasOwn(sources, statName)) sources[statName] = {};
     }
+
+    console.log(sources);
 
     return sources;
 }
@@ -3219,6 +3347,10 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
     return stats;
 }
 
+export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
+    return {"blue whale [55]": {multiBuff: {m_health: 2}}}
+}
+
 export const statCategoryNames: IObjectKeys = {
     base: "Base",
     skills: "Skills",
@@ -3276,7 +3408,8 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
             await calculateCakeStats(data, selectedProfile, playerUUID), value => value
         ),
         ...(mapObjectValues(await calculateArmorStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => armorStatNames[value] === undefined ? value : colorChar+armorStatColors[value]+armorStatNames[value]))),
-        ...(mapObjectValues(await calculateEquipmentStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => armorStatNames[value] === undefined ? value : colorChar+armorStatColors[value]+armorStatNames[value])))
+        ...(mapObjectValues(await calculateEquipmentStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => armorStatNames[value] === undefined ? value : colorChar+armorStatColors[value]+armorStatNames[value]))),
+        ...await calculatePetStats(data, selectedProfile, playerUUID)
     }
 
     var petScore = await calculatePetScoreStats(data, selectedProfile, playerUUID);
@@ -3332,7 +3465,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
         pets
             pet stats
             pet items
-            pet score
+            pet score (Y)
             
         pickable
             wither esssence shop (Y)
