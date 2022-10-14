@@ -15,6 +15,11 @@ interface IObjectKeys {
     [key: string]: any;
 }
 
+//because keys returns string[];
+export function keys<Type extends object>(obj: Type): (keyof Type)[] {
+    return Object.keys(obj) as (keyof Type)[];
+}
+
 // *** CUSTOM PROTOS ***
 
 declare global {
@@ -70,12 +75,12 @@ Number.prototype.compact = function() {
     return formatter.format(Number(this));
 }
 
-function mapObjectKeys<Type extends object>(obj: Type, callbackfn: (value: string, index: number, array: any[]) => string): Type {
+function mapObjectKeys<Type extends object>(obj: Type, callbackfn: (value: keyof Type, index: number, array: any[]) => string): Type {
     var newObj: Type | any = {};
 
-    for(let i = 0; i < Object.keys(obj).length; i++) {
-        var name = Object.keys(obj)[i]
-        var newName = callbackfn(name, i, Object.keys(obj))
+    for(let i = 0; i < keys(obj).length; i++) {
+        var name = keys(obj)[i];
+        var newName = callbackfn(name, i, keys(obj))
 
         newObj[newName] = obj[name as keyof typeof obj];
     }
@@ -86,10 +91,10 @@ function mapObjectKeys<Type extends object>(obj: Type, callbackfn: (value: strin
 function mapObjectValues<Type extends object>(obj: Type, callbackfn: (value: Type[keyof Type], index: number, array: any[]) => Type[keyof Type]): Type {
     var newObj: Type | any = {};
 
-    for(let i = 0; i < Object.keys(obj).length; i++) {
-        var name = Object.keys(obj)[i];
+    for(let i = 0; i < keys(obj).length; i++) {
+        var name = keys(obj)[i];
         var value = obj[name as keyof typeof obj];
-        var newValue = callbackfn(value, i, Object.keys(obj))
+        var newValue = callbackfn(value, i, keys(obj))
 
         newObj[name] = newValue;
     }
@@ -198,6 +203,44 @@ export interface item {
     id: string,
 }
 
+export interface nbtItem {
+    id: number
+    count: number,
+    tag: {
+        HideFlags: number,
+        SkullOwner?: {
+            Id: string,
+            Properties: {
+                textures: {Value: string}[]
+            }
+        }
+        display: {
+            Lore: string[],
+            Name: string
+        },
+        ExtraAttributes: {
+            modifier?: string,
+            attributes?: {
+                [key: string]: number
+            },
+            id: string,
+            uuid?: string,
+            timestamp: string,
+            enchantments?: {
+                [key: string]: number
+            },
+            hot_potato_count?: number,
+            dungeon_item_level?: number,
+            gems?: {
+                [key: string]: string
+            },
+            rarity_upgrades?: number,
+            talisman_enrichment?: statName
+        }
+    },
+    Damage: number
+}
+
 export async function itemIdToItem(id: string): Promise<item | undefined> {
     if(itemsIndex.size == 0) return undefined;
 
@@ -234,13 +277,13 @@ export async function initItems(data: apiData) {
 export function itemStatsToStatsList(itemStats: itemStats): statsList {
     var stats: statsList = {};
 
-    for (let i = 0; i < Object.keys(itemStats).length; i++) {
-        var name = Object.keys(itemStats)[i];
+    for (let i = 0; i < keys(itemStats).length; i++) {
+        var name = keys(itemStats)[i];
         var newName = name.toLowerCase();
 
         if(newName == "ability_damage_percent") newName = "ability_damage";
     
-        stats[newName as keyof typeof stats] = itemStats[name as keyof typeof itemStats];
+        stats[newName as statName] = itemStats[name as keyof typeof itemStats];
     }
 
     return stats;
@@ -312,7 +355,7 @@ export function coloredStringToElement(string: string, element: keyof React.Reac
         }
 
         if(primedForCode) {
-            if(new Set(Object.keys(colorCodeToHex)).has(currentStringChar)) { //its a color
+            if(new Set(keys(colorCodeToHex)).has(currentStringChar)) { //its a color
                 color = currentStringChar;
             } else { //its a modifer or something else that i dont want to deal with
                 modifier = currentStringChar;
@@ -375,64 +418,54 @@ export function coloredStringToElement(string: string, element: keyof React.Reac
 }
 
 
+
+
 export function sourcesToElement(sources: any, statName: statName) {
-    if(Object.keys(sources[statName]).length == 0) {
-        return React.createElement("h2", {style: {textAlign: "center", fontSize: "20px"}}, `This player has no ${statIdToStatName[statName] || "error"} :(`)
-    }
-
-    var multiplicativeStatName = "m_"+statName;
-
-    var children: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
-
-    for(let k = 0; k < 2; k++) {
-        var currentSources: any;
-
-        var typeChildren: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
-
-        if(k == 0) {
-            currentSources = sources[statName];
-            // children.push(React.createElement("span", {}, "Additive Stats: "))
-        }
-        if(k == 1) {
-            currentSources = sources[multiplicativeStatName];
-            // children.push(React.createElement("span", {}, "Multiplicative Stats: "))
+    //elements from the sources of one specific stat
+    function elementsFromSource(currentSources: any, numberFormatter: (num: number) => string, title?: string): React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] {
+        if(keys(currentSources).length == 0) {
+            return []
         }
 
-        for(let i in Object.keys(currentSources)) {
-            var categoryName = Object.keys(currentSources)[i];
+        var elements: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
+
+        var sum = 0;
+
+        for(let i in keys(currentSources)) {
+            var categoryName: string = keys(currentSources)[i] as string;
             var category = currentSources[categoryName];
-
+    
             var categoryChildren: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
-
+    
             var categorySum = 0;
-            
+
             var lastSourceName: string = "inital value :)";
             var lastSource: number = -1;
 
-            for(let j in Object.keys(category)) {
-                var sourceName = Object.keys(category)[j];
+            for(let j in keys(category)) {
+                var sourceName = keys(category)[j] as string;
                 var source: number = category[sourceName];
-
+    
                 var formattedName = sourceName + "";
-
+    
                 // var color: string = "unset";
                 var hasRecomb: boolean = false;
-
+    
                 if(formattedName.startsWith("RECOMB")) {
                     hasRecomb = true;
                     formattedName = formattedName.slice("RECOMB".length);
                 }
-
+    
                 // if(formattedName.startsWith(colorChar)) {
                 //     color = colorCodeToHex[formattedName[1]];
                 //     formattedName = formattedName.slice(2);
                 // }
-
+    
                 lastSourceName = formattedName;
                 lastSource = source;
-
+    
                 categorySum += source;
-
+    
                 categoryChildren.push(
                     React.createElement(
                         "li",
@@ -445,47 +478,156 @@ export function sourcesToElement(sources: any, statName: statName) {
                         [
                             hasRecomb ? React.createElement("img", {src: recombEmoji, style: {height: "1em", width: "auto"}}, null) : null,
                             coloredStringToElement(` ${formattedName}`),
-                            React.createElement("span", {style: {color: "white"}}, `: ${k == 1 ? multiplierFormatter.format(source)+"x" : statFormatter.format(source)}`)
+                            React.createElement("span", {style: {color: "white"}}, `: ${numberFormatter(source)}`)
                         ]
                     )
                 );
             }
-
-            if(Object.keys(category).length == 1 && lastSourceName == categoryName) {
-                typeChildren.push(
+    
+            if(keys(category).length == 1 && lastSourceName == categoryName) {
+                elements.push(
                     React.createElement("li", {className: statStyles.statsCategory}, [ //style: {color: colorCodeToHex[statCategoryColors[categoryName]]}
                         coloredStringToElement(`${
                             statCategoryNames[categoryName] === undefined ? categoryName : colorChar+statCategoryColors[categoryName]+statCategoryNames[categoryName]
                         }`),
-                        React.createElement("span", {style: {color: "white"}}, `: ${k == 1 ? multiplierFormatter.format(categorySum)+"x" : statFormatter.format(categorySum)}`)
+                        React.createElement("span", {style: {color: "white"}}, `: ${numberFormatter(categorySum)}`)
                     ]),
                     React.createElement("br")
                 )
-
+    
                 continue;
             }
-
-            typeChildren.push(
+    
+            elements.push(
                 React.createElement("li", {className: statStyles.statsCategory}, [
                     coloredStringToElement(`${
                         statCategoryNames[categoryName] === undefined ? categoryName : colorChar+statCategoryColors[categoryName]+statCategoryNames[categoryName]
                     }`),
-                    React.createElement("span", {style: {color: "white"}}, `: ${k == 1 ? multiplierFormatter.format(categorySum)+"x" : statFormatter.format(categorySum)}`)
+                    React.createElement("span", {style: {color: "white"}}, `: ${numberFormatter(categorySum)}`)
                 ]),
                 React.createElement("ul", {className: statStyles.statValue}, categoryChildren),
                 React.createElement("br")
             )
+
+            sum += categorySum;
         }
 
-        children.push(React.createElement("div", {}, typeChildren));
+        if(title) return [React.createElement("span", {}, title+numberFormatter(sum)), React.createElement("ul", {}, elements)];
+    
+        return elements;
     }
+
+    var children: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
+
+    var hasAdditiveBuff = !(sources[statName] === undefined || keys(sources[statName]).length === 0);
+    var hasMultiplicativeBuff = sources["m_"+statName] !== undefined;
+
+    if(hasAdditiveBuff)
+        children.push(...elementsFromSource(sources[statName] || {}, num => statFormatter.format(num), hasMultiplicativeBuff ? "Additive: " : undefined));
+
+    if(hasMultiplicativeBuff)
+        children.push(...elementsFromSource(sources["m_"+statName] || {}, num => multiplierFormatter.format(num)+"x", hasAdditiveBuff ? "Multiplicative: " : undefined))
+
+    if(!hasAdditiveBuff && !hasMultiplicativeBuff)
+        children.push(React.createElement("h2", {style: {textAlign: "center", fontSize: "20px"}}, `This player has no ${statIdToStatName[statName] || "error"} :(`))
 
     return React.createElement("ul", {}, children);
 }
 
+// export function sourcesToElement(sources: any, statName: statName) {
+//     if(keys(sources[statName]).length == 0) {
+//         return React.createElement("h2", {style: {textAlign: "center", fontSize: "20px"}}, `This player has no ${statIdToStatName[statName]} :(`)
+//     }
+
+//     var children: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
+
+//     for(let i in keys(sources[statName])) {
+//         var categoryName = keys(sources[statName])[i];
+//         var category = sources[statName][categoryName];
+
+//         var categoryChildren: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
+
+//         var categorySum = 0;
+        
+//         var lastSourceName: string = "inital value :)";
+//         var lastSource: number = -1;
+
+//         for(let j in keys(category)) {
+//             var sourceName = keys(category)[j];
+//             var source: number = category[sourceName];
+
+//             var formattedName = sourceName + "";
+
+//             // var color: string = "unset";
+//             var hasRecomb: boolean = false;
+
+//             if(formattedName.startsWith("RECOMB")) {
+//                 hasRecomb = true;
+//                 formattedName = formattedName.slice("RECOMB".length);
+//             }
+
+//             // if(formattedName.startsWith(colorChar)) {
+//             //     color = colorCodeToHex[formattedName[1]];
+//             //     formattedName = formattedName.slice(2);
+//             // }
+
+//             lastSourceName = formattedName;
+//             lastSource = source;
+
+//             categorySum += source;
+
+//             categoryChildren.push(
+//                 React.createElement(
+//                     "li",
+//                     {
+//                         className: statStyles.statValue,
+//                         // style: {
+//                         //     color: color
+//                         // },
+//                     },
+//                     [
+//                         hasRecomb ? React.createElement("img", {src: recombEmoji, style: {height: "1em", width: "auto"}}, null) : null,
+//                         coloredStringToElement(` ${formattedName}`),
+//                         React.createElement("span", {style: {color: "white"}}, `: ${statFormatter.format(source)}`)
+//                     ]
+//                 )
+//             );
+//         }
+
+//         if(keys(category).length == 1 && lastSourceName == categoryName) {
+//             children.push(
+//                 React.createElement("li", {className: statStyles.statsCategory}, [ //style: {color: colorCodeToHex[statCategoryColors[categoryName]]}
+//                     coloredStringToElement(`${
+//                         statCategoryNames[categoryName] === undefined ? categoryName : colorChar+statCategoryColors[categoryName]+statCategoryNames[categoryName]
+//                     }`),
+//                     React.createElement("span", {style: {color: "white"}}, `: ${statFormatter.format(categorySum)}`)
+//                 ]),
+//                 React.createElement("br")
+//             )
+
+//             continue;
+//         }
+
+//         children.push(
+//             React.createElement("li", {className: statStyles.statsCategory}, [
+//                 coloredStringToElement(`${
+//                     statCategoryNames[categoryName] === undefined ? categoryName : colorChar+statCategoryColors[categoryName]+statCategoryNames[categoryName]
+//                 }`),
+//                 React.createElement("span", {style: {color: "white"}}, `: ${statFormatter.format(categorySum)}`)
+//             ]),
+//             React.createElement("ul", {className: statStyles.statValue}, categoryChildren),
+//             React.createElement("br")
+//         )
+//     }
+
+//     return React.createElement("ul", {}, children);
+// }
+
 export const colorChar = "§";
 
-export const colorCodeToHex: IObjectKeys = {
+export const colorCodeToHex: {
+    [key: string]: string
+} = {
     "0": "#000000",
     "1": "#0000AA",
     "2": "#00AA00",
@@ -1151,15 +1293,15 @@ export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, 
 
     var skills: allSkillExpInfo = {};
 
-    for (let i = 0; i < Object.keys(skillCaps).length; i++) {
-		var name = Object.keys(skillCaps)[i] as skillName;
+    for (let i = 0; i < keys(skillCaps).length; i++) {
+		var name = keys(skillCaps)[i] as skillName;
 
 		if(name == "dungeoneering") continue;
 
-		var skillExp = apiData.profileData.profiles[selectedProfile].members[playerUUID][skillNameToApiName[name as keyof typeof skillNameToApiName] as keyof typeof apiData.profileData] as number;
+		var skillExp = apiData.profileData.profiles[selectedProfile].members[playerUUID][skillNameToApiName[name]] as number;
 
 
-		skills[name as keyof typeof skills] = {
+		skills[name] = {
 			skillExp: skillExp,
 			levelInfo: skillExpToLevel(skillExp, name),
 			extrapolatedLevelInfo: skillExpToLevel(skillExp, name, true),
@@ -1242,81 +1384,15 @@ export type statName = "health" |
 "m_vitality" |
 "m_mending";
 
+export type statsList = {
+    [key in statName]?: number;
+};
 
-export interface statsList extends IObjectKeys {
-    health?: number,
-    defense?: number,
-    true_defense?: number,
-    strength?: number,
-    walk_speed?: number,
-    critical_chance?: number,
-    critical_damage?: number,
-    intelligence?: number,
-    mining_speed?: number,
-    sea_creature_chance?: number,
-    magic_find?: number,
-    pet_luck?: number,
-    attack_speed?: number,
-    ability_damage?: number,
-    ferocity?: number,
-    mining_fortune?: number,
-    farming_fortune?: number,
-    foraging_fortune?: number,
-    breaking_power?: number,
-    pristine?: number,
-    combat_wisdom?: number,
-    mining_wisdom?: number,
-    farming_wisdom?: number,
-    foraging_wisdom?: number,
-    fishing_wisdom?: number,
-    enchanting_wisdom?: number,
-    alchemy_wisdom?: number,
-    carpentry_wisdom?: number,
-    runecrafting_wisdom?: number,
-    social_wisdom?: number,
-    fishing_speed?: number,
-    health_regen?: number,
-    vitality?: number,
-    mending?: number,
-
-    //multiplicative 
-    m_health?: number,
-    m_defense?: number,
-    m_true_defense?: number,
-    m_strength?: number,
-    m_walk_speed?: number,
-    m_critical_chance?: number,
-    m_critical_damage?: number,
-    m_intelligence?: number,
-    m_mining_speed?: number,
-    m_sea_creature_chance?: number,
-    m_magic_find?: number,
-    m_pet_luck?: number,
-    m_attack_speed?: number,
-    m_ability_damage?: number,
-    m_ferocity?: number,
-    m_mining_fortune?: number,
-    m_farming_fortune?: number,
-    m_foraging_fortune?: number,
-    m_breaking_power?: number,
-    m_pristine?: number,
-    m_combat_wisdom?: number,
-    m_mining_wisdom?: number,
-    m_farming_wisdom?: number,
-    m_foraging_wisdom?: number,
-    m_fishing_wisdom?: number,
-    m_enchanting_wisdom?: number,
-    m_alchemy_wisdom?: number,
-    m_carpentry_wisdom?: number,
-    m_runecrafting_wisdom?: number,
-    m_social_wisdom?: number,
-    m_fishing_speed?: number,
-    m_health_regen?: number,
-    m_vitality?: number,
-    m_mending?: number,
+export type statIdMap<Type> = {
+    [key in statName]?: Type
 }
 
-export const statIdToStatName: IObjectKeys = {
+export const statIdToStatName: statIdMap<string> = {
     health: "Health",
     defense: "Defense",
     walk_speed: "Speed",
@@ -1396,13 +1472,16 @@ export function mergeStatsLists(list1: statsList, list2: statsList): statsList {
     var list1Copy = Object.assign({}, list1);
     var list2Copy = Object.assign({}, list2);
 
-    for (let i = 0; i < Object.keys(baseStats).length; i++) {
-        var key = Object.keys(baseStats)[i];
+    for (let i = 0; i < keys(baseStats).length; i++) {
+        var key: statName = keys(baseStats)[i];
 
-        if(list1Copy[key] === undefined) list1Copy[key] = 0;
-        if(list2Copy[key] === undefined) list2Copy[key] = 0;
+        var list1value = list1Copy[key];
+        var list2value = list2Copy[key];
 
-        newList[key] = list1Copy[key]+list2Copy[key];
+        if(list1value === undefined) list1value = 0;
+        if(list2value === undefined) list2value = 0;
+
+        newList[key] = list1value+list2value;
     }
 
     return newList;
@@ -1421,85 +1500,142 @@ export function addStatsLists(arr: statsList[]): statsList {
 }
 
 export function multiplyStatsList(list: statsList, mult: number | statsList): statsList {
-    var stats: any = {};
-
-    for(let i = 0; i < Object.keys(list).length; i++) {
-        var name = Object.keys(list)[i];
-
-        if(typeof mult == "number") {
-            stats[name as keyof typeof stats] = list[name as keyof typeof list]*mult;
-        } else {
-            var multiplier = mult[name as keyof typeof list];
-
-            if(multiplier === undefined) multiplier = 1;
-
-            stats[name as keyof typeof stats] = list[name as keyof typeof list]*multiplier;
-        }
-    }
-
-    return stats;
-}
-
-export interface statsCategory {
-    [key: string]: statsList
-}
-
-export interface statsCategories {
-    [key: string]: statsCategory
-}
-
-export function sumStatsCategories(categories: statsCategories): statsList {
     var stats: statsList = {};
 
-    for(let i = 0; i < Object.keys(categories).length; i++) {
-        var categoryName = Object.keys(categories)[i];
+    for(let i = 0; i < keys(list).length; i++) {
+        var name = keys(list)[i];
 
-        for(let j = 0; j < Object.keys(categories[categoryName]).length; j++) {
-            var listName = Object.keys(categories[categoryName])[j];
+        var statValue = list[name];
+
+        if(statValue === undefined) {
+            console.warn("multiplyStatsList: statValue === undefined");
+
+            statValue = 0;
+        }
+
+        if(typeof mult == "number") {
+            stats[name] = statValue*mult;
+        } else if(typeof mult == "object") {
+            var multiplier = mult[name];
+
             
-            stats = mergeStatsLists(stats, categories[categoryName][listName]);
+            stats[name] = statValue*(multiplier || 1);
         }
     }
 
     return stats;
 }
 
-export function getStatSources(categories: statsCategories) {
+export type statsCategory = {
+    [key in string]: statsList
+}
+
+export type statsCategories = {
+    [key in string]: statsCategory
+}
+
+export type statSources = {
+    [key in statName]?: {[key: string]: {[key: string]: number}}
+};
+
+// export function sumStatsCategories(categories: statsCategories): statsList {
+//     var stats: statsList = {};
+
+//     for(let i = 0; i < keys(categories).length; i++) {
+//         var categoryName = keys(categories)[i];
+
+//         for(let j = 0; j < keys(categories[categoryName]).length; j++) {
+//             var listName = keys(categories[categoryName])[j];
+            
+//             stats = mergeStatsLists(stats, categories[categoryName][listName]);
+//         }
+//     }
+
+//     return stats;
+// }
+
+export function sumStatsSources(sources: statSources): statsList {
+    var stats: statsList = {};
+    var m_stats: statsList = {};
+
+    console.log("summing")
+
+    for(let i in keys(sources)) {
+        var statName: statName = keys(sources)[i];
+        var statValue = sources[statName] || {};
+
+        console.log(statName);
+
+        for(let j in keys(statValue)) {
+            var categoryName = keys(statValue)[j];
+            var categoryValue = statValue[categoryName];
+
+            console.log(categoryName);
+
+            for(let k in keys(categoryValue)) {
+                var sourceName = keys(categoryValue)[k];
+                var sourceValue = categoryValue[sourceName];
+
+                console.log(sourceName, sourceValue);
+                
+                stats[statName] = (stats[statName] || 0) + sourceValue;
+
+                // console.log("all good")
+
+                // if(!sources["m_"+statName as statName]) console.log("aefefefeefEEEEEEEEEEEEEEEEEEE");
+                // if(!sources["m_"+statName as statName]) continue;
+
+                // m_stats[statName] = (m_stats[statName] || 0) + (sources["m_"+statName as statName] || {})[categoryName][sourceName];
+            }
+        }
+    }
+
+    console.log("e", m_stats)
+
+    return multiplyStatsList(stats, m_stats);
+    return stats;
+}
+
+export function getStatSources(categories: statsCategories): statSources {
     var sources: any = {};
 
-    for(let i in Object.keys(categories)) {
-        var categoryName = Object.keys(categories)[i];
-        var category = categories[categoryName as keyof typeof categories];
+    for(let i in keys(categories)) {
+        var categoryName: string = keys(categories)[i];
+        var category: statsCategory = categories[categoryName];
 
-        for(let j in Object.keys(category)) {
-            var listName = Object.keys(category)[j];
-            var list = category[listName as keyof typeof category];
+        for(let j in keys(category)) {
+            var listName: string = keys(category)[j];
+            var list: statsList = category[listName];
 
-            for(let k in Object.keys(list)) {
-                var statName = Object.keys(list)[k];
-                var stat = list[statName as keyof typeof list];
+            for(let k in keys(list)) {
+                var statName: statName = keys(list)[k];
+                var stat: number = list[statName] || 0;
 
-                if(!stat) continue;
+                if(stat == 0 || stat === undefined) continue;
 
+                // var currentStatSource: any = {};
+                
                 if(!sources[statName]) sources[statName] = {};
+
                 if(!sources[statName][categoryName]) sources[statName][categoryName] = {};
+
                 sources[statName][categoryName][listName] = stat;
             }
         }
     }
 
-    for(let i in Object.keys(statIdToStatName)) {
-        var statName = Object.keys(statIdToStatName)[i];
+    for(let i in keys(statIdToStatName)) {
+        var statName = keys(statIdToStatName)[i];
 
-        if(!Object.hasOwn(sources, statName)) sources[statName] = {};
+        if(sources[statName] === undefined) sources[statName] = {};
     }
 
-    console.log(sources);
+    // console.log(sources);
 
     return sources;
 }
 
-export const statColors: IObjectKeys = {
+export const statColors: statIdMap<string> = {
     health: "c",
     defense: "a",
     walk_speed: "f",
@@ -1536,7 +1672,7 @@ export const statColors: IObjectKeys = {
     social_wisdom: "3",
 }
 
-export const statChars: IObjectKeys = {
+export const statChars: statIdMap<string> = {
     health: "❤",
     defense: "❈",
     walk_speed: "✦",
@@ -1887,11 +2023,9 @@ export const reforgeStats: reforgeStats = {
     }
 }
 
-export interface enchantStats {
+export const enchantStats: {
     [key: string]: (level: number) => statsList
-}
-
-export const enchantStats: enchantStats = { //doing this without a 2nd monitor and youtube is impossible AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+} = { //doing this without a 2nd monitor and youtube is impossible AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     ...{ //armor
         big_brain: level => ({
             intelligence: 5*level,
@@ -1917,13 +2051,11 @@ export const enchantStats: enchantStats = { //doing this without a 2nd monitor a
     },
 }
 
-export interface gemstoneStats {
+export const gemstoneStats: {
     [key: string]: {
         [key: string]: (tier: number) => statsList
     }
-}
-
-export const gemstoneStats: gemstoneStats = {
+} = {
     ruby: { //ruby my beloved
         rough: tier => ({
             health: [1,2,3,4,5,7,7][tier]
@@ -2092,11 +2224,10 @@ export const gemstoneRarities: IObjectKeys = {
     perfect: "LEGENDARY"
 }
 
-export interface attributeStats {
-    [key: string]: (level: number) => statsList
-}
 
-export const attributeStats: attributeStats = {
+export const attributeStats: {
+    [key: string]: (level: number) => statsList
+} = {
     attack_speed: level => ({
         attack_speed: level
     }),
@@ -2120,7 +2251,7 @@ export const attributeStats: attributeStats = {
     }),
 }
 
-export function calculateItemStats(item: any, baseItem: item): statsCategory {
+export function calculateItemStats(item: nbtItem, baseItem: item): statsCategory {
     var stats: statsCategory = {};
 
     // console.log(JSON.stringify(item));
@@ -2137,7 +2268,7 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
         attributes (N)
     */
 
-    var rarity = Object.keys(mpTable).findIndex(name => {return baseItem?.tier == name}) + (item.tag.ExtraAttributes.rarity_upgrades || 0);
+    var rarity = keys(mpTable).findIndex(name => {return baseItem?.tier == name}) + (item.tag.ExtraAttributes.rarity_upgrades || 0);
 
 
     //base stats
@@ -2146,12 +2277,12 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
     //hpbs
     if(new Set(["HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"]).has(baseItem.category)) { //its an armor piece
         stats.hpbs = {
-            health: 4*item.tag.ExtraAttributes.hot_potato_count || 0,
-            defense: 2*item.tag.ExtraAttributes.hot_potato_count || 0,
+            health: 4*(item.tag.ExtraAttributes.hot_potato_count || 0),
+            defense: 2*(item.tag.ExtraAttributes.hot_potato_count || 0),
         }
     } else { //its probably some type of damager
         stats.hpbs = {
-            strength: 2*item.tag.ExtraAttributes.hot_potato_count || 0,
+            strength: 2*(item.tag.ExtraAttributes.hot_potato_count || 0),
         }
     }
 
@@ -2169,8 +2300,8 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
     //enchants
     var enchantsList = item.tag.ExtraAttributes.enchantments || {};
 
-    for(let i in Object.keys(enchantsList)) {
-        var enchantName: string = Object.keys(enchantsList)[i];
+    for(let i in keys(enchantsList)) {
+        var enchantName: keyof typeof enchantStats = keys(enchantsList)[i] as string;
         if(!enchantName) continue;
 
         var enchantLevel = enchantsList[enchantName];
@@ -2179,7 +2310,7 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
         if(enchantStats[enchantName] !== undefined) {
             var recievedEnchantStats = enchantStats[enchantName](enchantLevel); //variable naming :)
 
-            stats[`${colorChar}${statColors[Object.keys(recievedEnchantStats)[0] || "f"]}${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`] = recievedEnchantStats;
+            stats[`${colorChar}${statColors[keys(recievedEnchantStats)[0] || "f"]}${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`] = recievedEnchantStats;
         } else {
             // console.warn(`couldnt find enchant ${enchantName}`)
         }
@@ -2188,8 +2319,8 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
     //attributes
     var attributesList = item.tag.ExtraAttributes.attributes || {};
 
-    for(let i in Object.keys(attributesList)) {
-        var attributeName: keyof typeof attributeStats = Object.keys(attributesList)[i];
+    for(let i in keys(attributesList)) {
+        var attributeName: keyof typeof attributeStats = keys(attributesList)[i] as string;
         var attributeLevel: number = attributesList[attributeName];
 
         if(attributeStats[attributeName]) {
@@ -2205,11 +2336,11 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
     var itemGems = item.tag.ExtraAttributes.gems;
 
     if(itemGems !== undefined) {
-        for(let i in Object.keys(itemGems)) {
-            var key: string = Object.keys(itemGems)[i];
+        for(let i in keys(itemGems)) {
+            var key: string = keys(itemGems)[i] as string;
             var value: string | {uuid: string, quality: string} = itemGems[key];
-    
-            if(typeof value === "object") value = value.quality;
+
+            if(typeof value === "object") value = value["quality"]; //no idea why i have to use brackets but https://bobbyhadz.com/blog/typescript-property-does-not-exist-on-type-never said so
 
             if(key == "unlocked_slots") continue;
 
@@ -2253,6 +2384,8 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
         stats[`${colorChar + rarityColors[gemstoneRarities[gemInfo.tier]]}${(gemInfo.tier as string).capitalize()} ${(gemInfo.gemstone as string).capitalize()} Gemstone`] = recievedStats;
     }
 
+    console.log(itemGems);
+
     //star stats
         // okay so, this area was completely undocumented on the wiki so i had to figure it out myself :)
 
@@ -2264,9 +2397,9 @@ export function calculateItemStats(item: any, baseItem: item): statsCategory {
     var starCount = Math.min(item.tag.ExtraAttributes.dungeon_item_level || 0, 5) //because master stars dont do it;
     stats.starStats = {};
 
-    for(let i in Object.keys(stats.baseStats)) {
-        var statName = Object.keys(stats.baseStats)[i];
-        var statValue = stats.baseStats[statName];
+    for(let i in keys(stats.baseStats)) {
+        var statName = keys(stats.baseStats)[i];
+        var statValue = stats.baseStats[statName] || 0;
 
         stats.starStats[statName] = statValue * 0.1 * (starCount / 5);
     }
@@ -2368,8 +2501,8 @@ export async function calculateSkillStats(data: apiData, selectedProfile: number
 
     var stats: statsCategory = {};
     
-    for (let i = 0; i < Object.keys(skillCaps).length; i++) {
-        let name: skillName = Object.keys(skillCaps)[i] as skillName;
+    for (let i = 0; i < keys(skillCaps).length; i++) {
+        let name: skillName = keys(skillCaps)[i] as skillName;
 
         if(name == "dungeoneering") continue;
         if(skillLevelStats[name as keyof typeof skillLevelStats] === undefined) continue;
@@ -2506,25 +2639,29 @@ export async function calculateHarpStats(data: apiData, selectedProfile: number,
 
     var harp_quest = data.profileData.profiles[selectedProfile].members[playerUUID].harp_quest;
 
-    if(Object.keys(harp_quest).length == 0) return {};
+    if(keys(harp_quest).length == 0) return {};
 
     var stats: statsCategory = {};
 
-    for (let i = 0; i < Object.keys(harpStats).length; i++) {
-        var name = Object.keys(harpStats)[i];
+    for (let i = 0; i < keys(harpStats).length; i++) {
+        var name = keys(harpStats)[i];
 
         var perfectCompletions = harp_quest["song_"+name+"_perfect_completions" as keyof typeof harp_quest];
 
 
         if(typeof perfectCompletions != "number") continue;
 
-        stats[name] = {intelligence: (perfectCompletions >= 1 ? 1 : 0) * harpStats[name as keyof typeof harpStats]};
+        stats[name] = {intelligence: (perfectCompletions >= 1 ? 1 : 0) * harpStats[name]};
     }
 
     return stats;
 }
 
-export const slayerStats = {
+export type slayerName = "zombie" | "spider" | "wolf" | "enderman" | "blaze";
+
+export const slayerStats: {
+    [key in slayerName]: statsList[]
+} = {
     zombie: [
         {health: 2},
         {health: 2},
@@ -2595,26 +2732,26 @@ export async function calculateSlayerStats(data: apiData, selectedProfile: numbe
 
     var slayer_bosses = data.profileData.profiles[selectedProfile].members[playerUUID].slayer_bosses;
 
-    var stats: statsCategory = {};
+    var stats: any = {};
 
-    for (let i = 0; i < Object.keys(slayerStats).length; i++) {
-        var name = Object.keys(slayerStats)[i];
+    for (let i = 0; i < keys(slayerStats).length; i++) {
+        var name: slayerName = keys(slayerStats)[i];
 
         for(let j=0;j<9;j++) {
-            var boss = slayer_bosses[name as keyof typeof slayer_bosses];
+            var boss = slayer_bosses[name];
 
             var claimed = boss.claimed_levels["level_"+j as keyof typeof boss.claimed_levels] === undefined ? false : true;
             if(!claimed) continue;
 
-            var levelStats = slayerStats[name as keyof typeof slayerStats][j];
+            var levelStats: statsList = slayerStats[name][j];
 
-            for(let k=0;k<Object.keys(levelStats).length;k++) {
-                var statName: statName = Object.keys(levelStats)[k] as statName;
+            for(let k=0;k<keys(levelStats).length;k++) {
+                var statName: statName = keys(levelStats)[k] as statName;
 
                 if(!stats[name]) stats[name] = {};
                 if(!stats[name][statName]) stats[name][statName] = 0;
 
-                stats[name][statName as string] += levelStats[statName as keyof typeof levelStats];
+                stats[name][statName] += levelStats[statName];
             }
         }
     }
@@ -2657,7 +2794,7 @@ export interface accPowers {
     [key: string]: accPower
 }
 
-export const accPowers: accPowers  = {
+export const accPowers: accPowers = {
     //default powers
     lucky: {
         per: {
@@ -2676,7 +2813,7 @@ export const accPowers: accPowers  = {
             strength: 4.8,
             intelligence: 10.8,
             critical_chance: 0.475,
-            critcial_damage: 1.2,
+            critical_damage: 1.2,
         }
     },
     protected: {
@@ -2696,7 +2833,7 @@ export const accPowers: accPowers  = {
             strength: 3.6,
             intelligence: 5.4,
             critical_chance: 1.45,
-            cricial_damage: 3.6,
+            critical_damage: 3.6,
         }
     },
     warrior: {
@@ -2826,7 +2963,7 @@ export const accPowers: accPowers  = {
             critical_damage: 19.2,
         },
         extra: {
-            attack_damage: 15,
+            attack_speed: 15,
         }
     },
     pleasant: {
@@ -2963,13 +3100,13 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
     var inv = await parseContents(inv_raw) as IObjectKeys;
     if(inv.i === undefined) return;
 
-    var taliContents: IObjectKeys[] = inv.i.concat(taliBag.i);
-    taliContents = taliContents.filter(value => Object.keys(value).length);
+    var taliContents: nbtItem[] = inv.i.concat(taliBag.i);
+    taliContents = taliContents.filter(value => keys(value).length);
 
     var mp = 0;
 
     for (let i = 0; i < taliContents.length; i++) {
-        var tali = taliContents[i];
+        var tali: nbtItem = taliContents[i];
         var itemAttributes = tali.tag.ExtraAttributes;
         var itemId = itemAttributes.id;
 
@@ -2981,7 +3118,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
         if(itemInfo.category !== "ACCESSORY") continue;
 
-        var rarityIndex = Object.keys(mpTable).findIndex(name => {return itemInfo?.tier == name});
+        var rarityIndex = keys(mpTable).findIndex(name => {return itemInfo?.tier == name});
         if(rarityIndex == -1) rarityIndex = 0;
 
         // !!! i dont have any recombed accs so i cant test this one !!!
@@ -2996,15 +3133,18 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
         if(itemEnrichment !== undefined) {
             stats.enrichments[formattedName] = {};
+
             stats.enrichments[formattedName][itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
         }
 
         if(itemAttributes.gems) {
-            for(let j in Object.keys(itemAttributes.gems)) {
-                var gemName: string = Object.keys(itemAttributes.gems)[j];
+            console.log(tali.tag.ExtraAttributes.gems)
+
+            for(let j in keys(itemAttributes.gems)) {
+                var gemName: string = keys(itemAttributes.gems)[j] as string;
                 var gemValue: string | {uuid: string, quality: string} = itemAttributes.gems[gemName];
 
-                if(typeof gemValue === "object") gemValue = gemValue.quality;
+                if(typeof gemValue === "object") gemValue = gemValue["quality"]; //no idea why i have to use brackets but https://bobbyhadz.com/blog/typescript-property-does-not-exist-on-type-never said so
 
                 if(gemName.endsWith("_0")) {
                     var recievedGemstoneStats = multiplyStatsList(gemstoneStats[gemName.slice(0,-"_0".length).toLowerCase()][gemValue.toLowerCase()](5), 0.5);
@@ -3014,7 +3154,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
             }
         }
 
-        mp += mpTable[Object.keys(mpTable)[rarity] as keyof typeof mpTable];
+        mp += mpTable[keys(mpTable)[rarity]];
     }
 
     if(accessory_bag_storage.selected_power === undefined) {
@@ -3024,12 +3164,12 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
     var statsMultiplier = 29.97 * Math.pow((Math.log(0.0019 * mp + 1)), 1.2);
 
-    if(Object.keys(accPowers).findIndex(key => {return key == accessory_bag_storage.selected_power}) == -1) {
+    if(keys(accPowers).findIndex(key => {return key == accessory_bag_storage.selected_power}) == -1) {
         console.error("couldnt find selected power");
         return stats;
     }
     
-    var selectedPowerStats = accPowers[accessory_bag_storage.selected_power as keyof typeof accPowers];
+    var selectedPowerStats = accPowers[accessory_bag_storage.selected_power];
 
     stats.magicPower.magicPower = multiplyStatsList(selectedPowerStats.per, statsMultiplier);
     if(selectedPowerStats.extra) {
@@ -3245,11 +3385,11 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     var armor = await parseContents(inv_armor_raw) as IObjectKeys;
     if(armor.i === undefined) return {};
 
-    var armorContents: IObjectKeys[] = armor.i;
+    var armorContents: nbtItem[] = armor.i;
 
 
     for(let i in armorContents) {
-        var piece = armorContents[i];
+        var piece: nbtItem = armorContents[i];
 
         var baseItem = await itemIdToItem(piece.tag.ExtraAttributes.id);
         if(!baseItem) {
@@ -3278,13 +3418,13 @@ export async function calculateEquipmentStats(data: apiData, selectedProfile: nu
     var equipment = await parseContents(equippment_contents_raw) as IObjectKeys;
     if(equipment.i === undefined) return {};
 
-    var equipmentContents: IObjectKeys[] = equipment.i;
+    var equipmentContents: nbtItem[] = equipment.i;
 
 
     for(let i in equipmentContents) {
-        var piece = equipmentContents[i];
+        var piece: nbtItem = equipmentContents[i];
 
-        if(Object.keys(piece).length == 0) continue;
+        if(keys(piece).length == 0) continue;
 
         var baseItem = await itemIdToItem(piece.tag.ExtraAttributes.id);
         if(!baseItem) {
@@ -3327,7 +3467,7 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
     for(let i in pets) {
         var pet = pets[i];
 
-        var rarity = Object.keys(mpTable).findIndex(name => {return pet.tier == name});
+        var rarity = keys(mpTable).findIndex(name => {return pet.tier == name});
 
         petScore += rarity;
     }
@@ -3348,7 +3488,7 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
 }
 
 export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
-    return {"blue whale [55]": {multiBuff: {m_health: 2}}}
+    return {"blue whale [55]": {multiBuff: {m_health: 2}, stats: {health: 1000}}}
 }
 
 export const statCategoryNames: IObjectKeys = {
@@ -3413,7 +3553,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     }
 
     var petScore = await calculatePetScoreStats(data, selectedProfile, playerUUID);
-    returnValue[Object.keys(petScore)[0] || "error"] = petScore;
+    returnValue[keys(petScore)[0] || "error"] = petScore;
 
     return returnValue;
 

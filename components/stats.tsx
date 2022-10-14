@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { statIdToStatName, statName, statsList, statsCategories} from "../lib";
+import { statIdToStatName, statName, statsList, statsCategories, keys} from "../lib";
 import StatsPopUp from "./statspopup";
 import Stat from "./stat";
 import styles from "../styles/stat.module.css";
@@ -13,7 +13,7 @@ interface props {
 export default function Stats({statValues, summedList, sources}: props) {
     var [selectedStat, setSelectedStat] = useState<undefined | statName>(undefined);
 
-    var statsArr: JSX.Element[] = Object.keys(statIdToStatName).map(key => {
+    var statsArr: JSX.Element[] = keys(statIdToStatName).map(key => {
         return <Stat onClick={setSelectedStat} sources={sources || {}} statName={key as statName} value={summedList[key] || 0}/>
     });
 

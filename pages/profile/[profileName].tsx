@@ -2,7 +2,7 @@ import { useRouter } from "next/router"
 import Head from "next/head";
 import { Context, createContext, useEffect, useState} from 'react'
 import { readFileSync } from "fs";
-import { allSkillExpInfo, baseProfile, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, item, statsList, statsCategory, sumStatsCategories, getStatSources } from "../../lib";
+import { allSkillExpInfo, baseProfile, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, item, statsList, statsCategory, sumStatsSources, getStatSources, statsCategories } from "../../lib";
 import Skills from "../../components/skills";
 import Stats from "../../components/stats";
 import { GetServerSideProps } from "next";
@@ -16,7 +16,7 @@ export interface dataContext {
 
 export interface serverData {
 	computedData: {
-		stats: statsCategory,
+		stats: statsCategories,
 		skills: allSkillExpInfo
 	}
 }
@@ -59,6 +59,9 @@ export default function profileViewer(props: serverData) {
 		doAsyncStuff();
 	}, [])
 
+	var sources = getStatSources(props.computedData.stats);
+	var summed = sumStatsSources(sources)
+
     return (
 		<dataContext.Provider value={data}>
 			<Head>
@@ -68,8 +71,8 @@ export default function profileViewer(props: serverData) {
 				<main>
 					{/* <Skills skills={props.computedData.skills}/> */}
 					<Stats statValues={props.computedData.stats}
-						summedList={sumStatsCategories(props.computedData.stats)}
-						sources={getStatSources(props.computedData.stats)}
+						summedList={summed}
+						sources={sources}
 					/>
 				</main>
 			</main>
