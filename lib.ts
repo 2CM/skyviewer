@@ -3522,7 +3522,7 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
 }
 
 export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
-    return {"blue whale [55]": {multiBuff: {m_health: 2}, stats: {health: 1000}}, "superior set": {"superior blood": allStatsBoost(0.05)}};
+    return {};
 }
 
 export const statCategoryNames: IObjectKeys = {

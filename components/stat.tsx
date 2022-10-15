@@ -74,7 +74,7 @@ export default function Stat({statName, value, sources, onClick}: props) {
                         }).join("\n")
                     }
                     LINEBREAK
-                    Multiplicative ${statIdToStatName[statName] || "error"}: ${multiplierFormatter.format(((multiplicativesSum || 1)+1))}x
+                    Multiplicative ${statIdToStatName[statName] || "error"}: ${multiplierFormatter.format(((multiplicativesSum || 0)+1))}x
                     ${
                         Object.keys(multiplicatives).map(multiplicativeName => {
                             return `- ${statCategoryNames[multiplicativeName] || removeStringColors(multiplicativeName)}: ${percentFormatter.format(multiplicatives[multiplicativeName]*100)}%`
