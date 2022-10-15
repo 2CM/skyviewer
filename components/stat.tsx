@@ -77,7 +77,7 @@ export default function Stat({statName, value, sources, onClick}: props) {
                     Multiplicative ${statIdToStatName[statName] || "error"}: ${multiplierFormatter.format(multiplicativesSum || 1)}x
                     ${
                         Object.keys(multiplicatives).map(multiplicativeName => {
-                            return `- ${statCategoryNames[multiplicativeName] || removeStringColors(multiplicativeName)}: ${statFormatter.format(multiplicatives[multiplicativeName])}`
+                            return `- ${statCategoryNames[multiplicativeName] || removeStringColors(multiplicativeName)}: ${multiplierFormatter.format(multiplicatives[multiplicativeName])}`
                         }).join("\n")
                     }
                     `
@@ -96,7 +96,7 @@ export default function Stat({statName, value, sources, onClick}: props) {
                 className={styles.stat}
             >
                 <b>
-                    {statChars[statName] || "?"} <span className={styles.statName}>{statIdToStatName[statName] || "error"}</span> <span style={{color: "white"}}>{mainFormatter.format(value*(multiplicativesSum || 1))}</span>
+                    {statChars[statName] || "?"} <span className={styles.statName}>{statIdToStatName[statName] || "error"}</span> <span style={{color: "white"}}>{mainFormatter.format(value)}</span>
                 </b>
             </div>
         </Tippy>

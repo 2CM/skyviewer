@@ -253,7 +253,7 @@ export async function itemIdToItem(id: string): Promise<item | undefined> {
 
 export async function initItems(data: apiData) {
     if(itemsIndex.size != 0) {
-        console.log("items already inited");
+        console.warn("items already inited");
 
         return;
     }
@@ -291,9 +291,20 @@ export function itemStatsToStatsList(itemStats: itemStats): statsList {
 
 // *** MISC ***
 
-export var mainFormatter = new Intl.NumberFormat("en-US", {maximumFractionDigits: 1});
-export var statFormatter = new Intl.NumberFormat("en-US", {maximumFractionDigits: 1, signDisplay: "always"});
-export var multiplierFormatter = new Intl.NumberFormat("en-US", {maximumFractionDigits: 1, minimumFractionDigits: 1, signDisplay: "always"});
+export var mainFormatter = new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 1
+});
+
+export var statFormatter = new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 1,
+    signDisplay: "always"
+});
+
+export var multiplierFormatter = new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 1,
+    signDisplay: "always"
+});
 
 export function removeStringColors(string: string): string {
     return string.replaceAll(/§[0123456789abcdefklmnor]/g, "");
@@ -1558,43 +1569,37 @@ export function sumStatsSources(sources: statSources): statsList {
     var stats: statsList = {};
     var m_stats: statsList = {};
 
-    console.log("summing")
-
     for(let i in keys(sources)) {
-        var statName: statName = keys(sources)[i];
-        var statValue = sources[statName] || {};
-
-        console.log(statName);
+        let statName: statName = keys(sources)[i];
+        let statValue = sources[statName] || {};
 
         for(let j in keys(statValue)) {
-            var categoryName = keys(statValue)[j];
-            var categoryValue = statValue[categoryName];
-
-            console.log(categoryName);
+            let categoryName = keys(statValue)[j];
+            let categoryValue = statValue[categoryName];
 
             for(let k in keys(categoryValue)) {
-                var sourceName = keys(categoryValue)[k];
-                var sourceValue = categoryValue[sourceName];
-
-                console.log(sourceName, sourceValue);
+                let sourceName = keys(categoryValue)[k];
+                let sourceValue = categoryValue[sourceName];
                 
                 stats[statName] = (stats[statName] || 0) + sourceValue;
-
-                // console.log("all good")
-
-                // if(!sources["m_"+statName as statName]) console.log("aefefefeefEEEEEEEEEEEEEEEEEEE");
-                // if(!sources["m_"+statName as statName]) continue;
-
-                // m_stats[statName] = (m_stats[statName] || 0) + (sources["m_"+statName as statName] || {})[categoryName][sourceName];
             }
         }
     }
 
-    console.log("e", m_stats)
+    for(let i in keys(stats)) {
+        let statName: statName = keys(stats)[i];
+        let statValue: number = stats[statName] || 0;
+
+        if(statName.startsWith("m_")) {
+            var originalStatName: statName = statName.slice(2) as statName;
+
+            m_stats[originalStatName] = statValue;
+        }
+    }
 
     return multiplyStatsList(stats, m_stats);
-    return stats;
 }
+
 
 export function getStatSources(categories: statsCategories): statSources {
     var sources: any = {};
@@ -2384,8 +2389,6 @@ export function calculateItemStats(item: nbtItem, baseItem: item): statsCategory
         stats[`${colorChar + rarityColors[gemstoneRarities[gemInfo.tier]]}${(gemInfo.tier as string).capitalize()} ${(gemInfo.gemstone as string).capitalize()} Gemstone`] = recievedStats;
     }
 
-    console.log(itemGems);
-
     //star stats
         // okay so, this area was completely undocumented on the wiki so i had to figure it out myself :)
 
@@ -3138,8 +3141,6 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
         }
 
         if(itemAttributes.gems) {
-            console.log(tali.tag.ExtraAttributes.gems)
-
             for(let j in keys(itemAttributes.gems)) {
                 var gemName: string = keys(itemAttributes.gems)[j] as string;
                 var gemValue: string | {uuid: string, quality: string} = itemAttributes.gems[gemName];
@@ -3488,7 +3489,7 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
 }
 
 export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
-    return {"blue whale [55]": {multiBuff: {m_health: 2}, stats: {health: 1000}}}
+    return {"blue whale [55]": {multiBuff: {m_health: 2}, stats: {health: 1000}}, "superior set": {thing: {m_health: 2}}}
 }
 
 export const statCategoryNames: IObjectKeys = {
