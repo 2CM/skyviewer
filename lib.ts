@@ -301,8 +301,13 @@ export var statFormatter = new Intl.NumberFormat("en-US", {
 });
 
 export var multiplierFormatter = new Intl.NumberFormat("en-US", {
-    maximumFractionDigits: 1,
+    maximumFractionDigits: 2,
     minimumFractionDigits: 1,
+    // signDisplay: "always"
+});
+
+export var percentFormatter = new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
     signDisplay: "always"
 });
 
@@ -433,7 +438,7 @@ export function coloredStringToElement(string: string, element: keyof React.Reac
 
 export function sourcesToElement(sources: any, statName: statName) {
     //elements from the sources of one specific stat
-    function elementsFromSource(currentSources: any, numberFormatter: (num: number) => string, title?: string): React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] {
+    function elementsFromSource(currentSources: any, numberFormatter: (num: number) => string, title?: string, titleNumberFormatter?: (num: number) => string): React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] {
         if(keys(currentSources).length == 0) {
             return []
         }
@@ -505,6 +510,8 @@ export function sourcesToElement(sources: any, statName: statName) {
                     ]),
                     React.createElement("br")
                 )
+
+                sum += categorySum;
     
                 continue;
             }
@@ -523,7 +530,7 @@ export function sourcesToElement(sources: any, statName: statName) {
             sum += categorySum;
         }
 
-        if(title) return [React.createElement("span", {}, title+numberFormatter(sum)), React.createElement("ul", {}, elements)];
+        if(title) return [React.createElement("span", {}, title+ (titleNumberFormatter !== undefined ? titleNumberFormatter(sum) : numberFormatter(sum))), React.createElement("ul", {}, elements)];
     
         return elements;
     }
@@ -537,7 +544,7 @@ export function sourcesToElement(sources: any, statName: statName) {
         children.push(...elementsFromSource(sources[statName] || {}, num => statFormatter.format(num), hasMultiplicativeBuff ? "Additive: " : undefined));
 
     if(hasMultiplicativeBuff)
-        children.push(...elementsFromSource(sources["m_"+statName] || {}, num => multiplierFormatter.format(num)+"x", hasAdditiveBuff ? "Multiplicative: " : undefined))
+        children.push(...elementsFromSource(sources["m_"+statName] || {}, num => percentFormatter.format(num*100)+"%", hasAdditiveBuff ? "Multiplicative: " : undefined, num => multiplierFormatter.format(num+1)+"x"))
 
     if(!hasAdditiveBuff && !hasMultiplicativeBuff)
         children.push(React.createElement("h2", {style: {textAlign: "center", fontSize: "20px"}}, `This player has no ${statIdToStatName[statName] || "error"} :(`))
@@ -1477,6 +1484,25 @@ export const baseStats: statsList = {
     mending: 100,
 }
 
+export function allStatsBoost(amount: number): statsList { //util to replace typing out multiplicative of every stat for sources like (edrag superior perk, superior set bonus, renowned reforge, etc)
+    return multiplyStatsList({
+        m_health: 1,
+        m_defense: 1,
+        m_strength: 1,
+        m_intelligence: 1,
+        m_critical_chance: 1,
+        m_critical_damage: 1,
+        m_attack_speed: 1,
+        m_ability_damage: 1,
+        m_true_defense: 1,
+        m_ferocity: 1,
+        m_walk_speed: 1,
+        m_magic_find: 1,
+        m_pet_luck: 1,
+        m_sea_creature_chance: 1,
+    }, amount);
+}
+
 export function mergeStatsLists(list1: statsList, list2: statsList): statsList {
     var newList: statsList = {};
 
@@ -1593,7 +1619,7 @@ export function sumStatsSources(sources: statSources): statsList {
         if(statName.startsWith("m_")) {
             var originalStatName: statName = statName.slice(2) as statName;
 
-            m_stats[originalStatName] = statValue;
+            m_stats[originalStatName] = statValue+1;
         }
     }
 
@@ -1603,6 +1629,8 @@ export function sumStatsSources(sources: statSources): statsList {
 
 export function getStatSources(categories: statsCategories): statSources {
     var sources: any = {};
+
+    // var correctedMultipliers: statsList = {}; //to add +1 to every multiplier so a 5% (0.05) multiplier would be a 1.05 multiplier 
 
     for(let i in keys(categories)) {
         var categoryName: string = keys(categories)[i];
@@ -1619,6 +1647,11 @@ export function getStatSources(categories: statsCategories): statSources {
                 if(stat == 0 || stat === undefined) continue;
 
                 // var currentStatSource: any = {};
+
+                // if(correctedMultipliers[statName] === undefined && statName.startsWith("m_")) {
+                //     stat += 1;
+                //     correctedMultipliers[statName] = 1;
+                // }
                 
                 if(!sources[statName]) sources[statName] = {};
 
@@ -3489,7 +3522,7 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
 }
 
 export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
-    return {"blue whale [55]": {multiBuff: {m_health: 2}, stats: {health: 1000}}, "superior set": {thing: {m_health: 2}}}
+    return {"blue whale [55]": {multiBuff: {m_health: 2}, stats: {health: 1000}}, "superior set": {"superior blood": allStatsBoost(0.05)}};
 }
 
 export const statCategoryNames: IObjectKeys = {
@@ -3527,7 +3560,7 @@ export const statCategoryColors: IObjectKeys = {
 }
 
 export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
-    // return {...await calculateAccStats(data, selectedProfile)};
+    // return {base: {base: baseStats}, gamer: {yes: {m_health: 1.05}}};
 
     var returnValue: statsCategories = {
         base: {base: baseStats},

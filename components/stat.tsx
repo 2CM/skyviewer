@@ -1,4 +1,4 @@
-import { colorCodeToHex, mainFormatter, statChars, statColors, statFormatter, statIdToStatName, statName, statCategoryColors, statCategoryNames, removeStringColors, multiplierFormatter } from "../lib";
+import { colorCodeToHex, mainFormatter, statChars, statColors, statFormatter, statIdToStatName, statName, statCategoryColors, statCategoryNames, removeStringColors, multiplierFormatter, percentFormatter } from "../lib";
 import Tippy from "@tippyjs/react/headless"
 import styles from "../styles/stat.module.css";
 import { motion, useSpring } from "framer-motion";
@@ -74,10 +74,10 @@ export default function Stat({statName, value, sources, onClick}: props) {
                         }).join("\n")
                     }
                     LINEBREAK
-                    Multiplicative ${statIdToStatName[statName] || "error"}: ${multiplierFormatter.format(multiplicativesSum || 1)}x
+                    Multiplicative ${statIdToStatName[statName] || "error"}: ${multiplierFormatter.format(((multiplicativesSum || 1)+1))}x
                     ${
                         Object.keys(multiplicatives).map(multiplicativeName => {
-                            return `- ${statCategoryNames[multiplicativeName] || removeStringColors(multiplicativeName)}: ${multiplierFormatter.format(multiplicatives[multiplicativeName])}`
+                            return `- ${statCategoryNames[multiplicativeName] || removeStringColors(multiplicativeName)}: ${percentFormatter.format(multiplicatives[multiplicativeName]*100)}%`
                         }).join("\n")
                     }
                     `
