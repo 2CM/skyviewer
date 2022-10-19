@@ -1,4 +1,4 @@
-import nbt, { NBT } from "prismarine-nbt";
+import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
@@ -127,6 +127,12 @@ export interface itemStats {
     MENDING?: number,
 }
 
+export function tierStringToNumber(string: itemTier): number {
+    var index = keys(mpTable).findIndex(tier => {return string == tier});
+
+    return index == -1 ? 0 : index;
+}
+
 /*
 
 //CAN DO THESE ONES LATER
@@ -228,11 +234,18 @@ export interface nbtItem {
     Damage: number
 }
 
+//some item ids arent in the items api (for example, PARTY_HAT_CRAB_ANIMATED doesnt exist, the right one would be PARTY_HAT_CRAB)
+export const itemIdReplacements = new Map<string, string>([
+    ["PARTY_HAT_CRAB_ANIMATED", "PARTY_HAT_CRAB"]
+]);
+
 //converts item id (found in nbt) -> item
 export async function itemIdToItem(id: string): Promise<item | undefined> {
     if(itemsIndex.size == 0) return undefined; //its not initiated
 
-    var location = itemsIndex.get(id); //index of id in items[]
+    var correctId = itemIdReplacements.get(id) || id;
+
+    var location = itemsIndex.get(correctId); //index of id in items[]
 
     if(location == undefined) return undefined; //item id prob doesnt exist
 
@@ -711,7 +724,7 @@ export const effectStats: {
             walk_speed: -5*level
         }),
         "haste": level => ({
-            mining_speed: 20*level
+            mining_speed: 50*level //wiki was wrong :/
         }),
         "rabbit": level => ({
             walk_speed: 10*level
@@ -838,7 +851,7 @@ export interface pet {
     type: string,
     exp: number,
     active: boolean,
-    tier: string,
+    tier: itemTier,
     heldItem: string | null,
     candyUsed: number,
     skin: string | null
@@ -958,7 +971,7 @@ export interface profileMember { //all objects can be expanded upon; all any[] |
             luck_of_the_cave?: number,
             crystallized?: number,
 
-            efficient_miner?: number,
+            mining_experience?: number,
             seasoned_mineman?: number,
             orbiter?: number,
             mining_madness?: number,
@@ -2004,7 +2017,7 @@ export const enchantStats: {
             health: 15*level,
         }),
         protection: level => ({
-            defense: [4,8,12,16,20,25,30][level],
+            defense: [4,8,12,16,20,25,30][level-1],
         }),
         rejuvenate: level => ({
             health_regen: 2*level,
@@ -2272,7 +2285,7 @@ export function calculateItemStats(item: nbtItem, baseItem: item, compact: boole
    
    var rarityUpgrades = item.tag.ExtraAttributes.rarity_upgrades;
    
-   var rarity = keys(mpTable).findIndex(name => {return baseItem?.tier == name}) + (rarityUpgrades || 0);
+   var rarity = tierStringToNumber(baseItem.tier || "COMMON") + (rarityUpgrades || 0);
    
    //base stats
    if(baseItem.stats) {
@@ -2294,7 +2307,7 @@ export function calculateItemStats(item: nbtItem, baseItem: item, compact: boole
     //reforge
     var reforge: string | undefined = item.tag.ExtraAttributes.modifier;
 
-    if(reforge !== undefined && reforge !== "none") {
+    if(reforge !== undefined && reforge !== "none" && baseItem.category !== "ACCESSORY") {
         if(reforgeStats[reforge] !== undefined) {
             stats[compact ? "reforge" : `${colorChar}5${reforge.capitalize()}`] = reforgeStats[reforge](Math.min(rarity, 5));
         } else {
@@ -2492,7 +2505,7 @@ export const skillLevelStats: {
         pet_luck: 1*level
     }),
     carpentry: level => ({
-        health: 1*level
+        health: 1*Math.min(level,49) //lvl 50 doesnt give health
     }),
 
     dungeoneering: level => ({
@@ -2578,6 +2591,8 @@ export async function calculateHotmStats(data: apiData, selectedProfile: number,
     if(mining_core.nodes.mining_fortune_2) stats["Mining Fortune 2"] = {mining_fortune: 5*mining_core.nodes.mining_fortune_2 || 0};
 
     if(mining_core.nodes.mining_madness) stats["Mining Madness"] = {mining_speed: 50, mining_fortune: 50};
+
+    if(mining_core.nodes.mining_experience) stats["Seasoned Mineman"] = {mining_wisdom: 5+0.1*mining_core.nodes.mining_experience || 0}
 
     return stats;
 }
@@ -2730,13 +2745,13 @@ export const slayerStats: {
     ],
     enderman: [
         {health: 1},
-        {intelligence: 1},
+        {intelligence: 2},
         {health: 2},
         {intelligence: 2},
         {health: 3},
-        {intelligence: 3},
+        {intelligence: 5},
         {health: 4},
-        {intelligence: 4},
+        {intelligence: 4}, //real intelligence doesnt match wiki. and because im not eman 7, i dont know this one.
         {health: 5},
     ],
     blaze: [
@@ -2767,28 +2782,38 @@ export async function calculateSlayerStats(data: apiData, selectedProfile: numbe
 
     var slayer_bosses = data.profileData.profiles[selectedProfile].members[playerUUID].slayer_bosses;
 
-    var stats: any = {};
+    var stats: statsCategory = {};
+    var combatWisdomBuff = 0;
 
     for (let i = 0; i < keys(slayerStats).length; i++) { //for each slayer boss
         var name: slayerName = keys(slayerStats)[i];
+        var info = slayer_bosses[name];
 
         var boss = slayer_bosses[name];
 
         var rewardedStats: statsList = {};
         var highestClaimed: number = keys(boss.claimed_levels).length == 0 ? 0 : 1; //highest level claimed
 
-        for(let j=0;j<9;j++) { //for each level of it
+        for(let j = 0; j < 9; j++) { //for each level of it
             var claimed = boss.claimed_levels["level_"+j as keyof typeof boss.claimed_levels] !== undefined || boss.claimed_levels["level_"+j+"_special" as keyof typeof boss.claimed_levels] !== undefined; //if you claimed the level reward
             if(!claimed) continue; //if you didnt, continue
 
-            var levelStats: statsList = slayerStats[name][j]; //stats of the claimed level
+            var levelStats: statsList = slayerStats[name][j-1]; //stats of the claimed level
 
             rewardedStats = mergeStatsLists(rewardedStats, levelStats);
             highestClaimed = j;
         }
 
         stats[colorChar+slayerColors[name]+name.capitalize()+" "+highestClaimed] = rewardedStats;
+        
+        for(let j = 0; j < 4; j++) {
+            if(info["boss_kills_tier_"+j as keyof typeof info] !== undefined) {
+                combatWisdomBuff += j < 3 ? 1 : 2;
+            }
+        }
     }
+
+    stats[colorChar+"3"+"Global Combat Wisdom Buff"] = {combat_wisdom: combatWisdomBuff}
 
     return stats;
 }
@@ -3140,7 +3165,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
     taliContents = taliContents.filter(value => keys(value).length);
 
     var mp = 0;
-
+    
     for (let i = 0; i < taliContents.length; i++) {
         var tali: nbtItem = taliContents[i];
         var itemAttributes = tali.tag.ExtraAttributes;
@@ -3154,12 +3179,10 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
         if(itemInfo.category !== "ACCESSORY") continue;
 
-        var rarityIndex = keys(mpTable).findIndex(name => {return itemInfo?.tier == name});
-        if(rarityIndex == -1) rarityIndex = 0;
+        var rarityIndex = tierStringToNumber(itemInfo.tier || "COMMON");
 
-        // !!! i dont have any recombed accs so i cant test this one !!!
-        var rarityUpgrades = itemAttributes.rarity_upgrades;
-        var rarity = rarityIndex + (rarityUpgrades === undefined ? 0 : rarityUpgrades == 1 ? 1 : 0);
+        var rarityUpgrades: number | undefined = itemAttributes.rarity_upgrades;
+        var rarity: number = rarityIndex + (rarityUpgrades === undefined ? 0 : rarityUpgrades == 1 ? 1 : 0);
 
         var formattedName = (rarityUpgrades === undefined ? "" : rarityUpgrades == 1 ? "RECOMB" : "") + colorChar + Object.values(rarityColors)[rarity] + removeStringColors(itemInfo.name);
 
@@ -3193,7 +3216,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
     stats.tuning.tuning = multiplyStatsList((accessory_bag_storage.tuning.slot_0 ? accessory_bag_storage.tuning.slot_0 : {}) as statsList, tuningValues)
 
-    console.log(`mp: ${mp}, multiplier: ${statsMultiplier}`);
+    console.log({mp, statsMultiplier});
 
     return stats;
 }
@@ -3313,6 +3336,9 @@ export async function calculatePotionStats(data: apiData, selectedProfile: numbe
                 case "juice":
                     effectStatsList.health = effectStatsList.health || 0;
                     effectStatsList.health *= 1.05;
+
+                    effectStatsList.health_regen = effectStatsList.health_regen || 0;
+                    effectStatsList.health_regen *= 1.05;
                 break;
                 case "dr_paper":
                     effectStatsList.health = effectStatsList.health || 0;
@@ -3344,23 +3370,19 @@ export interface cakeStatNumberToStat {
     [key: string]: statName
 }
 
-export const cakeStatNumberToStat: cakeStatNumberToStat = {
-    "0": "health",
-    "1": "defense",
-    "2": "walk_speed",
-    //"3": it doesnt exist ._. ight whos gonna make the 20 minute video essay on why cake stat number 3 doesnt exist?
-    "4": "strength",
-    "5": "intelligence",
-    //missing 6-11
-    "11": "magic_find",
-    "12": "pet_luck",
-    //"13" .-.
-    "14": "sea_creature_chance",
-    "15": "ferocity",
-    //"16" .-------.
-    "17": "mining_fortune",
-    "18": "mining_speed",
-    "19": "foraging_fortune",
+export const cakeStats: statIdMap<number> = {
+    walk_speed: 10,
+    strength: 2,
+    defense: 3,
+    farming_fortune: 5,
+    ferocity: 2,
+    health: 10,
+    pet_luck: 1,
+    mining_fortune: 5,
+    sea_creature_chance: 1,
+    magic_find: 1,
+    intelligence: 5,
+    foraging_fortune: 5
 }
 
 //calculates stats given from century cakes
@@ -3375,8 +3397,11 @@ export async function calculateCakeStats(data: apiData, selectedProfile: number,
 
     for(let i in temp_stat_buffs) {
         var statBuff = temp_stat_buffs[i];
+        var cakeStat = statBuff.key.slice("cake_".length) as statName;
 
-        stats[cakeStatNumberToStat[statBuff.stat]] = statBuff.amount;
+        if(cakeStats[cakeStat] !== undefined) {
+            stats[cakeStat] = cakeStats[cakeStat];
+        }
     }
 
     return {cake: stats}
@@ -3467,15 +3492,19 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
     var pets = data.profileData.profiles[selectedProfile].members[playerUUID].pets;
 
     var petScore = 0;
-    var mf = 0;
+    var uniquePets = new Map<string, number>();
+    var mf = 0; //magic find
 
     for(let i in pets) {
         var pet = pets[i];
 
-        var rarity = keys(mpTable).findIndex(name => {return pet.tier == name});
+        var rarity: number = tierStringToNumber(pet.tier)+1;
+        var lastRarity: number = uniquePets.get(pet.type) || 0; //if the pet is already in the map, its rarity. if not, 0
 
-        petScore += rarity;
+        uniquePets.set(pet.type, Math.max(lastRarity, rarity))
     }
+
+    petScore = [...uniquePets.values()].reduce((prev, curr) => prev+curr, 0);
 
     for(let i in petScores) {
         let num = petScores[i];
