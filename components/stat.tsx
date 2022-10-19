@@ -1,4 +1,4 @@
-import { colorCodeToHex, mainFormatter, statChars, statColors, statFormatter, statIdToStatName, statName, statCategoryColors, statCategoryNames, removeStringColors, multiplierFormatter, percentFormatter } from "../lib";
+import { colorCodeToHex, mainFormatter, statChars, statColors, statFormatter, statIdToStatName, statName, statCategoryColors, statCategoryNames, removeStringColors, multiplierFormatter, percentFormatter, keys, statSource } from "../lib";
 import Tippy from "@tippyjs/react/headless"
 import styles from "../styles/stat.module.css";
 import { motion, useSpring } from "framer-motion";
@@ -69,15 +69,15 @@ export default function Stat({statName, value, sources, onClick}: props) {
                     LINEBREAK
                     Additional ${statIdToStatName[statName] || "error"}: ${mainFormatter.format(additionalsSum)}
                     ${
-                        Object.keys(additionals).map(additionalName => {
-                            return `- ${statCategoryNames[additionalName] || removeStringColors(additionalName)}: ${statFormatter.format(additionals[additionalName])}`
+                        keys(additionals).map(additionalName => {
+                            return `- ${statCategoryNames[additionalName as statSource] || removeStringColors(additionalName as string)}: ${statFormatter.format(additionals[additionalName])}`
                         }).join("\n")
                     }
                     LINEBREAK
                     Multiplicative ${statIdToStatName[statName] || "error"}: ${multiplierFormatter.format(((multiplicativesSum || 0)+1))}x
                     ${
-                        Object.keys(multiplicatives).map(multiplicativeName => {
-                            return `- ${statCategoryNames[multiplicativeName] || removeStringColors(multiplicativeName)}: ${percentFormatter.format(multiplicatives[multiplicativeName]*100)}%`
+                        keys(multiplicatives).map(multiplicativeName => {
+                            return `- ${statCategoryNames[multiplicativeName as statSource] || removeStringColors(multiplicativeName as string)}: ${percentFormatter.format(multiplicatives[multiplicativeName]*100)}%`
                         }).join("\n")
                     }
                     `
