@@ -54,6 +54,8 @@ export default function profileViewer(props: serverData) {
 					selectedProfile: 3
 				}
 			});
+
+			console.log(props)
 		}
 
 		doAsyncStuff();
@@ -87,13 +89,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 	var staticFileName =
 		context.params?.profileName == "2CGI" ? "skyblockprofile.json" :
 		context.params?.profileName == "breefing" ? "breefingprofile.json" :
-		// context.params?.profileName == "refraction" ? "refractionprofile.json" :
+		context.params?.profileName == "refraction" ? "refractionprofile.json" :
 		"skyblockprofile.json"
 
 	var playerUUID =
 		context.params?.profileName == "2CGI" ? "86a6f490bf424769a625a266aa89e8d0" :
 		context.params?.profileName == "breefing" ? "6d2564e80798417c877f799e9727e2bd" :
-		// "refraction" ? "28667672039044989b0019b14a2c34d6" :
+		"refraction" ? "28667672039044989b0019b14a2c34d6" :
 		"86a6f490bf424769a625a266aa89e8d0";
 
 	var apiData: apiData = {
