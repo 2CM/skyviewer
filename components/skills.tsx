@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { allSkillExpInfo, skillCaps, skillName } from "../lib";
+import { allSkillExpInfo } from "../lib";
+import { skillCaps, skillName } from "../sbconstants";
 import SkillLevel from "./skillLevel";
 
 interface props {

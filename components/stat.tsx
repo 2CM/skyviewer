@@ -1,7 +1,8 @@
-import { colorCodeToHex, mainFormatter, statChars, statColors, statFormatter, statIdToStatName, statName, statCategoryColors, statCategoryNames, removeStringColors, multiplierFormatter, percentFormatter, keys, statSource } from "../lib";
+import { mainFormatter, statFormatter, statCategoryColors, statCategoryNames, removeStringColors, multiplierFormatter, percentFormatter, keys, statSource } from "../lib";
 import Tippy from "@tippyjs/react/headless"
 import styles from "../styles/stat.module.css";
 import { motion, useSpring } from "framer-motion";
+import { colorCodeToHex, statChars, statColors, statIdToStatName, statName } from "../sbconstants";
 
 interface props {
     statName: statName,

@@ -1,8 +1,8 @@
 import { mainFormatter, skillExpInfo, skillExpInfos} from "../lib";
-import type { skillName } from "../lib";
 import Image from "next/image";
 import styles from "../styles/skillLevel.module.css";
 import utilStyles from "../styles/utils.module.css";
+import { skillName } from "../sbconstants";
 
 interface props {
     skillExpInfos: skillExpInfos,

@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { statIdToStatName, statName, statsList, statsCategories, keys} from "../lib";
+import { statsCategories, keys} from "../lib";
 import StatsPopUp from "./statspopup";
 import Stat from "./stat";
 import styles from "../styles/stat.module.css";
+import { statsList, statName, statIdToStatName } from "../sbconstants";
 
 interface props {
     statValues: statsCategories,

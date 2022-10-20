@@ -1,5 +1,6 @@
 import { useEffect } from "react"
-import { colorCodeToHex, sourcesToElement, statChars, statColors, statFormatter, statIdToStatName, statName } from "../lib";
+import { sourcesToElement, statFormatter} from "../lib";
+import { statName, statColors, statChars, statIdToStatName, colorCodeToHex } from "../sbconstants";
 import styles from "../styles/stat.module.css";
 
 interface props {

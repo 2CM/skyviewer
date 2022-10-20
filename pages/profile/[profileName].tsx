@@ -2,10 +2,11 @@ import { useRouter } from "next/router"
 import Head from "next/head";
 import { Context, createContext, useEffect, useState} from 'react'
 import { readFileSync } from "fs";
-import { allSkillExpInfo, baseProfile, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, item, statsList, statsCategory, sumStatsSources, getStatSources, statsCategories } from "../../lib";
+import { allSkillExpInfo, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, sumStatsSources, getStatSources, statsCategories } from "../../lib";
 import Skills from "../../components/skills";
 import Stats from "../../components/stats";
 import { GetServerSideProps } from "next";
+import { baseProfile, item } from "../../sbconstants";
 
 
 export interface dataContext {
