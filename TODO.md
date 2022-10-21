@@ -1,1 +1,2 @@
 - exceptions in calculateItemStats()
+- candy in petLevel()

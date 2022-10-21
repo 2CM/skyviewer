@@ -442,10 +442,10 @@ export interface cake_buff {
 //a pet
 export interface pet {
     uuid: string,
-    type: string,
+    type: petName,
     exp: number,
     active: boolean,
-    tier: itemTier,
+    tier: petTier,
     heldItem: string | null,
     candyUsed: number,
     skin: string | null
@@ -2124,19 +2124,153 @@ export const petScores = [
     325,
 ]
 
-export type petName = "BAT" | "BLACK_CAT";
+//possible tiers of pets
+export type petTier = Exclude<itemTier, "DIVINE" | "SPECIAL" | "VERY_SPECIAL">;
 
-//perks and stats of every pet
-export const petStats: {
-    [key in petName]: {
-        base: (level: number, tier: itemTier) => statsList,
-        perks: {
+//pets
+export type petName = 
+    "ROCK" |
+    "BAT" |
+    "MITHRIL_GOLEM" |
+    "WITHER_SKELETON" |
+    "SILVERFISH" |
+    "ENDERMITE" |
+    "BEE" |
+    "CHICKEN" |
+    "PIG" |
+    "RABBIT" |
+    "ELEPHANT" |
+    "BLUE_WHALE" |
+    "DOLPHIN" |
+    "FLYING_FISH" |
+    "BABY_YETI" |
+    "MEGALODON" |
+    "SQUID" |
+    "JELLYFISH" |
+    "SHEEP" |
+    "PARROT" |
+    "MONKEY" |
+    "GIRAFFE" |
+    "LION" |
+    "OCELOT" |
+    "BLACK_CAT" |
+    "BLAZE" |
+    "ENDER_DRAGON" |
+    "ENDERMAN" |
+    "GHOUL" |
+    "GOLEM" |
+    "GRIFFIN" |
+    "HORSE" |
+    "HOUND" |
+    "JERRY" |
+    "MAGMA_CUBE" |
+    "PHOENIX" |
+    "PIGMAN" |
+    "SKELETON" |
+    "SKELETON_HORSE" |
+    "SNOWMAN" |
+    "SPIDER" |
+    "SPIRIT" |
+    "TARANTULA" |
+    "TURTLE" |
+    "TIGER" |
+    "ZOMBIE" |
+    "WOLF" |
+    "GUARDIAN" |
+    "GRANDMA_WOLF" |
+    "ARMADILLO" |
+    "BAL" |
+    "GOLDEN_DRAGON" |
+    "RAT" |
+    "SCATHA" |
+    "AMMONITE" |
+    "SNAIL" |
+    "MOOSHROOM_COW" |
+    "KUUDRA" |
+    "WISP";
+
+//pet exp types
+export type petExpType = "mining" | "farming" | "combat" | "fishing" | "foraging" | "enchanting" | "alchemy" | "gabagool";
+
+//exp types of every pet
+export const petTypes: {
+    [key in petName]: petExpType
+} = {
+    ROCK: "mining",
+    BAT: "mining",
+    MITHRIL_GOLEM: "mining",
+    WITHER_SKELETON: "mining",
+    SILVERFISH: "mining",
+    ENDERMITE: "mining",
+    BEE: "farming",
+    CHICKEN: "farming",
+    PIG: "farming",
+    RABBIT: "farming",
+    ELEPHANT: "farming",
+    BLUE_WHALE: "fishing",
+    DOLPHIN: "fishing",
+    FLYING_FISH: "fishing",
+    BABY_YETI: "fishing",
+    MEGALODON: "fishing",
+    SQUID: "fishing",
+    JELLYFISH: "alchemy",
+    SHEEP: "alchemy",
+    PARROT: "alchemy",
+    MONKEY: "foraging",
+    GIRAFFE: "foraging",
+    LION: "foraging",
+    OCELOT: "foraging",
+    BLACK_CAT: "combat",
+    BLAZE: "combat",
+    ENDER_DRAGON: "combat",
+    ENDERMAN: "combat",
+    GHOUL: "combat",
+    GOLEM: "combat",
+    GRIFFIN: "combat",
+    HORSE: "combat",
+    HOUND: "combat",
+    JERRY: "combat",
+    MAGMA_CUBE: "combat",
+    PHOENIX: "combat",
+    PIGMAN: "combat",
+    SKELETON: "combat",
+    SKELETON_HORSE: "combat",
+    SNOWMAN: "combat",
+    SPIDER: "combat",
+    SPIRIT: "combat",
+    TARANTULA: "combat",
+    TURTLE: "combat",
+    TIGER: "combat",
+    ZOMBIE: "combat",
+    WOLF: "combat",
+    GUARDIAN: "enchanting",
+    GRANDMA_WOLF: "combat",
+    ARMADILLO: "mining",
+    BAL: "combat",
+    GOLDEN_DRAGON: "combat",
+    RAT: "combat",
+    SCATHA: "mining",
+    AMMONITE: "fishing",
+    SNAIL: "mining",
+    MOOSHROOM_COW: "farming",
+    KUUDRA: "combat",
+    WISP: "gabagool",
+}
+
+//info about stats of a pet
+export type petStatInfo = {
+    base: (level: number, tier: petTier) => statsList,
+    perks: {
         [key: string]: {
-            tier: itemTier
+            tier: petTier
             stats: (level: number) => statsList
         }
     }
-    }
+}
+
+//perks and stats of every pet
+export const petStats: {
+    [key in petName]: petStatInfo
 } = {
     "BAT": {
         base: (level, tier) => ({
@@ -2175,3 +2309,141 @@ export const petStats: {
         }
     }
 }
+
+//higher tiers of pets are harder to level
+export const petRarityOffset: {
+    [key in petTier]: number
+} = {
+    COMMON: 0,
+    UNCOMMON: 6,
+    RARE: 11,
+    EPIC: 16,
+    LEGENDARY: 20,
+    MYTHIC: 20
+}
+
+export const petLeveling = [
+    100,
+    110,
+    120,
+    130,
+    145,
+    160,
+    175,
+    190,
+    210,
+    230,
+    250,
+    275,
+    300,
+    330,
+    360,
+    400,
+    440,
+    490,
+    540,
+    600,
+    660,
+    730,
+    800,
+    880,
+    960,
+    1050,
+    1150,
+    1260,
+    1380,
+    1510,
+    1650,
+    1800,
+    1960,
+    2130,
+    2310,
+    2500,
+    2700,
+    2920,
+    3160,
+    3420,
+    3700,
+    4000,
+    4350,
+    4750,
+    5200,
+    5700,
+    6300,
+    7000,
+    7800,
+    8700,
+    9700,
+    10800,
+    12000,
+    13300,
+    14700,
+    16200,
+    17800,
+    19500,
+    21300,
+    23200,
+    25200,
+    27400,
+    29800,
+    32400,
+    35200,
+    38200,
+    41400,
+    44800,
+    48400,
+    52200,
+    56200,
+    60400,
+    64800,
+    69400,
+    74200,
+    79200,
+    84700,
+    90700,
+    97200,
+    104200,
+    111700,
+    119700,
+    128200,
+    137200,
+    146700,
+    156700,
+    167700,
+    179700,
+    192700,
+    206700,
+    221700,
+    237700,
+    254700,
+    272700,
+    291700,
+    311700,
+    333700,
+    357700,
+    383700,
+    411700,
+    441700,
+    476700,
+    516700,
+    561700,
+    611700,
+    666700,
+    726700,
+    791700,
+    861700,
+    936700,
+    1016700,
+    1101700,
+    1191700,
+    1286700,
+    1386700,
+    1496700,
+    1616700,
+    1746700,
+    1886700,
+    
+    //for gdrag / future lvl > 100 pets
+    0, //when it reaches lvl 100 it hatches into lvl 101, so its instant
+    5555, //why hypixel why
+]

@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors } from "./sbconstants";
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset } from "./sbconstants";
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -144,6 +144,48 @@ export function itemStatsToStatsList(itemStats: itemStats): statsList {
 
 // *** MISC ***
 
+//calculates pet level from a pet
+export function petLevel(pet: pet): number {
+    var exp = pet.exp;
+
+    //NEED TO DO CANDY
+
+    var level = 1;
+
+    for(let i = 0; i < 99 + (pet.type == "GOLDEN_DRAGON" ? 100 : 0); i++) {
+        var rarityOffset: number = petRarityOffset[pet.tier] || 0;
+        var toLevel: number = petLeveling[i+rarityOffset];
+
+        if(toLevel === undefined) toLevel = 1886700
+
+
+        if(exp >= toLevel) {
+            // console.log(exp+" > "+toLevel)
+
+            exp -= toLevel;
+
+            level++;
+        } else {
+            // console.log({toLevel, exp})
+
+            break;
+        }
+    }
+
+
+    return level;
+}
+
+console.log(petLevel({
+    exp: 79200000, //from deathstreeks
+    tier: "LEGENDARY",
+    type: "GOLDEN_DRAGON",
+    active: false,
+    heldItem: null,
+    candyUsed: 0,
+    uuid: "",
+    skin: "",
+}))
 
 //main number formatter
 export var mainFormatter = new Intl.NumberFormat("en-US", {
@@ -1426,7 +1468,47 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
 
 //calculates stats given from current pet
 export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
-    return {};
+    if (!data.profileData) return {};
+
+    var pets = data.profileData.profiles[selectedProfile].members[playerUUID].pets;
+
+    var equippedPet: pet | undefined = undefined;
+
+    var stats: statsCategory = {
+        base: {}
+    };
+
+    for(let i = 0; i < pets.length; i++) {
+        if(pets[i].active == true) {
+            equippedPet = pets[i];
+            
+            break;
+        }
+    }
+
+    if(equippedPet === undefined) {
+        console.warn("no equipped pet");
+
+        return {};
+    }
+
+    var recivedStats: petStatInfo = petStats[equippedPet.type];
+
+    stats.base = recivedStats.base(66, equippedPet.tier);
+
+    for(let j in keys(recivedStats.perks)) {
+        var perk: string = keys(recivedStats.perks)[j] as string;
+
+        var hasPerk: boolean = tierStringToNumber(equippedPet.tier) >= tierStringToNumber(recivedStats.perks[perk].tier);
+        
+        if(!hasPerk) continue;
+
+        stats[perk] = recivedStats.perks[perk].stats(66)
+    }
+
+    return {
+        [colorChar+rarityColors[equippedPet.tier]+equippedPet.type.replaceAll("_", " ").capitalize()]: stats
+    }
 }
 
 export const statCategoryNames = {
