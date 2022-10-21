@@ -2123,3 +2123,55 @@ export const petScores = [
     275,
     325,
 ]
+
+export type petName = "BAT" | "BLACK_CAT";
+
+//perks and stats of every pet
+export const petStats: {
+    [key in petName]: {
+        base: (level: number, tier: itemTier) => statsList,
+        perks: {
+        [key: string]: {
+            tier: itemTier
+            stats: (level: number) => statsList
+        }
+    }
+    }
+} = {
+    "BAT": {
+        base: (level, tier) => ({
+            intelligence: 1*level,
+            walk_speed: 0.05*level,
+            [tier == "MYTHIC" ? "sea_creature_chance" : ""]: tier == "MYTHIC" ? 0.05 : 0
+        }),
+        perks: {
+
+        }
+    },
+    "BLACK_CAT": {
+        base: (level, tier) => ({
+            intelligence: 1*level,
+            walk_speed: 0.25*level,
+        }),
+        perks: {
+            "Hunter": {
+                tier: "LEGENDARY",
+                stats: level => ({
+                    walk_speed: 1*level
+                })
+            },
+            "Omen": {
+                tier: "LEGENDARY",
+                stats: level => ({
+                    pet_luck: 0.15*level
+                })
+            },
+            "Supernatural": {
+                tier: "LEGENDARY",
+                stats: level => ({
+                    magic_find: 0.15*level
+                })
+            }
+        }
+    }
+}
