@@ -964,7 +964,6 @@ export async function calculateSkillStats(data: apiData, selectedProfile: number
         let name: skillName = keys(skillCaps)[i] as skillName;
 
         if (name == "dungeoneering") continue;
-        if (skillLevelStats[name as keyof typeof skillLevelStats] === undefined) continue;
 
         var levelInfo = skillExpToLevel(data.profileData.profiles[selectedProfile].members[playerUUID][skillNameToApiName[name] as keyof profileMember] as number || 0, name)
 
