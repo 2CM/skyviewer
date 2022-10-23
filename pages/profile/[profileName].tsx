@@ -2,11 +2,12 @@ import { useRouter } from "next/router"
 import Head from "next/head";
 import { Context, createContext, useEffect, useState} from 'react'
 import { readFileSync } from "fs";
-import { allSkillExpInfo, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, sumStatsSources, getStatSources, statsCategories } from "../../lib";
+import { allSkillExpInfo, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, sumStatsSources, getStatSources, statsCategories, keys, calcTemp } from "../../lib";
 import Skills from "../../components/skills";
 import Stats from "../../components/stats";
 import { GetServerSideProps } from "next";
 import { baseProfile, item } from "../../sbconstants";
+import { randomBytes } from "crypto";
 
 
 export interface dataContext {
@@ -120,8 +121,24 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
 	await initItems(apiData);
 
-	returnValue.props.computedData.skills = calculateAllSkillExp(apiData, selectedProfile, playerUUID);
-	returnValue.props.computedData.stats = await calculateStats(apiData, selectedProfile, playerUUID);
+	
+    var calcId = randomBytes(64).toString("base64");
+
+    calcTemp[calcId] = {
+        stats: {},
+        skills: {},
+        other: {
+
+        },
+    };
+
+	calculateAllSkillExp(apiData, selectedProfile, playerUUID, calcId);
+	await calculateStats(apiData, selectedProfile, playerUUID, calcId);
+
+	returnValue.props.computedData.skills = calcTemp[calcId].skills;
+	returnValue.props.computedData.stats = calcTemp[calcId].stats;
+
+	delete calcTemp[calcId] //we dont need it anymore
 
 	return returnValue;
 }

@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData } from "./sbconstants";
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors } from "./sbconstants";
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -341,7 +341,7 @@ export function sourcesToElement(sources: any, statName: statName) {
         var sum = 0;
 
         for (let i in keys(currentSources)) {
-            var categoryName: statSource = keys(currentSources)[i] as statSource;
+            var categoryName: string = keys(currentSources)[i] as string;
             var category = currentSources[categoryName];
 
             var categoryChildren: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
@@ -393,30 +393,24 @@ export function sourcesToElement(sources: any, statName: statName) {
                 );
             }
 
-            if (keys(category).length == 1 && lastSourceName == categoryName) {
+            if (keys(category).length == 1 && lastSourceName == "SAME") {
                 elements.push(
                     React.createElement("li", { className: statStyles.statsCategory }, [ //style: {color: colorCodeToHex[statCategoryColors[categoryName]]}
-                        coloredStringToElement(`${statCategoryNames[categoryName] === undefined ? categoryName : colorChar + statCategoryColors[categoryName] + statCategoryNames[categoryName]
-                            }`),
+                        coloredStringToElement(categoryName),
                         React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(categorySum)}`)
                     ]),
                     React.createElement("br")
                 )
-
-                sum += categorySum;
-
-                continue;
+            } else {
+                elements.push(
+                    React.createElement("li", { className: statStyles.statsCategory }, [
+                        coloredStringToElement(categoryName),
+                        React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(categorySum)}`)
+                    ]),
+                    React.createElement("ul", { className: statStyles.statValue }, categoryChildren),
+                    React.createElement("br")
+                )
             }
-
-            elements.push(
-                React.createElement("li", { className: statStyles.statsCategory }, [
-                    coloredStringToElement(`${statCategoryNames[categoryName] === undefined ? categoryName : colorChar + statCategoryColors[categoryName] + statCategoryNames[categoryName]
-                        }`),
-                    React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(categorySum)}`)
-                ]),
-                React.createElement("ul", { className: statStyles.statValue }, categoryChildren),
-                React.createElement("br")
-            )
 
             sum += categorySum;
         }
@@ -553,7 +547,7 @@ export function skillExpToLevel(exp: number, skill: skillName, extrapolate: bool
 }
 
 //calculates all the data you need for skill exp stuff
-export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, playerUUID: string): allSkillExpInfo {
+export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, playerUUID: string, calcId: string): allSkillExpInfo {
     if (apiData.profileData === undefined) {
         console.error("profileData is undefined");
         return {};
@@ -576,11 +570,23 @@ export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, 
         };
     }
 
+    calcTemp[calcId].skills = skills;
+
     return skills;
 }
 
 // *** STATS ***
 
+//map of calculation id to stat info
+export var calcTemp: {
+    [key in string]: {
+        stats: statsCategories,
+        skills: allSkillExpInfo,
+        other: {
+
+        }
+    }        
+} = {};
 
 //util to replace typing out multiplicative of every stat for sources like (edrag superior perk, superior set bonus, renowned reforge, etc)
 export function allStatsBoost(amount: number): statsList {
@@ -763,14 +769,13 @@ export function getStatSources(categories: statsCategories): statSources {
 }
 
 
-export type itemStatSource = "hpbs" | "reforge" | "baseStats" | "starStats" | "enrichments" | "gemstones";
+export type itemStatSource = "hpbs" | "baseStats" | "starStats" | "enrichments" | "gemstones";
 
 export const itemStatSourceNames: {
     [key in itemStatSource]: string
 } = {
     hpbs: "Hot Potato Books",
-    reforge: "Reforge",
-    baseStats: "Base Value",
+    baseStats: "Base",
     starStats: "Stars",
     enrichments: "Enrichments",
     gemstones: "Gemstones"
@@ -780,7 +785,6 @@ export const itemStatSourceColors: {
     [key in itemStatSource]: colorCode
 } = {
     hpbs: "6",
-    reforge: "5",
     baseStats: "f",
     starStats: "6",
     enrichments: "b",
@@ -851,7 +855,7 @@ export function calculateItemStats(item: nbtItem, baseItem: item, compact: boole
         if (enchantStats[enchantName] !== undefined) {
             var recievedEnchantStats = enchantStats[enchantName](enchantLevel); //variable naming :)
 
-            var sourceName: string = compact ? "enchants" : `${colorChar}b${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`
+            var sourceName: string = compact ? "enchants" : `${colorChar}${statColors[keys(recievedEnchantStats)[0]] || "f"}${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`
 
             stats[sourceName] = mergeStatsLists(stats[sourceName] || {}, recievedEnchantStats);
         } else {
@@ -869,7 +873,7 @@ export function calculateItemStats(item: nbtItem, baseItem: item, compact: boole
         if (attributeStats[attributeName]) {
             var recievedAttributeStats = attributeStats[attributeName](attributeLevel);
 
-            var sourceName: string = compact ? "attributes" : `${colorChar}b${attributeName.replaceAll("_", " ").capitalize()} ${attributeLevel}`
+            var sourceName: string = compact ? "attributes" : `${colorChar}${statColors[keys(recievedAttributeStats)[0]] || "f"}${attributeName.replaceAll("_", " ").capitalize()} ${attributeLevel}`
 
             stats[sourceName] = mergeStatsLists(stats[sourceName] || {}, recievedAttributeStats);
         } else {
@@ -990,6 +994,10 @@ export function calculateItemStats(item: nbtItem, baseItem: item, compact: boole
         pets
             blaze hpb doubler
             flying fish magma lord armor buff
+        accs
+            day/night tali
+            beastmaster crest
+            pulse ring
 
     */
 
@@ -1000,8 +1008,8 @@ export function calculateItemStats(item: nbtItem, baseItem: item, compact: boole
 
 
 //calculates stats given from skill level ups
-export async function calculateSkillStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
-    if (!data.profileData) return {}
+export async function calculateSkillStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return
 
     var stats: statsCategory = {};
 
@@ -1010,12 +1018,15 @@ export async function calculateSkillStats(data: apiData, selectedProfile: number
 
         if (name == "dungeoneering") continue;
 
-        var levelInfo = skillExpToLevel(data.profileData.profiles[selectedProfile].members[playerUUID][skillNameToApiName[name] as keyof profileMember] as number || 0, name)
-
+        // var levelInfo = skillExpToLevel(data.profileData.profiles[selectedProfile].members[playerUUID][skillNameToApiName[name] as keyof profileMember] as number || 0, name)
+        var levelInfo = calcTemp[calcId].skills[name]?.levelInfo || {
+            level: 0
+        }
+        
         stats[colorChar + skillColors[name] + name.capitalize() + " " + Math.floor(levelInfo.level)] = skillLevelStats[name](Math.floor(levelInfo.level))
     }
 
-    return stats;
+    calcTemp[calcId].stats[colorChar+"6"+"Skills"] = stats;
 }
 
 export const fairySoulStats = {
@@ -1043,8 +1054,8 @@ export async function calculateFairySoulStats(data: apiData, selectedProfile: nu
 }
 
 //NEEDS MORE TESTING; havent accounted for toggles and interface is probably wrong because i cant test around right now
-export async function calculateHotmStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
-    if (!data.profileData) return {}
+export async function calculateHotmStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var mining_core = data.profileData.profiles[selectedProfile].members[playerUUID].mining_core;
 
@@ -1060,45 +1071,43 @@ export async function calculateHotmStats(data: apiData, selectedProfile: number,
 
     if (mining_core.nodes.mining_experience) stats["Seasoned Mineman"] = { mining_wisdom: 5 + 0.1 * mining_core.nodes.mining_experience || 0 }
 
-    return stats;
+    calcTemp[calcId].stats[colorChar+"5"+"HoTM"] = stats;
 }
 
 //calculates stats given from the wither essence shop
-export async function calculateEssenceStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
-    if (!data.profileData) return {}
+export async function calculateEssenceStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var perks = data.profileData.profiles[selectedProfile].members[playerUUID].perks;
 
-    return {
+    calcTemp[calcId].stats[colorChar+"7"+"Essence Shop"] = {
         "Forbidden Health": { health: (perks.permanent_health || 0) * 2 },
         "Forbidden Defense": { defense: (perks.permanent_defense || 0) * 1 },
         "Forbidden Speed": { walk_speed: (perks.permanent_speed || 0) * 1 },
         "Forbidden Intelligence": { intelligence: (perks.permanent_intelligence || 0) * 2 },
         "Forbidden Strength": { strength: (perks.permanent_strength || 0) * 1 },
-    }
+    };
 }
 
 //calculates stats given from reaper peppers
-export async function calculatePepperStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
-    if (!data.profileData) return {}
+export async function calculatePepperStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var peppers = data.profileData.profiles[selectedProfile].members[playerUUID].reaper_peppers_eaten;
 
-    if (peppers == undefined) return {};
+    if (peppers == undefined) return;
 
-    return {
-        peppers: { health: peppers }
-    }
+    calcTemp[calcId].stats[colorChar+"c"+"Peppers"] = {peppers: {health: peppers}};
 }
 
 
 //calculates stats given from the harp
-export async function calculateHarpStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
-    if (!data.profileData) return {}
+export async function calculateHarpStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var harp_quest = data.profileData.profiles[selectedProfile].members[playerUUID].harp_quest;
 
-    if (keys(harp_quest).length == 0) return {};
+    if (keys(harp_quest).length == 0) return;
 
     var stats: statsCategory = {};
 
@@ -1110,15 +1119,15 @@ export async function calculateHarpStats(data: apiData, selectedProfile: number,
 
         if (typeof perfectCompletions != "number") continue;
 
-        stats[name] = { intelligence: (perfectCompletions >= 1 ? 1 : 0) * harpStats[name] };
+        stats[colorChar+harpColors[name]+name.replaceAll("_", " ").capitalize()] = { intelligence: (perfectCompletions >= 1 ? 1 : 0) * harpStats[name] };
     }
 
-    return stats;
+    calcTemp[calcId].stats[colorChar+"d"+"Harp"] = stats;
 }
 
 
 //calculates stats given from slayers
-export async function calculateSlayerStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
+export async function calculateSlayerStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
     if (!data.profileData) return {}
 
     var slayer_bosses = data.profileData.profiles[selectedProfile].members[playerUUID].slayer_bosses;
@@ -1154,9 +1163,9 @@ export async function calculateSlayerStats(data: apiData, selectedProfile: numbe
         }
     }
 
-    stats[colorChar + "3" + "Global Combat Wisdom Buff"] = { combat_wisdom: combatWisdomBuff }
+    stats[colorChar + "3" + "Global Combat Wisdom Buff"] = { combat_wisdom: combatWisdomBuff };
 
-    return stats;
+    calcTemp[calcId].stats[colorChar+"2"+"Slayer"] = stats;
 }
 
 export interface accStatsInterface {
@@ -1168,7 +1177,7 @@ export interface accStatsInterface {
 }
 
 //calculates stats given from accessories
-export async function calculateAccStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<accStatsInterface | undefined> {
+export async function calculateAccStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
     if (!data.profileData) return;
 
     var talisman_bag_raw = data.profileData.profiles[selectedProfile].members[playerUUID].talisman_bag;
@@ -1216,11 +1225,11 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
         var formattedName = (rarityUpgrades === undefined ? "" : rarityUpgrades == 1 ? "RECOMB" : "") + colorChar + Object.values(rarityColors)[rarity] + removeStringColors(itemInfo.name);
 
-        var itemStats = calculateItemStats(tali, itemInfo, true)
+        var itemStats = calculateItemStats(tali, itemInfo, true);
 
-        stats.taliStats[formattedName] = itemStats.baseStats || {};
-        stats.enrichments[formattedName] = itemStats.enrichments || {};
-        stats.gems[formattedName] = itemStats.gemstones || {};
+        if(keys(itemStats.baseStats || {}).length > 0) stats.taliStats[formattedName] = itemStats.baseStats || {};
+        if(keys(itemStats.enrichments || {}).length > 0) stats.enrichments[formattedName] = itemStats.enrichments || {};
+        if(keys(itemStats.gemstones || {}).length > 0) stats.gems[formattedName] = itemStats.gemstones || {};
 
         mp += mpTable[keys(mpTable)[rarity]];
     }
@@ -1248,13 +1257,17 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
     console.log({ mp, statsMultiplier });
 
-    return stats;
+    calcTemp[calcId].stats[colorChar+"9"+"Accessory Stats"] = stats.taliStats;
+    calcTemp[calcId].stats[colorChar+"b"+"Accessory Enrichments"] = stats.enrichments;
+    calcTemp[calcId].stats[colorChar+"e"+"Accessory Tuning"] = {SAME: stats.tuning.tuning};
+    calcTemp[calcId].stats[colorChar+"d"+"Accessory Gems"] = stats.gems;
+    calcTemp[calcId].stats[colorChar+"b"+"Magic Power"] = {SAME: stats.magicPower.magicPower};
 }
 
 
 
 //calculates stats given from potions
-export async function calculatePotionStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
+export async function calculatePotionStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
     if (!data.profileData) return {};
 
     var active_effects = data.profileData.profiles[selectedProfile].members[playerUUID].active_effects;
@@ -1335,10 +1348,10 @@ export async function calculatePotionStats(data: apiData, selectedProfile: numbe
             }
         }
 
-        stats[`${effect.effect} ${effect.level}`] = effectStatsList;
+        stats[`${colorChar+effectColors[effect.effect]+effect.effect.replaceAll("_", " ").capitalize()} ${effect.level}`] = effectStatsList;
     }
 
-    return stats;
+    calcTemp[calcId].stats[colorChar+"5"+"Potions"] = stats;
 }
 
 export interface cakeStatNumberToStat {
@@ -1347,7 +1360,7 @@ export interface cakeStatNumberToStat {
 
 
 //calculates stats given from century cakes
-export async function calculateCakeStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
+export async function calculateCakeStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
     if (!data.profileData) return {};
 
     var temp_stat_buffs = data.profileData.profiles[selectedProfile].members[playerUUID].temp_stat_buffs;
@@ -1365,19 +1378,19 @@ export async function calculateCakeStats(data: apiData, selectedProfile: number,
         }
     }
 
-    return { cake: stats }
+    calcTemp[calcId].stats[colorChar+"d"+"Century Cakes"] = {SAME: stats};
 }
 
 //calculates stats given from armor
-export async function calculateArmorStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
-    if (!data.profileData) return {};
+export async function calculateArmorStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var inv_armor_raw = data.profileData.profiles[selectedProfile].members[playerUUID].inv_armor;
 
     var stats: statsCategories = {};
 
     var armor = await parseContents(inv_armor_raw) as IObjectKeys;
-    if (armor.i === undefined) return {};
+    if (armor.i === undefined) return;
 
     var armorContents: nbtItem[] = armor.i;
 
@@ -1394,21 +1407,24 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
         var category = baseItem.category;
 
         stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem);
-    }
 
-    return stats;
+        calcTemp[calcId].stats[piece.tag.display.Name] = mapObjectKeys(
+            stats[piece.tag.display.Name],
+            value => itemStatSourceNames[value as itemStatSource] ?(colorChar+itemStatSourceColors[value as itemStatSource]+itemStatSourceNames[value as itemStatSource]) : value
+        );
+    }
 }
 
 //calculates stats given from equipment
-export async function calculateEquipmentStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
-    if (!data.profileData) return {};
+export async function calculateEquipmentStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var equippment_contents_raw = data.profileData.profiles[selectedProfile].members[playerUUID].equippment_contents;
 
     var stats: statsCategories = {};
 
     var equipment = await parseContents(equippment_contents_raw) as IObjectKeys;
-    if (equipment.i === undefined) return {};
+    if (equipment.i === undefined) return;
 
     var equipmentContents: nbtItem[] = equipment.i;
 
@@ -1427,15 +1443,18 @@ export async function calculateEquipmentStats(data: apiData, selectedProfile: nu
         var category = baseItem.category;
 
         stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem);
-    }
 
-    return stats;
+        calcTemp[calcId].stats[piece.tag.display.Name] = mapObjectKeys(
+            stats[piece.tag.display.Name],
+            value => itemStatSourceNames[value as itemStatSource] ?(colorChar+itemStatSourceColors[value as itemStatSource]+itemStatSourceNames[value as itemStatSource]) : value
+        );
+    }
 }
 
 
 //calculates stats given from pet score
-export async function calculatePetScoreStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
-    if (!data.profileData) return {};
+export async function calculatePetScoreStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var pets = data.profileData.profiles[selectedProfile].members[playerUUID].pets;
 
@@ -1464,14 +1483,12 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
 
     var stats: statsCategory = {};
 
-    stats[colorChar + "bPet Score (" + petScore + ")"] = { magic_find: mf };
-
-    return stats;
+    calcTemp[calcId].stats[colorChar + "b"+"Pet Score (" + petScore + ")"] = {SAME: {magic_find: mf}};
 }
 
 //calculates stats given from current pet
-export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string, specialData: specialPetData): Promise<statsCategories> {
-    if (!data.profileData) return {};
+export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string, specialData: specialPetData, calcId: string) {
+    if (!data.profileData) return;
 
     var pets = data.profileData.profiles[selectedProfile].members[playerUUID].pets;
 
@@ -1523,48 +1540,11 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
     console.log(stats);
 
-    return {
-        [colorChar+rarityColors[equippedPet.tier]+equippedPet.type.replaceAll("_", " ").capitalize()]: stats
-    }
+    calcTemp[calcId].stats[colorChar+rarityColors[equippedPet.tier]+equippedPet.type.replaceAll("_", " ").capitalize()] = stats;
 }
 
-export const statCategoryNames = {
-    base: "Base",
-    skills: "Skills",
-    hotm: "HoTM",
-    essence: "Essence Shop",
-    peppers: "Reaper Peppers",
-    harp: "Harp",
-    slayer: "Slayer",
-    taliStats: "Accessory Stats",
-    gems: "Accessory Gems",
-    magicPower: "Magic Power",
-    tuning: "Tuning",
-    enrichments: "Enrichments",
-    potions: "Effects",
-    cake: "Cake",
-}
 
-export type statSource = keyof typeof statCategoryNames;
-
-export const statCategoryColors: { [key in statSource]: colorCode } = {
-    base: "f",
-    skills: "6",
-    hotm: "5",
-    essence: "7",
-    peppers: "c",
-    harp: "d",
-    slayer: "2",
-    taliStats: "9",
-    gems: "d",
-    magicPower: "b",
-    tuning: "e",
-    enrichments: "b",
-    potions: "5",
-    cake: "d",
-}
-
-export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
+export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string): Promise<statsCategories> {
     // return {base: {base: baseStats}, gamer: {yes: {m_health: 1.05}}};
 
     var specialPetData: specialPetData = {
@@ -1577,32 +1557,24 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
         hotm: 7
     };
 
-    var returnValue: statsCategories = {
-        base: { base: baseStats },
-        skills: await calculateSkillStats(data, selectedProfile, playerUUID),
-        hotm: await calculateHotmStats(data, selectedProfile, playerUUID),
-        essence: await calculateEssenceStats(data, selectedProfile, playerUUID),
-        peppers: await calculatePepperStats(data, selectedProfile, playerUUID),
-        harp: mapObjectKeys(
-            await calculateHarpStats(data, selectedProfile, playerUUID), value => colorChar + (harpColors[value as harpSong] || "f") + (harpNames[value as harpSong] || value)
-        ),
-        slayer: await calculateSlayerStats(data, selectedProfile, playerUUID),
-        ...await calculateAccStats(data, selectedProfile, playerUUID),
-        potions: mapObjectKeys(
-            await calculatePotionStats(data, selectedProfile, playerUUID), value => colorChar + (effectColors[value.slice(0, -2) as effectName] || value) + value.replaceAll("_", " ").capitalize()
-        ),
-        cake: mapObjectKeys(
-            await calculateCakeStats(data, selectedProfile, playerUUID), value => value
-        ),
-        ...(mapObjectValues(await calculateArmorStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => (itemStatSourceNames[value as itemStatSource] || value) === undefined ? value : colorChar + (itemStatSourceColors[value as itemStatSource] || "f") + (itemStatSourceNames[value as itemStatSource] || value)))),
-        ...(mapObjectValues(await calculateEquipmentStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => (itemStatSourceNames[value as itemStatSource] || value) === undefined ? value : colorChar + (itemStatSourceColors[value as itemStatSource] || "f") + (itemStatSourceNames[value as itemStatSource] || value)))),
-        ...await calculatePetStats(data, selectedProfile, playerUUID, specialPetData)
-    }
 
-    var petScore = await calculatePetScoreStats(data, selectedProfile, playerUUID);
-    returnValue[keys(petScore)[0] || "error"] = petScore;
+    calcTemp[calcId].stats["Base Stats"] = {SAME: baseStats}
+    await calculateSkillStats(data, selectedProfile, playerUUID, calcId);
+    await calculateHotmStats(data, selectedProfile, playerUUID, calcId);
+    await calculateEssenceStats(data, selectedProfile, playerUUID, calcId);
+    await calculatePepperStats(data, selectedProfile, playerUUID, calcId);
+    await calculateHarpStats(data, selectedProfile, playerUUID, calcId)
+    await calculateSlayerStats(data, selectedProfile, playerUUID, calcId);
+    await calculateAccStats(data, selectedProfile, playerUUID, calcId);
+    await calculatePotionStats(data, selectedProfile, playerUUID, calcId);
+    await calculateCakeStats(data, selectedProfile, playerUUID, calcId);
+    await calculateArmorStats(data, selectedProfile, playerUUID, calcId);
+    await calculateEquipmentStats(data, selectedProfile, playerUUID, calcId);
+    await calculatePetStats(data, selectedProfile, playerUUID, specialPetData, calcId);
 
-    return returnValue;
+    await calculatePetScoreStats(data, selectedProfile, playerUUID, calcId);
+
+    return calcTemp[calcId].stats
 
 
     /*
@@ -1646,5 +1618,6 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
         misc 
             peppers (Y)
             fairy souls
+            community shop upgrades
     */
 }
