@@ -3232,6 +3232,7 @@ export const petStats: {
     },
 }
 
+//these pets give perks even when not active
 export const alwaysActivePets: petName[] = [
     "GRANDMA_WOLF",
     "SPIRIT",
@@ -3239,6 +3240,88 @@ export const alwaysActivePets: petName[] = [
     "BINGO",
     "KUUDRA",
 ]
+
+export type petItem = 
+    "PET_ITEM_ALL_SKILLS_BOOST_COMMON" |
+    "ALL_SKILLS_SUPER_BOOST" |
+
+    "PET_ITEM_FARMING_SKILL_BOOST_COMMON" |
+    "PET_ITEM_FARMING_SKILL_BOOST_UNCOMMON" |
+    "PET_ITEM_FARMING_SKILL_BOOST_RARE" |
+    "PET_ITEM_FARMING_SKILL_BOOST_EPIC" |
+    
+    "PET_ITEM_MINING_SKILL_BOOST_COMMON" |
+    "PET_ITEM_MINING_SKILL_BOOST_RARE" |
+
+    "PET_ITEM_COMBAT_SKILL_BOOST_COMMON" |
+    "PET_ITEM_COMBAT_SKILL_BOOST_UNCOMMON" |
+    "PET_ITEM_COMBAT_SKILL_BOOST_RARE" |
+    "PET_ITEM_COMBAT_SKILL_BOOST_EPIC" |
+
+    "PET_ITEM_FORAGING_SKILL_BOOST_COMMON" |
+    "PET_ITEM_FORAGING_SKILL_BOOST_EPIC" |
+
+    "PET_ITEM_FISHING_SKILL_BOOST_COMMON" |
+    "PET_ITEM_FISHING_SKILL_BOOST_UNCOMMON" |
+    "PET_ITEM_FISHING_SKILL_BOOST_RARE" |
+    "PET_ITEM_FISHING_SKILL_BOOST_EPIC" |
+
+    "PET_ITEM_EXP_SHARE" |
+
+    "PET_ITEM_BIG_TEETH_COMMON" |
+    "BIGGER_TEETH" |
+
+    "PET_ITEM_SHARPENED_CLAWS_UNCOMMON" |
+    "SERRATED_CLAWS" |
+
+    "PET_ITEM_IRON_CLAWS_COMMON" |
+    "GOLD_CLAWS" |
+
+    "PET_ITEM_HARDENED_SCALES_UNCOMMON" |
+    "REINFORCED_SCALES" |
+
+    "PET_ITEM_TEXTBOOK" |
+    "PET_ITEM_LUCKY_CLOVER" |
+    "PET_ITEM_SADDLE" |
+    "PET_ITEM_BUBBLEGUM" |
+
+    "PET_ITEM_TIER_BOOST" |
+    "PET_ITEM_VAMPIRE_FANG" |
+    "PET_ITEM_TOY_JERRY" | //apparently thats what its called
+    "PET_ITEM_SPOOKY_CUPCAKE" |
+
+    "DWARF_TURTLE_SHELMET" |
+    "CROCHET_TIGER_PLUSHIE" |
+    "ANTIQUE_REMEDIES" |
+    "MINOS_RELIC" |
+    "WASHED_UP_SOUVENIR" |
+
+    "REAPER_GEM" |
+
+    "PET_ITEM_FLYING_PIG" |
+
+    "PET_ITEM_QUICK_CLAW";
+
+export const petItemStats: {
+    [key in petItem]?: statsList
+} = {
+    "PET_ITEM_BIG_TEETH_COMMON": {critical_chance: 5},
+    "BIGGER_TEETH": {critical_chance: 10},
+    "PET_ITEM_SHARPENED_CLAWS_UNCOMMON": {critical_damage: 15},
+    "SERRATED_CLAWS": {critical_damage: 25},
+    "PET_ITEM_IRON_CLAWS_COMMON": {critical_damage: 40, critical_chance: 40},
+    "GOLD_CLAWS": {critical_damage: 50, critical_chance: 50},
+    "PET_ITEM_HARDENED_SCALES_UNCOMMON": {defense: 25},
+    "REINFORCED_SCALES": {defense: 40},
+    "PET_ITEM_TEXTBOOK": {m_intelligence: 1},
+    "PET_ITEM_LUCKY_CLOVER": {magic_find: 7},
+    "PET_ITEM_SPOOKY_CUPCAKE": {strength: 30, walk_speed: 20},
+    "CROCHET_TIGER_PLUSHIE": {attack_speed: 35},
+    "ANTIQUE_REMEDIES": {strength: 0.8},
+    //ill account for minos relic in the function to avoid typing every stat
+    "WASHED_UP_SOUVENIR": {sea_creature_chance: 5},
+    //same with quick claw
+}
 
 //higher tiers of pets are harder to level
 export const petRarityOffset: {
