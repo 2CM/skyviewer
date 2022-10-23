@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset } from "./sbconstants";
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData } from "./sbconstants";
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -145,7 +145,7 @@ export function itemStatsToStatsList(itemStats: itemStats): statsList {
 // *** MISC ***
 
 //calculates pet level from a pet
-export function petLevel(pet: pet): number {
+export function petToLevel(pet: pet): number {
     var exp = pet.exp;
 
     //NEED TO DO CANDY
@@ -176,7 +176,7 @@ export function petLevel(pet: pet): number {
     return level;
 }
 
-console.log(petLevel({
+console.log(petToLevel({
     exp: 79200000, //from deathstreeks
     tier: "LEGENDARY",
     type: "GOLDEN_DRAGON",
@@ -987,6 +987,9 @@ export function calculateItemStats(item: nbtItem, baseItem: item, compact: boole
                     needs research
                 vanq blaze belt
                     needs research
+        pets
+            blaze hpb doubler
+            flying fish magma lord armor buff
 
     */
 
@@ -1467,7 +1470,7 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
 }
 
 //calculates stats given from current pet
-export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
+export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string, specialData: specialPetData): Promise<statsCategories> {
     if (!data.profileData) return {};
 
     var pets = data.profileData.profiles[selectedProfile].members[playerUUID].pets;
@@ -1492,9 +1495,21 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
         return {};
     }
 
-    var recivedStats: petStatInfo = petStats[equippedPet.type];
+    equippedPet = {
+        exp: 79200000, //from deathstreeks
+        tier: "LEGENDARY",
+        type: "GOLDEN_DRAGON",
+        active: false,
+        heldItem: null,
+        candyUsed: 0,
+        uuid: "",
+        skin: "",
+    }
 
-    stats.base = recivedStats.base(66, equippedPet.tier);
+    var recivedStats: petStatInfo = petStats[equippedPet.type] || petStats.GOLDEN_DRAGON;
+    var petLevel = petToLevel(equippedPet);
+
+    stats.base = recivedStats.base(petLevel, equippedPet.tier);
 
     for(let j in keys(recivedStats.perks)) {
         var perk: string = keys(recivedStats.perks)[j] as string;
@@ -1503,8 +1518,10 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
         
         if(!hasPerk) continue;
 
-        stats[perk] = recivedStats.perks[perk].stats(66)
+        stats[perk] = recivedStats.perks[perk].stats(petLevel, equippedPet.tier, specialData)
     }
+
+    console.log(stats);
 
     return {
         [colorChar+rarityColors[equippedPet.tier]+equippedPet.type.replaceAll("_", " ").capitalize()]: stats
@@ -1550,6 +1567,16 @@ export const statCategoryColors: { [key in statSource]: colorCode } = {
 export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
     // return {base: {base: baseStats}, gamer: {yes: {m_health: 1.05}}};
 
+    var specialPetData: specialPetData = {
+        goldCollection: 49000000,
+        bankCoins: 40000000,
+        skills: {
+            fishing: 45,
+            mining: 60,
+        },
+        hotm: 7
+    };
+
     var returnValue: statsCategories = {
         base: { base: baseStats },
         skills: await calculateSkillStats(data, selectedProfile, playerUUID),
@@ -1569,7 +1596,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
         ),
         ...(mapObjectValues(await calculateArmorStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => (itemStatSourceNames[value as itemStatSource] || value) === undefined ? value : colorChar + (itemStatSourceColors[value as itemStatSource] || "f") + (itemStatSourceNames[value as itemStatSource] || value)))),
         ...(mapObjectValues(await calculateEquipmentStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => (itemStatSourceNames[value as itemStatSource] || value) === undefined ? value : colorChar + (itemStatSourceColors[value as itemStatSource] || "f") + (itemStatSourceNames[value as itemStatSource] || value)))),
-        ...await calculatePetStats(data, selectedProfile, playerUUID)
+        ...await calculatePetStats(data, selectedProfile, playerUUID, specialPetData)
     }
 
     var petScore = await calculatePetScoreStats(data, selectedProfile, playerUUID);

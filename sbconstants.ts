@@ -1,5 +1,7 @@
 //file containing a bunch of raw data not found in api about skyblock
 
+import { allStatsBoost } from "./lib";
+
 //tier of an item
 export type itemTier = "COMMON" | "UNCOMMON" | "RARE" | "EPIC" | "LEGENDARY" | "MYTHIC" | "DIVINE" | "SPECIAL" | "VERY_SPECIAL";
 
@@ -448,7 +450,10 @@ export interface pet {
     tier: petTier,
     heldItem: string | null,
     candyUsed: number,
-    skin: string | null
+    skin: string | null,
+    extra?: {
+        blaze_kills?: number
+    }
 }
 
 //contains all the data of a profile member from the api
@@ -829,7 +834,68 @@ export type statName =
     "m_fishing_speed" |
     "m_health_regen" |
     "m_vitality" |
-    "m_mending";
+    "m_mending" |
+
+    //special
+    "s_damage" |
+    "s_golden_damage" | //gdrag
+
+    "s_yeti_sword_intelligence" | //baby yeti
+    "s_yeti_sword_damage" | //baby yeti
+    
+    "s_blaze_armor_stats" | //blaze pet
+
+    "s_aotd_damage" | //dragon pet
+    "s_aotd_strength" | //dragon pet
+
+    "s_fs_ts_c_buff" | //lion pet
+
+    "s_ember_armor_stats" | //magma cube
+
+    "s_shark_armor_buff" | //megalodon pet
+
+    "s_pigman_sword_damage" | //pigman pet
+    "s_pigman_sword_strength" | //pigman pet
+
+    "s_ink_wand_damage" | //squid pet
+    "s_ink_wand_strength" | //squid pet
+
+    "s_undead_armor_defense" | //zombie pet
+
+
+    "s_pet_stat_buff" | //bingo pet
+
+    "s_no_speed" | //snail pet
+
+    //y per x
+    "p_strength_per_5_magic_find" | //gdrag
+    
+    "p_walk_speed_per_defense" | //amadillo
+    "p_mining_speed_per_defense" | //armadilo
+
+    "p_defense_per_30_health" | //blue whale
+
+    "p_defense_per_100_speed" | //elephant
+
+    "p_health_per_10_defense" | //elephant
+
+    "p_farming_fortune_per_strength" | //mooshroom cow pet
+
+    //as
+    "a_strength_as_defense" | //baby yeti
+
+    //location buffs
+    "l_all_crimson_isle" | //blaze pet
+    "l_mining_fortune_crimson_isle" | //kuudra pet
+    "l_combat_mining_island" | //mithril golem
+    "l_walk_speed_park" |
+
+    //mob damage buffs
+    "d_end_mobs" | //edrag pet
+    "d_slimes" | // magma cube
+    "d_lvl_100" | //pigman pet
+    "d_wither_mobs" | //wither skeleton
+    "d_zombies" //zombie pet
 
 export type statsList = {
     [key in statName]?: number;
@@ -2187,10 +2253,11 @@ export type petName =
     "SNAIL" |
     "MOOSHROOM_COW" |
     "KUUDRA" |
-    "WISP";
+    "DROPLET_WISP" |
+    "BINGO";
 
 //pet exp types
-export type petExpType = "mining" | "farming" | "combat" | "fishing" | "foraging" | "enchanting" | "alchemy" | "gabagool";
+export type petExpType = "mining" | "farming" | "combat" | "fishing" | "foraging" | "enchanting" | "alchemy" | "all" | "gabagool";
 
 //exp types of every pet
 export const petTypes: {
@@ -2254,7 +2321,18 @@ export const petTypes: {
     SNAIL: "mining",
     MOOSHROOM_COW: "farming",
     KUUDRA: "combat",
-    WISP: "gabagool",
+    DROPLET_WISP: "gabagool",
+    BINGO: "all"
+}
+
+//special data for pet stats (gold collection for gdrag, stuff like that)
+export interface specialPetData {
+    goldCollection: number,
+    bankCoins: number,
+    skills: {
+        [key in skillName]?: number
+    },
+    hotm: number
 }
 
 //info about stats of a pet
@@ -2263,7 +2341,7 @@ export type petStatInfo = {
     perks: {
         [key: string]: {
             tier: petTier
-            stats: (level: number) => statsList
+            stats: (level: number, tier: petTier, specialData: specialPetData) => statsList
         }
     }
 }
@@ -2271,7 +2349,7 @@ export type petStatInfo = {
 //perks and stats of every pet
 export const petStats: {
     [key in petName]: petStatInfo
-} = {
+} = { //ordered from fandom wiki
     "BAT": {
         base: (level, tier) => ({
             intelligence: 1*level,
@@ -2282,6 +2360,154 @@ export const petStats: {
 
         }
     },
+    "ENDERMAN": {
+        base: (level, tier) => ({
+            critical_damage: 0.75*level,
+        }),
+        perks: {
+
+        }
+    },
+    "ENDERMITE": {
+        base: (level, tier) => ({
+            intelligence: 1.5*level,
+            pet_luck: 0.1*level,
+        }),
+        perks: {
+
+        }
+    },
+    "FLYING_FISH": {
+        base: (level, tier) => ({
+            strength: 0.4*level,
+            defense: 0.4*level,
+        }),
+        perks: {
+            "Quick Reel": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    fishing_speed: 0.4*level
+                })
+            }
+        }
+    },
+    "JERRY": {
+        base: (level, tier) => ({
+            intelligence: -1*level
+        }),
+        perks: {
+
+        }
+    },
+    "GOLDEN_DRAGON": {
+        base: (level, tier) => ({
+            strength: (25 + 0.25*(level-100))*(level < 100 ? 0 : 1),
+            magic_find: (15 + 0.05*(level-100))*(level < 100 ? 0 : 1),
+            attack_speed: (25 + 0.25*(level-100))*(level < 100 ? 0 : 1),
+        }),
+        perks: {
+            "Gold's Power": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    s_golden_damage: (50 + 0.5*(level-100))*(level < 100 ? 0 : 1),
+                })
+            },
+            "Shining Scales": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    strength: (Math.ceil(Math.log10(special.goldCollection))*10)*(level < 100 ? 0 : 1),
+                    magic_find: (Math.ceil(Math.log10(special.goldCollection))*2)*(level < 100 ? 0 : 1),
+                })
+            },
+            "Dragon's Greed": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({ //wiki desc on this perk has a percent after strength but i asked in lobbies and 2 people said it was additive
+                    p_strength_per_5_magic_find: (0.5)*(level < 100 ? 0 : 1) //very good solution i know
+                })
+            },
+            "Legendary Treasure": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    s_damage: Math.floor(special.bankCoins/1000000)*(0.125 + 0.00125*(level-100))*(level < 100 ? 0 : 1),
+                })
+            },
+        }
+    },
+    "AMMONITE": {
+        base: (level, tier) => ({
+            sea_creature_chance: 0.5*level
+        }),
+        perks: {
+            "Heart of the Sea": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    sea_creature_chance: 0.01*level*special.hotm
+                })
+            },
+            "Gift of the Ammonite": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    fishing_speed: 0.005*level*((special.skills.mining || 0)+(special.skills.fishing || 0)),
+                    walk_speed: 0.02*level*((special.skills.mining || 0)+(special.skills.fishing || 0)),
+                    defense: 0.02*level*((special.skills.mining || 0)+(special.skills.fishing || 0)),
+                })
+            },
+        }
+    },
+    "ARMADILLO": {
+        base: (level, tier) => ({
+            defense: 2*level
+        }),
+        perks: {
+            "Mobile Tank": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    p_walk_speed_per_defense: 100-0.5*level,
+                    p_mining_speed_per_defense: 100-0.5*level,
+                })
+            },
+        }
+    },
+    "BABY_YETI": {
+        base: (level, tier) => ({
+            strength: 0.4*level,
+            intelligence: 0.75*level,
+        }),
+        perks: {
+            "Ice Shields": {
+                tier: "EPIC",
+                stats: (level, tier, special) => ({
+                    a_strength_as_defense: 0.75*level
+                })
+            },
+            "Yeti Fury": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    s_yeti_sword_damage: 1*level,
+                    s_yeti_sword_intelligence: 1*level,
+                })
+            },
+        }
+    },
+    "BAL": {
+        base: (level, tier) => ({
+            strength: 0.25*level,
+            ferocity: 0.1*level,
+        }),
+        perks: {
+
+        }
+    },
+    "BEE": {
+        base: (level, tier) => ({
+            strength: 5+0.25*level,
+            intelligence: 0.5*level,
+            walk_speed: 0.1*level,
+        }),
+        perks: {
+            
+        }
+    },
     "BLACK_CAT": {
         base: (level, tier) => ({
             intelligence: 1*level,
@@ -2290,25 +2516,729 @@ export const petStats: {
         perks: {
             "Hunter": {
                 tier: "LEGENDARY",
-                stats: level => ({
+                stats: (level, tier, special) => ({
                     walk_speed: 1*level
                 })
             },
             "Omen": {
                 tier: "LEGENDARY",
-                stats: level => ({
+                stats: (level, tier, special) => ({
                     pet_luck: 0.15*level
                 })
             },
             "Supernatural": {
                 tier: "LEGENDARY",
-                stats: level => ({
+                stats: (level, tier, special) => ({
                     magic_find: 0.15*level
                 })
             }
         }
-    }
+    },
+    "BLAZE": {
+        base: (level, tier) => ({
+            intelligence: 1*level,
+            defense: 0.3*level,
+        }),
+        perks: {
+            "Nether Embodiment": {
+                tier: "EPIC",
+                stats: (level, tier, special) => ({
+                    l_all_crimson_isle: 0.1*level
+                })
+            },
+            "Bling Armor": {
+                tier: "EPIC",
+                stats: (level, tier, special) => ({
+                    s_blaze_armor_stats: 0.4*level
+                })
+            },
+            //Fusion-Style Potato is calculated in calculateItemStats()
+        }
+    },
+    "BLUE_WHALE": {
+        base: (level, tier) => ({
+            health: 2*level
+        }),
+        perks: {
+            "Bulk": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    p_defense_per_30_health: 0.01*level
+                })
+            },
+            "Archimedes": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    m_health: 0.2*level
+                })
+            },
+        }
+    },
+    "CHICKEN": {
+        base: (level, tier) => ({
+            health: 2*level,
+        }),
+        perks: {
+
+        }
+    },
+    "DOLPHIN": {
+        base: (level, tier) => ({
+            intelligence: 1*level,
+            sea_creature_chance: 0.05*level
+        }),
+        perks: {
+            "Echolocation": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    sea_creature_chance: (tier == "RARE" ? 0.07 : 0.1)*level
+                })
+            },
+        }
+    },
+    "ELEPHANT": {
+        base: (level, tier) => ({
+            health: 1*level,
+            intelligence: 0.75*level
+        }),
+        perks: {
+            "Stomp": {
+                tier: "COMMON",
+                stats: (level, tier, special) => ({
+                    p_defense_per_100_speed: (tier == "EPIC" || tier == "LEGENDARY" ? 0.2: 0.15) * level
+                })
+            },
+            "Walking Fortress": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    p_health_per_10_defense: 0.01*level
+                })
+            },
+            "Trunk Efficiency": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    farming_fortune: 1.8*level
+                })
+            },
+        }
+    },
+    "ENDER_DRAGON": {
+        base: (level, tier) => ({
+            strength: 0.5*level,
+            critical_damage: 0.5*level,
+            critical_chance: 0.1*level,
+        }),
+        perks: {
+            "End Strike": {
+                tier: "EPIC",
+                stats: (level, tier, special) => ({
+                    d_end_mobs: 2*level
+                })
+            },
+            "One with the Dragons": {
+                tier: "EPIC",
+                stats: (level, tier, special) => ({
+                    s_aotd_damage: 0.5*level,
+                    s_aotd_strength: 0.3*level
+                })
+            },
+            "Superior": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => allStatsBoost(0.1*level)
+            },
+        }
+    },
+    "GHOUL": {
+        base: (level, tier) => ({
+            health: 1*level,
+            critical_chance: 0.05*level,
+        }),
+        perks: {
+
+        }
+    },
+    "GIRAFFE": {
+        base: (level, tier) => ({
+            ferocity: 0.05*level,
+            health: 1*level,
+            intelligence: 0.75*level,
+        }),
+        perks: {
+            "Amplified Healing": {
+                tier: "EPIC",
+                stats: (level, tier, special) => ({
+                    vitality: 0.25*level
+                })
+            }
+        }
+    },
+    "GOLEM": {
+        base: (level, tier) => ({
+            health: 1.5*level,
+            strength: 0.5*level,
+        }),
+        perks: {
+
+        }
+    },
+    "GRANDMA_WOLF": {
+        base: (level, tier) => ({
+            strength: 0.25*level,
+            health: 1*level,
+        }),
+        perks: {
+
+        }
+    },
+    "GRIFFIN": {
+        base: (level, tier) => ({
+            strength: 0.25*level,
+            critical_damage: 0.5*level,
+            intelligence: 0.1*level,
+            magic_find: 0.1*level,
+            critical_chance: 0.1*level,
+        }),
+        perks: {
+            "King of Kings": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({ //it only works when above 85% health but i think its fine
+                    m_strength: 1+0.14*level
+                })
+            }
+        }
+    },
+    "GUARDIAN": {
+        base: (level, tier) => ({
+            intelligence: 1*level,
+            defense: 0.5*level,
+        }),
+        perks: {
+            "Enchanting Wisdom Boost": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    enchanting_wisdom: 0.25
+                })
+            }
+        }
+    },
+    "HORSE": {
+        base: (level, tier) => ({
+            intelligence: 0.5*level,
+            walk_speed: 0.2*level,
+        }),
+        perks: {
+            "Enchanting Wisdom Boost": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    enchanting_wisdom: 0.25
+                })
+            }
+        }
+    },
+    "HOUND": {
+        base: (level, tier) => ({
+            strength: 0.4*level,
+            ferocity: 0.05*level,
+            attack_speed: 0.15*level,
+        }),
+        perks: {
+            "Fury Claws": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    attack_speed: 0.1*level
+                })
+            }
+        }
+    },
+    "JELLYFISH": {
+        base: (level, tier) => ({
+            health: 2*level,
+            health_regen: 1*level,
+        }),
+        perks: {
+
+        }
+    },
+    "KUUDRA": {
+        base: (level, tier) => ({
+            strength: 0.4*level,
+            health: 4*level,
+        }),
+        perks: {
+            "Kuudra Fortune": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    mining_fortune: 0.5*level
+                })
+            }
+        }
+    },
+    "LION": {
+        base: (level, tier) => ({
+            ferocity: 0.05*level,
+            walk_speed: 0.25*level,
+            strength: 0.5*level,
+        }),
+        perks: {
+            "Primal Force": {
+                tier: "COMMON",
+                stats: (level, tier, special) => ({
+                    s_damage: 0.2*level,
+                    strength: 0.2*level,
+                })
+            },
+            "First Pounce": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    s_fs_ts_c_buff: 1*level
+                })
+            },
+        }
+    },
+    "MAGMA_CUBE": {
+        base: (level, tier) => ({
+            strength: 0.5*level,
+            critical_damage: 0.5*level,
+            critical_chance: 0.1*level,
+        }),
+        perks: {
+            "Salt Blade": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    d_slimes: (tier == "RARE" ? 0.2 : 0.25)*level,
+                })
+            },
+            "Hot Ember": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    s_ember_armor_stats: 0.5*level
+                })
+            },
+        }
+    },
+    "MEGALODON": {
+        base: (level, tier) => ({
+            strength: 0.5*level,
+            magic_find:  0.1*level,
+            ferocity: 0.05*level,
+        }),
+        perks: {
+            "Enhanced Scales": {
+                tier: "EPIC",
+                stats: (level, tier, special) => ({
+                    s_shark_armor_buff: 0.2*level
+                })
+            },
+        }
+    },
+    "MITHRIL_GOLEM": {
+        base: (level, tier) => ({
+            true_defense: 0.5*level,
+        }),
+        perks: {
+            "Danger Adverse": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    l_combat_mining_island: 0.2*level,
+                })
+            },
+        }
+    },
+    "MONKEY": {
+        base: (level, tier) => ({
+            walk_speed: 0.2*level,
+            intelligence: 0.5*level,
+        }),
+        perks: {
+            "Treeborn": {
+                tier: "COMMON",
+                stats: (level, tier, special) => ({
+                    foraging_fortune: (tier == "COMMON" ? 0.4 : tier == "UNCOMMON" || tier == "RARE" ? 0.5 : 0.6)*level,
+                })
+            },
+            "Vine Swing": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    l_walk_speed_park: (tier == "RARE" ? 0.75 : 1)*level,
+                })
+            },
+        }
+    },
+    "MOOSHROOM_COW": {
+        base: (level, tier) => ({
+            health: 1*level,
+            farming_fortune: 10+1*level,
+        }),
+        perks: {
+            "Farming Strength": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    p_farming_fortune_per_strength: 40-0.2*level
+                })
+            },
+        }
+    },
+    "OCELOT": {
+        base: (level, tier) => ({
+            walk_speed: 0.5*level,
+            ferocity: 0.1*level,
+        }),
+        perks: {
+            "Foraging Wisdom Boost": {
+                tier: "COMMON",
+                stats: (level, tier, special) => ({
+                    farming_wisdom: (tier == "COMMON" ? 0.2 : tier == "UNCOMMON" || tier == "RARE" ? 0.25 : 0.3)*level
+                })
+            },
+        }
+    },
+    "PARROT": {
+        base: (level, tier) => ({
+            intelligence: 1*level,
+            critical_damage: 0.1*level
+        }),
+        perks: {
+
+        }
+    },
+    "PHOENIX": {
+        base: (level, tier) => ({
+            strength: 0.6*level,
+            intelligence: 50+1*level,
+        }),
+        perks: {
+
+        }
+    },
+    "PIG": {
+        base: (level, tier) => ({
+            walk_speed: 0.2*level,
+        }),
+        perks: {
+
+        }
+    },
+    "PIGMAN": {
+        base: (level, tier) => ({
+            strength: 0.5*level,
+            ferocity: 0.05*level,
+            defense: 0.5*level,
+        }),
+        perks: {
+            "Pork Master": {
+                tier: "EPIC",
+                stats: (level, tier, special) => ({
+                    s_pigman_sword_damage: 0.4*level,
+                    s_pigman_sword_strength: 0.25*level,
+                })
+            },
+            "Giant Slayer": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    d_lvl_100: 0.25*level
+                })
+            },
+        }
+    },
+    "RABBIT": {
+        base: (level, tier) => ({
+            health: 1*level,
+            walk_speed: 0.2*level,
+        }),
+        perks: {
+            "Farming Wisdom Buff": {
+                tier: "EPIC",
+                stats: (level, tier, special) => ({
+                    farming_wisdom: (tier == "RARE" ? 0.25 : 0.3)*level,
+                })
+            },
+            "Giant Slayer": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    d_lvl_100: 0.25*level
+                })
+            },
+        }
+    },
+    "RAT": {
+        base: (level, tier) => ({
+            strength: 0.5*level,
+            critical_damage: 0.1*level,
+            health: 1*level
+        }),
+        perks: {
+
+        }
+    },
+    "ROCK": {
+        base: (level, tier) => ({
+            true_defense: 0.1*level,
+            defense: 2*level
+        }),
+        perks: {
+
+        }
+    },
+    "SCATHA": {
+        base: (level, tier) => ({
+            mining_speed: 1*level,
+            defense: 1*level,
+        }),
+        perks: {
+            "Grounded": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    mining_fortune: (tier == "RARE" ? 1 : 1.25)*level,
+                })
+            },
+        }
+    },
+    "SHEEP": {
+        base: (level, tier) => ({
+            intelligence: 1*level,
+            ability_damage: 0.2*level,
+        }),
+        perks: {
+
+        }
+    },
+    "SILVERFISH": {
+        base: (level, tier) => ({
+            health: 0.2*level,
+            defense: 1*level,
+        }),
+        perks: {
+            "True Defense Boost": {
+                tier: "COMMON",
+                stats: (level, tier, special) => ({
+                    true_defense: (tier == "COMMON" ? 0.05 : tier == "UNCOMMON" || tier == "RARE" ? 0.1 : 0.15)*level
+                })
+            },
+            "Mining Wisdom Boost": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    mining_wisdom: (tier == "RARE" ? 0.25 : 0.3)*level
+                })
+            },
+        }
+    },
+    "SKELETON": {
+        base: (level, tier) => ({
+            critical_chance: 0.15*level,
+            critical_damage: 0.3*level,
+        }),
+        perks: {
+
+        }
+    },
+    "SKELETON_HORSE": {
+        base: (level, tier) => ({
+            intelligence: 1*level,
+            walk_speed: 0.5*level
+        }),
+        perks: {
+            "True Defense Boost": {
+                tier: "COMMON",
+                stats: (level, tier, special) => ({
+                    true_defense: (tier == "COMMON" ? 0.05 : tier == "UNCOMMON" || tier == "RARE" ? 0.1 : 0.15)*level
+                })
+            },
+            "Mining Wisdom Boost": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    mining_wisdom: (tier == "RARE" ? 0.25 : 0.3)*level
+                })
+            },
+        }
+    },
+    "SNAIL": {
+        base: (level, tier) => ({
+            intelligence: 1*level
+        }),
+        perks: {
+            "Slow Moving": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    s_no_speed: 1,
+                })
+            },
+        }
+    },
+    "SNOWMAN": {
+        base: (level, tier) => ({
+            strength: 0.25*level,
+            critical_damage: 0.2*level,
+            s_damage: 0.25*level,
+        }),
+        perks: {
+
+        }
+    },
+    "SPIDER": {
+        base: (level, tier) => ({
+            strength: 0.1*level,
+            critical_chance: 0.1*level,
+        }),
+        perks: {
+
+        }
+    },
+    "SPIRIT": {
+        base: (level, tier) => ({
+            walk_speed: 0.3*level,
+            intelligence: 1*level,
+        }),
+        perks: {
+
+        }
+    },
+    "SQUID": {
+        base: (level, tier) => ({
+            health: 0.5*level,
+            intelligence: 0.5*level,
+        }),
+        perks: {
+            "Ink Specialty": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    s_ink_wand_damage: (tier == "RARE" ? 0.3 : 0.4)*level,
+                    s_ink_wand_strength: (tier == "RARE" ? 0.1 : 0.2)*level,
+                })
+            },
+            "Fishing Wisdom Boost": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    fishing_wisdom: 0.3*level,
+                })
+            },
+        }
+    },
+    "TARANTULA": {
+        base: (level, tier) => ({
+            strength: 0.1*level,
+            critical_chance: 0.1*level,
+            critical_damage: 0.3*level,
+        }),
+        perks: {
+
+        }
+    },
+    "TIGER": {
+        base: (level, tier) => ({
+            strength: 0.15*level,
+            ferocity: 0.25*level,
+            critical_chance: 0.05*level,
+            critical_damage: 0.5*level,
+        }),
+        perks: {
+            "Merciless Swipe": {
+                tier: "COMMON",
+                stats: (level, tier, special) => ({
+                    ferocity: (tier == "COMMON" ? 0.1 : tier == "UNCOMMON" || tier == "RARE" ? 0.2 : 0.3)*level
+                })
+            },
+        }
+    },
+    "TURTLE": {
+        base: (level, tier) => ({
+            health: 0.5*level,
+            defense: 1*level
+        }),
+        perks: {
+            "Turtle Tactics": {
+                tier: "EPIC",
+                stats: (level, tier, special) => ({
+                    m_defense: 3+0.27*level
+                })
+            },
+        }
+    },
+    "DROPLET_WISP": { //oh boy
+        base: (level, tier) => ({
+            [tier !== "UNCOMMON" ? "true_defense" : ""]: (tier == "RARE" ? 0.15 : tier == "EPIC" ? 0.3 : 0.35)*level,
+            health: (tier == "UNCOMMON" ? 1 : tier == "RARE" ? 2.5 : tier == "EPIC" ? 4 : 6)*level,
+            [tier !== "UNCOMMON" ? "intelligence" : ""]: (tier == "RARE" ? 0.5 : tier == "EPIC" ? 1.25 : 2.5)*level,
+        }),
+        perks: {
+
+        }
+    },
+    "WITHER_SKELETON": {
+        base: (level, tier) => ({
+            strength: 0.25*level,
+            critical_damage: 0.25*level,
+            defense: 0.25*level,
+            critical_chance: 0.05*level,
+            intelligence: 0.25*level,
+        }),
+        perks: {
+            "Wither Blood": {
+                tier: "EPIC",
+                stats: (level, tier, special) => ({
+                    d_wither_mobs: 0.25*level,
+                })
+            },
+        }
+    },
+    "WOLF": {
+        base: (level, tier) => ({
+            true_defense: 0.1*level,
+            critical_damage: 0.2*level,
+            health: 0.5*level,
+            walk_speed: 0.2*level,
+        }),
+        perks: {
+            "Combat Wisdom Boost": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    combat_wisdom: 0.3*level,
+                })
+            },
+        }
+    },
+    "ZOMBIE": {
+        base: (level, tier) => ({
+            health: 1*level,
+            critical_damage: 0.3*level,
+        }),
+        perks: {
+            "Rotten Blade": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    d_zombies: 0.25*level,
+                })
+            },
+            "Living Dead": {
+                tier: "LEGENDARY",
+                stats: (level, tier, special) => ({
+                    s_undead_armor_defense: 0.2*level,
+                })
+            },
+        }
+    },
+    "BINGO": {
+        base: (level, tier) => ({
+            strength: 0.25*level,
+            health: 1*level,
+        }),
+        perks: {
+            "Chimera": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    d_zombies: 0.25*level,
+                })
+            },
+        }
+    },
 }
+
+export const alwaysActivePets: petName[] = [
+    "GRANDMA_WOLF",
+    "SPIRIT",
+    "PARROT",
+    "BINGO",
+    "KUUDRA",
+]
 
 //higher tiers of pets are harder to level
 export const petRarityOffset: {

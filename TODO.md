@@ -1,2 +1,6 @@
 - exceptions in calculateItemStats()
 - candy in petLevel()
+- verify gdrag Dragon's Greed perk strength is correct
+- every other thing in skyblock
+    - skycrypt stuff
+    - dummy damage tester
