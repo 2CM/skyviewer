@@ -448,7 +448,7 @@ export interface pet {
     exp: number,
     active: boolean,
     tier: petTier,
-    heldItem: string | null,
+    heldItem: petItem | null,
     candyUsed: number,
     skin: string | null,
     extra?: {
@@ -3225,7 +3225,7 @@ export const petStats: {
             "Chimera": {
                 tier: "RARE",
                 stats: (level, tier, special) => ({
-                    d_zombies: 0.25*level,
+                    s_pet_stat_buff: 0.1+0.003*level
                 })
             },
         }
