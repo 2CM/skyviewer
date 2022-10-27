@@ -868,18 +868,21 @@ export type statName =
     "s_no_speed" | //snail pet
 
     //y per x
-    "p_strength_per_5_magic_find" | //gdrag
+    //per stats get applied after multiplication
+    "p_X_strength_per_5_magic_find" | //gdrag
     
-    "p_walk_speed_per_defense" | //amadillo
-    "p_mining_speed_per_defense" | //armadilo
+    "p_1_walk_speed_per_X_defense" | //amadillo
+    "p_1_mining_speed_per_X_defense" | //armadilo
 
-    "p_defense_per_30_health" | //blue whale
+    "p_X_defense_per_20_health" | //blue whale
+    "p_X_defense_per_25_health" | //blue whale
+    "p_X_defense_per_30_health" | //blue whale
 
-    "p_defense_per_100_speed" | //elephant
+    "p_X_defense_per_100_speed" | //elephant
 
-    "p_health_per_10_defense" | //elephant
+    "p_X_health_per_10_defense" | //elephant
 
-    "p_farming_fortune_per_strength" | //mooshroom cow pet
+    "p_X_farming_fortune_per_1_strength" | //mooshroom cow pet
 
     //as
     "a_strength_as_defense" | //baby yeti
@@ -2422,7 +2425,7 @@ export const petStats: {
             "Dragon's Greed": {
                 tier: "LEGENDARY",
                 stats: (level, tier, special) => ({ //wiki desc on this perk has a percent after strength but i asked in lobbies and 2 people said it was additive
-                    p_strength_per_5_magic_find: (0.5)*(level < 100 ? 0 : 1) //very good solution i know
+                    p_X_strength_per_5_magic_find: (0.5)*(level < 100 ? 0 : 1) //very good solution i know
                 })
             },
             "Legendary Treasure": {
@@ -2462,8 +2465,8 @@ export const petStats: {
             "Mobile Tank": {
                 tier: "LEGENDARY",
                 stats: (level, tier, special) => ({
-                    p_walk_speed_per_defense: 100-0.5*level,
-                    p_mining_speed_per_defense: 100-0.5*level,
+                    p_1_walk_speed_per_X_defense: 100-0.5*level,
+                    p_1_mining_speed_per_X_defense: 100-0.5*level,
                 })
             },
         }
@@ -2563,13 +2566,15 @@ export const petStats: {
             "Bulk": {
                 tier: "RARE",
                 stats: (level, tier, special) => ({
-                    p_defense_per_30_health: 0.01*level
+                    [tier == "RARE" ? "p_defense_per_30_health" : ""]: 0.01*level,
+                    [tier == "EPIC" ? "p_defense_per_25_health" : ""]: 0.01*level,
+                    [tier == "LEGENDARY" ? "p_defense_per_20_health" : ""]: 0.01*level,
                 })
             },
             "Archimedes": {
                 tier: "LEGENDARY",
                 stats: (level, tier, special) => ({
-                    m_health: 0.2*level
+                    m_health: 0.002*level
                 })
             },
         }
@@ -2605,13 +2610,13 @@ export const petStats: {
             "Stomp": {
                 tier: "COMMON",
                 stats: (level, tier, special) => ({
-                    p_defense_per_100_speed: (tier == "EPIC" || tier == "LEGENDARY" ? 0.2: 0.15) * level
+                    p_X_defense_per_100_speed: (tier == "EPIC" || tier == "LEGENDARY" ? 0.2: 0.15) * level
                 })
             },
             "Walking Fortress": {
                 tier: "RARE",
                 stats: (level, tier, special) => ({
-                    p_health_per_10_defense: 0.01*level
+                    p_X_health_per_10_defense: 0.01*level
                 })
             },
             "Trunk Efficiency": {
@@ -2873,7 +2878,7 @@ export const petStats: {
             "Farming Strength": {
                 tier: "LEGENDARY",
                 stats: (level, tier, special) => ({
-                    p_farming_fortune_per_strength: 40-0.2*level
+                    p_X_farming_fortune_per_1_strength: 40-0.2*level
                 })
             },
         }

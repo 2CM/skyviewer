@@ -731,19 +731,55 @@ export function sumStatsSources(sources: statSources): statsList {
 export function getStatSources(categories: statsCategories): statSources {
     var sources: any = {};
 
+    categories = {
+        base: {
+            SAME: {
+                defense: 1056-192,
+            }
+        },
+        armadillo: {
+            base: {
+                defense: 192,
+            },
+            mobileTank: {
+                p_1_mining_speed_per_X_defense: 52,
+                p_1_walk_speed_per_X_defense: 52,
+            }
+        }
+    }
+
+    // categories = {
+    //     base: {
+    //         SAME: {
+    //             health: 2913-180,
+    //         }
+    //     },
+    //     blue_whale: {
+    //         base: {
+    //             health: 180,
+    //         },
+    //         archimedes: {
+    //             m_health: 0.18
+    //         },
+    //         bulk: {
+    //             p_defense_per_20_health: 0.9,
+    //         }
+    //     }
+    // }
+
     // var correctedMultipliers: statsList = {}; //to add +1 to every multiplier so a 5% (0.05) multiplier would be a 1.05 multiplier 
 
     for (let i in keys(categories)) {
-        var categoryName: string = keys(categories)[i];
-        var category: statsCategory = categories[categoryName];
+        let categoryName: string = keys(categories)[i];
+        let category: statsCategory = categories[categoryName];
 
         for (let j in keys(category)) {
-            var listName: string = keys(category)[j];
-            var list: statsList = category[listName];
+            let listName: string = keys(category)[j];
+            let list: statsList = category[listName];
 
             for (let k in keys(list)) {
-                var statName: statName = keys(list)[k];
-                var stat: number = list[statName] || 0;
+                let statName: statName = keys(list)[k];
+                let stat: number = list[statName] || 0;
 
                 if (stat == 0 || stat === undefined) continue;
 
@@ -757,6 +793,52 @@ export function getStatSources(categories: statsCategories): statSources {
         }
     }
 
+    //for calculating pers
+    var summed = sumStatsSources(sources);
+
+
+    //calculate pers
+    for(let i in keys(sources)) { //for each stat in sources
+        let stat: statName = keys(sources)[i] as statName;
+        if(!stat.startsWith("p_")) continue; //if its not a per stat, continue
+
+        let name = stat.slice("p_".length);
+
+        //the stat recieving the extra, the stat the amount is based off of
+        // let [recievingStat, givingStat] = stat.slice("p_".length).split(/_per_.+?_/g) as statName[];
+        // let []: number = Number((stat.match(/_per_.+?_/g) || ["_per_1_"])[0].split("_")[2]); //how much of the giver stat is required for 1 of the reciever
+
+
+        //gain 0.9 walk speed per 30 defense
+        var perGiving: string | number = name.split("_per_")[1].split("_")[0];
+        var perRecieving: string | number = name.split("_")[0];
+
+        if(perGiving == "X") perGiving = summed[stat] || 0;
+        if(perRecieving == "X") perRecieving = summed[stat] || 0;
+
+        perGiving = Number(perGiving);
+        perRecieving = Number(perRecieving);
+
+        var [recievingStat, givingStat] = name.replace(/.+?_/, "").split(/_per_.+?_/) as statName[];
+
+        console.log({perGiving, perRecieving, recievingStat, givingStat})
+
+        //because there arent any ways to get multiple of a type of per stat, ill just treat it as only one
+        //depth into sources (yes im good at variable naming)
+        var depth1Name = keys(sources[stat])[0];
+        var depth2Name = keys(sources[stat][depth1Name])[0];
+
+        if(!sources[recievingStat])
+            sources[recievingStat] = {};
+
+        if(!sources[recievingStat][depth1Name])
+            sources[recievingStat][depth1Name] = {};
+
+        if(!sources[recievingStat][depth1Name][depth2Name])
+            sources[recievingStat][depth1Name][depth2Name] = perRecieving*Math.floor((summed[givingStat] || 0)/perGiving);
+    }
+
+    //fill in (excludes special stats (m_, s_, p_, a_, l_, d_))
     for (let i in keys(statIdToStatName)) {
         var statName = keys(statIdToStatName)[i];
 
@@ -1515,8 +1597,8 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     equippedPet = {
         exp: 79200000, //from deathstreeks
         tier: "LEGENDARY",
-        type: "GOLDEN_DRAGON",
-        active: false,
+        type: "BLUE_WHALE",
+        active: true,
         heldItem: null,
         candyUsed: 0,
         uuid: "",
@@ -1538,7 +1620,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
         stats[perk] = recivedStats.perks[perk].stats(petLevel, equippedPet.tier, specialData)
     }
 
-    console.log(stats);
+    // console.log(stats);
 
     calcTemp[calcId].stats[colorChar+rarityColors[equippedPet.tier]+equippedPet.type.replaceAll("_", " ").capitalize()] = stats;
 }
