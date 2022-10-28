@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors } from "./sbconstants";
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, defaultSkillCaps } from "./sbconstants";
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -724,12 +724,62 @@ export function sumStatsSources(sources: statSources): statsList {
         }
     }
 
-    return multiplyStatsList(stats, m_stats);
+    var summed = multiplyStatsList(stats, m_stats);
+
+
+    for(let i in keys(defaultSkillCaps)) {
+        let statName = keys(defaultSkillCaps)[i];
+
+        if(summed[statName]) {
+            summed[statName] = Math.min(summed[statName] || 0, defaultSkillCaps[statName] || 0);
+        }
+    }
+
+    return summed;
 }
 
 
 export function getStatSources(categories: statsCategories): statSources {
     var sources: any = {};
+
+    //elephant
+
+    categories = {
+        base: {
+            SAME: {
+                defense: 835,
+                walk_speed: 503,
+            }
+        },
+        elephant: {     
+            //not from a txt file because i wrote the notes in here
+
+            //stomp gives 80 def
+            //walking fortress gives 92 health
+
+            base: {
+                
+            },
+            stomp: {
+                p_X_defense_per_100_walk_speed: 20,
+            },
+            walkingFortress: {
+                p_X_health_per_10_defense: 1
+            }
+        }
+    }
+
+    //amadillo
+
+    // from my txt file on it:
+
+    // defense: 1056
+    // speed: 20
+    // ms: 20
+
+    // level: 96
+    // for every 52, gain 1 ms and 1 speed
+
 
     categories = {
         base: {
@@ -748,24 +798,38 @@ export function getStatSources(categories: statsCategories): statSources {
         }
     }
 
-    // categories = {
-    //     base: {
-    //         SAME: {
-    //             health: 2913-180,
-    //         }
-    //     },
-    //     blue_whale: {
-    //         base: {
-    //             health: 180,
-    //         },
-    //         archimedes: {
-    //             m_health: 0.18
-    //         },
-    //         bulk: {
-    //             p_defense_per_20_health: 0.9,
-    //         }
-    //     }
-    // }
+
+    //blue whale
+
+    // from my txt file on it:
+
+    // says it gives me 164.24 defense
+    // which means its off of 3284.8 health
+
+    // 3649.7 total health with it
+    // 3093 with it and not multiplied
+
+    // 2913 without it
+
+    categories = {
+        base: {
+            SAME: {
+                health: 2913,
+            }
+        },
+        blue_whale: {
+            base: {
+                health: 180,
+            },
+            archimedes: {
+                m_health: 0.18
+            },
+            bulk: {
+                p_X_defense_per_20_health: 0.9,
+            }
+        }
+    }
+    
 
     // var correctedMultipliers: statsList = {}; //to add +1 to every multiplier so a 5% (0.05) multiplier would be a 1.05 multiplier 
 
@@ -796,11 +860,14 @@ export function getStatSources(categories: statsCategories): statSources {
     //for calculating pers
     var summed = sumStatsSources(sources);
 
+    console.log(keys(sources)) //i need to sort them to get max output
 
     //calculate pers
     for(let i in keys(sources)) { //for each stat in sources
         let stat: statName = keys(sources)[i] as statName;
         if(!stat.startsWith("p_")) continue; //if its not a per stat, continue
+
+        console.log(stat)
 
         let name = stat.slice("p_".length);
 
@@ -828,6 +895,8 @@ export function getStatSources(categories: statsCategories): statSources {
         var depth1Name = keys(sources[stat])[0];
         var depth2Name = keys(sources[stat][depth1Name])[0];
 
+        var gained = perRecieving*((summed[givingStat] || 0)/perGiving);
+
         if(!sources[recievingStat])
             sources[recievingStat] = {};
 
@@ -835,7 +904,9 @@ export function getStatSources(categories: statsCategories): statSources {
             sources[recievingStat][depth1Name] = {};
 
         if(!sources[recievingStat][depth1Name][depth2Name])
-            sources[recievingStat][depth1Name][depth2Name] = perRecieving*Math.floor((summed[givingStat] || 0)/perGiving);
+            sources[recievingStat][depth1Name][depth2Name] = gained;
+
+        summed[recievingStat] = (summed[recievingStat] || 0)+gained;
     }
 
     //fill in (excludes special stats (m_, s_, p_, a_, l_, d_))

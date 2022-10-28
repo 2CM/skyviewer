@@ -878,7 +878,7 @@ export type statName =
     "p_X_defense_per_25_health" | //blue whale
     "p_X_defense_per_30_health" | //blue whale
 
-    "p_X_defense_per_100_speed" | //elephant
+    "p_X_defense_per_100_walk_speed" | //elephant
 
     "p_X_health_per_10_defense" | //elephant
 
@@ -898,7 +898,17 @@ export type statName =
     "d_slimes" | // magma cube
     "d_lvl_100" | //pigman pet
     "d_wither_mobs" | //wither skeleton
-    "d_zombies" //zombie pet
+    "d_zombies" | //zombie pet
+
+    //caps (addition)
+    "c_walk_speed" //black cat
+
+export const defaultSkillCaps: {
+    [key in statName]?: number
+} = {
+    walk_speed: 400,
+    critical_chance: 100,
+}
 
 export type statsList = {
     [key in statName]?: number;
@@ -2520,6 +2530,7 @@ export const petStats: {
             "Hunter": {
                 tier: "LEGENDARY",
                 stats: (level, tier, special) => ({
+                    c_walk_speed: 1*level,
                     walk_speed: 1*level
                 })
             },
@@ -2610,7 +2621,7 @@ export const petStats: {
             "Stomp": {
                 tier: "COMMON",
                 stats: (level, tier, special) => ({
-                    p_X_defense_per_100_speed: (tier == "EPIC" || tier == "LEGENDARY" ? 0.2: 0.15) * level
+                    p_X_defense_per_100_walk_speed: (tier == "EPIC" || tier == "LEGENDARY" ? 0.2: 0.15) * level
                 })
             },
             "Walking Fortress": {
