@@ -64,7 +64,9 @@ export default function profileViewer(props: serverData) {
 	}, [])
 
 	var sources = getStatSources(props.computedData.stats);
-	var summed = sumStatsSources(sources)
+	var summed = sumStatsSources(sources);
+
+	// console.log(sources)
 
     return (
 		<dataContext.Provider value={data}>

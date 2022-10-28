@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors } from "./sbconstants";
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, defaultSkillCaps } from "./sbconstants";
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -724,26 +724,35 @@ export function sumStatsSources(sources: statSources): statsList {
         }
     }
 
-    return multiplyStatsList(stats, m_stats);
+    var summed = multiplyStatsList(stats, m_stats);
+
+
+    for(let i in keys(defaultSkillCaps)) {
+        let statName = keys(defaultSkillCaps)[i];
+
+        if(summed[statName]) {
+            summed[statName] = Math.min(summed[statName] || 0, defaultSkillCaps[statName] || 0);
+        }
+    }
+
+    return summed;
 }
 
 
 export function getStatSources(categories: statsCategories): statSources {
     var sources: any = {};
 
-    // var correctedMultipliers: statsList = {}; //to add +1 to every multiplier so a 5% (0.05) multiplier would be a 1.05 multiplier 
-
     for (let i in keys(categories)) {
-        var categoryName: string = keys(categories)[i];
-        var category: statsCategory = categories[categoryName];
+        let categoryName: string = keys(categories)[i];
+        let category: statsCategory = categories[categoryName];
 
         for (let j in keys(category)) {
-            var listName: string = keys(category)[j];
-            var list: statsList = category[listName];
+            let listName: string = keys(category)[j];
+            let list: statsList = category[listName];
 
             for (let k in keys(list)) {
-                var statName: statName = keys(list)[k];
-                var stat: number = list[statName] || 0;
+                let statName: statName = keys(list)[k];
+                let stat: number = list[statName] || 0;
 
                 if (stat == 0 || stat === undefined) continue;
 
@@ -757,6 +766,51 @@ export function getStatSources(categories: statsCategories): statSources {
         }
     }
 
+    //for calculating pers
+    var summed = sumStatsSources(sources);
+
+    //calculate pers
+    for(let i in keys(sources)) { //for each stat in sources
+        let stat: statName = keys(sources)[i] as statName;
+        if(!stat.startsWith("p_")) continue; //if its not a per stat, continue
+
+        // console.log(stat)
+
+        let name = stat.slice("p_".length);
+
+        var perGiving: string | number = name.split("_per_")[1].split("_")[0];
+        var perRecieving: string | number = name.split("_")[0];
+
+        if(perGiving == "X") perGiving = summed[stat] || 0;
+        if(perRecieving == "X") perRecieving = summed[stat] || 0;
+
+        perGiving = Number(perGiving);
+        perRecieving = Number(perRecieving);
+
+        var [recievingStat, givingStat] = name.replace(/.+?_/, "").split(/_per_.+?_/) as statName[];
+
+        // console.log({perGiving, perRecieving, recievingStat, givingStat})
+
+        //because there arent any ways to get multiple of a type of per stat, ill just treat it as only one
+        //depth into sources (yes im good at variable naming)
+        var depth1Name = keys(sources[stat])[0];
+        var depth2Name = keys(sources[stat][depth1Name])[0];
+
+        var gained = perRecieving*((summed[givingStat] || 0)/perGiving);
+
+        if(!sources[recievingStat])
+            sources[recievingStat] = {};
+
+        if(!sources[recievingStat][depth1Name])
+            sources[recievingStat][depth1Name] = {};
+
+        if(!sources[recievingStat][depth1Name][depth2Name])
+            sources[recievingStat][depth1Name][depth2Name] = gained;
+
+        summed[recievingStat] = (summed[recievingStat] || 0)+gained;
+    }
+
+    //fill in (excludes special stats (m_, s_, p_, a_, l_, d_))
     for (let i in keys(statIdToStatName)) {
         var statName = keys(statIdToStatName)[i];
 
@@ -1515,8 +1569,8 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     equippedPet = {
         exp: 79200000, //from deathstreeks
         tier: "LEGENDARY",
-        type: "GOLDEN_DRAGON",
-        active: false,
+        type: "BLUE_WHALE",
+        active: true,
         heldItem: null,
         candyUsed: 0,
         uuid: "",
@@ -1538,7 +1592,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
         stats[perk] = recivedStats.perks[perk].stats(petLevel, equippedPet.tier, specialData)
     }
 
-    console.log(stats);
+    // console.log(stats);
 
     calcTemp[calcId].stats[colorChar+rarityColors[equippedPet.tier]+equippedPet.type.replaceAll("_", " ").capitalize()] = stats;
 }
