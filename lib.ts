@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, defaultSkillCaps } from "./sbconstants";
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -689,7 +689,7 @@ export type statSources = {
 };
 
 //sums up a statSources into a statsList
-export function sumStatsSources(sources: statSources): statsList {
+export function sumStatsSources(sources: statSources): {capped: statsList, summed: statsList} {
     var stats: statsList = {};
     var m_stats: statsList = {};
 
@@ -725,17 +725,17 @@ export function sumStatsSources(sources: statSources): statsList {
     }
 
     var summed = multiplyStatsList(stats, m_stats);
+    var capped: statsList = {};
 
-
-    for(let i in keys(defaultSkillCaps)) {
-        let statName = keys(defaultSkillCaps)[i];
+    for(let i in keys(defaultStatCaps)) {
+        let statName = keys(defaultStatCaps)[i];
 
         if(summed[statName]) {
-            summed[statName] = Math.min(summed[statName] || 0, defaultSkillCaps[statName] || 0);
+            capped[statName] = Math.min(summed[statName] || 0, defaultStatCaps[statName] || 0);
         }
     }
 
-    return summed;
+    return {capped, summed};
 }
 
 
@@ -781,8 +781,8 @@ export function getStatSources(categories: statsCategories): statSources {
         var perGiving: string | number = name.split("_per_")[1].split("_")[0];
         var perRecieving: string | number = name.split("_")[0];
 
-        if(perGiving == "X") perGiving = summed[stat] || 0;
-        if(perRecieving == "X") perRecieving = summed[stat] || 0;
+        if(perGiving == "X") perGiving = summed.capped[stat] || 0;
+        if(perRecieving == "X") perRecieving = summed.capped[stat] || 0;
 
         perGiving = Number(perGiving);
         perRecieving = Number(perRecieving);
@@ -796,7 +796,7 @@ export function getStatSources(categories: statsCategories): statSources {
         var depth1Name = keys(sources[stat])[0];
         var depth2Name = keys(sources[stat][depth1Name])[0];
 
-        var gained = perRecieving*((summed[givingStat] || 0)/perGiving);
+        var gained = perRecieving*((summed.capped[givingStat] || 0)/perGiving);
 
         if(!sources[recievingStat])
             sources[recievingStat] = {};
@@ -807,7 +807,7 @@ export function getStatSources(categories: statsCategories): statSources {
         if(!sources[recievingStat][depth1Name][depth2Name])
             sources[recievingStat][depth1Name][depth2Name] = gained;
 
-        summed[recievingStat] = (summed[recievingStat] || 0)+gained;
+        summed.capped[recievingStat] = (summed.capped[recievingStat] || 0)+gained;
     }
 
     //fill in (excludes special stats (m_, s_, p_, a_, l_, d_))
@@ -1569,19 +1569,20 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     equippedPet = {
         exp: 79200000, //from deathstreeks
         tier: "LEGENDARY",
-        type: "BLUE_WHALE",
+        type: "GOLDEN_DRAGON",
         active: true,
-        heldItem: null,
+        heldItem: "MINOS_RELIC",
         candyUsed: 0,
         uuid: "",
         skin: "",
     }
 
-    var recivedStats: petStatInfo = petStats[equippedPet.type] || petStats.GOLDEN_DRAGON;
+    var recivedStats: petStatInfo = petStats[equippedPet.type];
     var petLevel = petToLevel(equippedPet);
 
-    stats.base = recivedStats.base(petLevel, equippedPet.tier);
+    var baseStats = recivedStats.base(petLevel, equippedPet.tier);
 
+    
     for(let j in keys(recivedStats.perks)) {
         var perk: string = keys(recivedStats.perks)[j] as string;
 
@@ -1592,9 +1593,39 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
         stats[perk] = recivedStats.perks[perk].stats(petLevel, equippedPet.tier, specialData)
     }
 
+    if(equippedPet.heldItem) {
+        var petItemName = petItemNames[equippedPet.heldItem];
+
+        petItemName = equippedPet.heldItem;
+
+        stats[petItemName] = {};
+
+        if(equippedPet.heldItem == "MINOS_RELIC") {
+            baseStats = multiplyStatsList(baseStats, 1/3 + 1);
+        } else if(equippedPet.heldItem == "PET_ITEM_QUICK_CLAW") {
+            stats[petItemName] = {mining_speed: petLevel, mining_fortune: petLevel};
+        } else {
+            var heldItemStats = petItemStats[equippedPet.heldItem] || {};
+
+            for(let i in keys(heldItemStats)) {
+                let name: statName = keys(heldItemStats)[i];
+
+                if(name.startsWith("m_")) {
+                    var realName: statName = name.slice("m_".length) as statName;
+
+                    baseStats[realName] = (baseStats[realName] || 0) * ((heldItemStats[name] || 0) + 1);
+                } else {
+                    stats[petItemName][name] = (heldItemStats[name] || 0)
+                }
+            }
+        }
+    }
+
     // console.log(stats);
 
-    calcTemp[calcId].stats[colorChar+rarityColors[equippedPet.tier]+equippedPet.type.replaceAll("_", " ").capitalize()] = stats;
+    stats.Base = baseStats;
+
+    calcTemp[calcId].stats[colorChar+rarityColors[equippedPet.tier]+equippedPet.type.replaceAll("_", " ").capitalize()+colorChar+"f"+` (${petLevel})`] = stats;
 }
 
 
