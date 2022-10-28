@@ -742,97 +742,6 @@ export function sumStatsSources(sources: statSources): statsList {
 export function getStatSources(categories: statsCategories): statSources {
     var sources: any = {};
 
-    //elephant
-
-    categories = {
-        base: {
-            SAME: {
-                defense: 835,
-                walk_speed: 503,
-            }
-        },
-        elephant: {     
-            //not from a txt file because i wrote the notes in here
-
-            //stomp gives 80 def
-            //walking fortress gives 92 health
-
-            base: {
-                
-            },
-            stomp: {
-                p_X_defense_per_100_walk_speed: 20,
-            },
-            walkingFortress: {
-                p_X_health_per_10_defense: 1
-            }
-        }
-    }
-
-    //amadillo
-
-    // from my txt file on it:
-
-    // defense: 1056
-    // speed: 20
-    // ms: 20
-
-    // level: 96
-    // for every 52, gain 1 ms and 1 speed
-
-
-    categories = {
-        base: {
-            SAME: {
-                defense: 1056-192,
-            }
-        },
-        armadillo: {
-            base: {
-                defense: 192,
-            },
-            mobileTank: {
-                p_1_mining_speed_per_X_defense: 52,
-                p_1_walk_speed_per_X_defense: 52,
-            }
-        }
-    }
-
-
-    //blue whale
-
-    // from my txt file on it:
-
-    // says it gives me 164.24 defense
-    // which means its off of 3284.8 health
-
-    // 3649.7 total health with it
-    // 3093 with it and not multiplied
-
-    // 2913 without it
-
-    categories = {
-        base: {
-            SAME: {
-                health: 2913,
-            }
-        },
-        blue_whale: {
-            base: {
-                health: 180,
-            },
-            archimedes: {
-                m_health: 0.18
-            },
-            bulk: {
-                p_X_defense_per_20_health: 0.9,
-            }
-        }
-    }
-    
-
-    // var correctedMultipliers: statsList = {}; //to add +1 to every multiplier so a 5% (0.05) multiplier would be a 1.05 multiplier 
-
     for (let i in keys(categories)) {
         let categoryName: string = keys(categories)[i];
         let category: statsCategory = categories[categoryName];
@@ -860,23 +769,15 @@ export function getStatSources(categories: statsCategories): statSources {
     //for calculating pers
     var summed = sumStatsSources(sources);
 
-    console.log(keys(sources)) //i need to sort them to get max output
-
     //calculate pers
     for(let i in keys(sources)) { //for each stat in sources
         let stat: statName = keys(sources)[i] as statName;
         if(!stat.startsWith("p_")) continue; //if its not a per stat, continue
 
-        console.log(stat)
+        // console.log(stat)
 
         let name = stat.slice("p_".length);
 
-        //the stat recieving the extra, the stat the amount is based off of
-        // let [recievingStat, givingStat] = stat.slice("p_".length).split(/_per_.+?_/g) as statName[];
-        // let []: number = Number((stat.match(/_per_.+?_/g) || ["_per_1_"])[0].split("_")[2]); //how much of the giver stat is required for 1 of the reciever
-
-
-        //gain 0.9 walk speed per 30 defense
         var perGiving: string | number = name.split("_per_")[1].split("_")[0];
         var perRecieving: string | number = name.split("_")[0];
 
@@ -888,7 +789,7 @@ export function getStatSources(categories: statsCategories): statSources {
 
         var [recievingStat, givingStat] = name.replace(/.+?_/, "").split(/_per_.+?_/) as statName[];
 
-        console.log({perGiving, perRecieving, recievingStat, givingStat})
+        // console.log({perGiving, perRecieving, recievingStat, givingStat})
 
         //because there arent any ways to get multiple of a type of per stat, ill just treat it as only one
         //depth into sources (yes im good at variable naming)

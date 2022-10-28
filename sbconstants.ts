@@ -2577,9 +2577,9 @@ export const petStats: {
             "Bulk": {
                 tier: "RARE",
                 stats: (level, tier, special) => ({
-                    [tier == "RARE" ? "p_defense_per_30_health" : ""]: 0.01*level,
-                    [tier == "EPIC" ? "p_defense_per_25_health" : ""]: 0.01*level,
-                    [tier == "LEGENDARY" ? "p_defense_per_20_health" : ""]: 0.01*level,
+                    [tier == "RARE" ? "p_X_defense_per_30_health" : ""]: 0.01*level,
+                    [tier == "EPIC" ? "p_X_defense_per_25_health" : ""]: 0.01*level,
+                    [tier == "LEGENDARY" ? "p_X_defense_per_20_health" : ""]: 0.01*level,
                 })
             },
             "Archimedes": {
