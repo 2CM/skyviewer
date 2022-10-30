@@ -2418,7 +2418,6 @@ export const petStats: {
             strength: (25 + 0.25*(level-100))*(level < 100 ? 0 : 1),
             magic_find: (15 + 0.05*(level-100))*(level < 100 ? 0 : 1),
             attack_speed: (25 + 0.25*(level-100))*(level < 100 ? 0 : 1),
-            intelligence: 50
         }),
         perks: {
             "Gold's Power": {
@@ -3335,74 +3334,76 @@ export const petItemStats: {
     "PET_ITEM_LUCKY_CLOVER": {magic_find: 7},
     "PET_ITEM_SPOOKY_CUPCAKE": {strength: 30, walk_speed: 20},
     "CROCHET_TIGER_PLUSHIE": {attack_speed: 35},
-    "ANTIQUE_REMEDIES": {strength: 0.8},
+    "ANTIQUE_REMEDIES": {m_strength: 0.8},
     //ill account for minos relic in the function to avoid typing every stat
     "WASHED_UP_SOUVENIR": {sea_creature_chance: 5},
-    //same with quick claw
+    //same with quick claw because it uses a per level system
+    //also, would it work on a level 200 gdrag?
+    //mythbusters do the thing
 }
 
 export const petItemNames: {
     [key in petItem]: string
 } = {
-    "PET_ITEM_ALL_SKILLS_BOOST_COMMON": "",
-    "ALL_SKILLS_SUPER_BOOST": "",
+    "PET_ITEM_ALL_SKILLS_BOOST_COMMON": "All Skills Exp Boost",
+    "ALL_SKILLS_SUPER_BOOST": "All Skills Exp Super-Boost",
 
-    "PET_ITEM_FARMING_SKILL_BOOST_COMMON": "",
-    "PET_ITEM_FARMING_SKILL_BOOST_UNCOMMON": "",
-    "PET_ITEM_FARMING_SKILL_BOOST_RARE": "",
-    "PET_ITEM_FARMING_SKILL_BOOST_EPIC": "",
+    "PET_ITEM_FARMING_SKILL_BOOST_COMMON": "Farming Exp Boost",
+    "PET_ITEM_FARMING_SKILL_BOOST_UNCOMMON": "Farming Exp Boost",
+    "PET_ITEM_FARMING_SKILL_BOOST_RARE": "Farming Exp Boost",
+    "PET_ITEM_FARMING_SKILL_BOOST_EPIC": "Farming Exp Boost",
     
-    "PET_ITEM_MINING_SKILL_BOOST_COMMON": "",
-    "PET_ITEM_MINING_SKILL_BOOST_RARE": "",
+    "PET_ITEM_MINING_SKILL_BOOST_COMMON": "Mining Exp Boost",
+    "PET_ITEM_MINING_SKILL_BOOST_RARE": "Mining Exp Boost",
 
-    "PET_ITEM_COMBAT_SKILL_BOOST_COMMON": "",
-    "PET_ITEM_COMBAT_SKILL_BOOST_UNCOMMON": "",
-    "PET_ITEM_COMBAT_SKILL_BOOST_RARE": "",
-    "PET_ITEM_COMBAT_SKILL_BOOST_EPIC": "",
+    "PET_ITEM_COMBAT_SKILL_BOOST_COMMON": "Combat Exp Boost",
+    "PET_ITEM_COMBAT_SKILL_BOOST_UNCOMMON": "Combat Exp Boost",
+    "PET_ITEM_COMBAT_SKILL_BOOST_RARE": "Combat Exp Boost",
+    "PET_ITEM_COMBAT_SKILL_BOOST_EPIC": "Combat Exp Boost",
 
-    "PET_ITEM_FORAGING_SKILL_BOOST_COMMON": "",
-    "PET_ITEM_FORAGING_SKILL_BOOST_EPIC": "",
+    "PET_ITEM_FORAGING_SKILL_BOOST_COMMON": "Foraging Exp Boost",
+    "PET_ITEM_FORAGING_SKILL_BOOST_EPIC": "Foraging Exp Boost",
 
-    "PET_ITEM_FISHING_SKILL_BOOST_COMMON": "",
-    "PET_ITEM_FISHING_SKILL_BOOST_UNCOMMON": "",
-    "PET_ITEM_FISHING_SKILL_BOOST_RARE": "",
-    "PET_ITEM_FISHING_SKILL_BOOST_EPIC": "",
+    "PET_ITEM_FISHING_SKILL_BOOST_COMMON": "Fishing Exp Boost",
+    "PET_ITEM_FISHING_SKILL_BOOST_UNCOMMON": "Fishing Exp Boost",
+    "PET_ITEM_FISHING_SKILL_BOOST_RARE": "Fishing Exp Boost",
+    "PET_ITEM_FISHING_SKILL_BOOST_EPIC": "Fishing Exp Boost",
 
-    "PET_ITEM_EXP_SHARE": "",
+    "PET_ITEM_EXP_SHARE": "Exp Share",
 
-    "PET_ITEM_BIG_TEETH_COMMON": "",
-    "BIGGER_TEETH": "",
+    "PET_ITEM_BIG_TEETH_COMMON": "Big Teeth",
+    "BIGGER_TEETH": "Bigger Teeth",
 
-    "PET_ITEM_SHARPENED_CLAWS_UNCOMMON": "",
-    "SERRATED_CLAWS": "",
+    "PET_ITEM_SHARPENED_CLAWS_UNCOMMON": "Sharpened Claw",
+    "SERRATED_CLAWS": "Serrated Claws",
 
-    "PET_ITEM_IRON_CLAWS_COMMON": "",
-    "GOLD_CLAWS": "",
+    "PET_ITEM_IRON_CLAWS_COMMON": "Iron Claws",
+    "GOLD_CLAWS": "Gold Claws",
 
-    "PET_ITEM_HARDENED_SCALES_UNCOMMON": "",
-    "REINFORCED_SCALES": "",
+    "PET_ITEM_HARDENED_SCALES_UNCOMMON": "Hardened Scales",
+    "REINFORCED_SCALES": "Reinforced Scales",
 
-    "PET_ITEM_TEXTBOOK": "",
-    "PET_ITEM_LUCKY_CLOVER": "",
-    "PET_ITEM_SADDLE": "",
-    "PET_ITEM_BUBBLEGUM": "",
+    "PET_ITEM_TEXTBOOK": "Textbook",
+    "PET_ITEM_LUCKY_CLOVER": "Lucky Clover",
+    "PET_ITEM_SADDLE": "Saddle",
+    "PET_ITEM_BUBBLEGUM": "Bubblegum",
 
-    "PET_ITEM_TIER_BOOST": "",
-    "PET_ITEM_VAMPIRE_FANG": "",
-    "PET_ITEM_TOY_JERRY": "",
-    "PET_ITEM_SPOOKY_CUPCAKE": "",
+    "PET_ITEM_TIER_BOOST": "Tier Boost",
+    "PET_ITEM_VAMPIRE_FANG": "Vampire Fang",
+    "PET_ITEM_TOY_JERRY": "Jerry 3D Glasses",
+    "PET_ITEM_SPOOKY_CUPCAKE": "Spooky Cupcake",
 
-    "DWARF_TURTLE_SHELMET": "",
-    "CROCHET_TIGER_PLUSHIE": "",
-    "ANTIQUE_REMEDIES": "",
-    "MINOS_RELIC": "",
-    "WASHED_UP_SOUVENIR": "",
+    "DWARF_TURTLE_SHELMET": "Dwarf Turtle",
+    "CROCHET_TIGER_PLUSHIE": "Crochet Tiger Plushie",
+    "ANTIQUE_REMEDIES": "Antique Remedies",
+    "MINOS_RELIC": "Minos Relic",
+    "WASHED_UP_SOUVENIR": "Washed-Up Sourvenir",
 
-    "REAPER_GEM": "",
+    "REAPER_GEM": "Reaper Gem",
 
-    "PET_ITEM_FLYING_PIG": "",
+    "PET_ITEM_FLYING_PIG": "Flying Pig",
 
-    "PET_ITEM_QUICK_CLAW": ""
+    "PET_ITEM_QUICK_CLAW": "Quick Claw"
 }
 
 //higher tiers of pets are harder to level

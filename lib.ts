@@ -731,7 +731,11 @@ export function sumStatsSources(sources: statSources): {capped: statsList, summe
         let statName = keys(defaultStatCaps)[i];
 
         if(summed[statName]) {
-            capped[statName] = Math.min(summed[statName] || 0, defaultStatCaps[statName] || 0);
+            var extraCap = 
+                statName == "walk_speed" ? summed.c_walk_speed :
+                0;
+
+            capped[statName] = Math.min(summed[statName] || 0, defaultStatCaps[statName] || 0)+(extraCap || 0);
         }
     }
 
@@ -1569,7 +1573,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     equippedPet = {
         exp: 79200000, //from deathstreeks
         tier: "LEGENDARY",
-        type: "GOLDEN_DRAGON",
+        type: "BLACK_CAT",
         active: true,
         heldItem: "MINOS_RELIC",
         candyUsed: 0,
@@ -1596,12 +1600,12 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     if(equippedPet.heldItem) {
         var petItemName = petItemNames[equippedPet.heldItem];
 
-        petItemName = equippedPet.heldItem;
+        petItemName = petItemNames[equippedPet.heldItem];
 
         stats[petItemName] = {};
 
         if(equippedPet.heldItem == "MINOS_RELIC") {
-            baseStats = multiplyStatsList(baseStats, 1/3 + 1);
+            stats[petItemName] = multiplyStatsList(baseStats, 1/3);
         } else if(equippedPet.heldItem == "PET_ITEM_QUICK_CLAW") {
             stats[petItemName] = {mining_speed: petLevel, mining_fortune: petLevel};
         } else {
@@ -1613,7 +1617,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
                 if(name.startsWith("m_")) {
                     var realName: statName = name.slice("m_".length) as statName;
 
-                    baseStats[realName] = (baseStats[realName] || 0) * ((heldItemStats[name] || 0) + 1);
+                    stats[petItemName][realName] = (baseStats[realName] || 0) * (heldItemStats[name] || 0);
                 } else {
                     stats[petItemName][name] = (heldItemStats[name] || 0)
                 }

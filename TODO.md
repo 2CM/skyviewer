@@ -2,6 +2,12 @@
 - candy in petLevel()
 - verify gdrag Dragon's Greed perk strength is correct
 - haste effect only works in custom mining islands
+- pet stats
+    - get specials
+    - always active pets
+    - calculateItemStats() pet exceptions using calcTemp
+        - blaze pet hpb buff
+        - blaze blaze armor buff
 - every other thing in skyblock
     - skycrypt stuff
     - dummy damage tester
