@@ -198,9 +198,18 @@ export const colorCodeToHex: {
     "f": "#FFFFFF",
 }
 
+export type profileGameMode = "bingo";
 
-//base profile (because not all profile types have the same data)
-export interface baseProfile { //base profile. all profile types can be derived from this (dont use)
+export type bankAction = "WITHDRAW" | "DEPOSIT";
+
+export interface transaction {
+    amount: number,
+    timestamp: number,
+    action: bankAction,
+    initiator_name: string,
+}
+
+export interface baseProfile {
     profile_id: string,
     members: {
         [key: string]: profileMember
@@ -209,20 +218,28 @@ export interface baseProfile { //base profile. all profile types can be derived 
     last_save: number,
     cute_name: string,
     selected: boolean,
-}
-
-//normal profile
-export interface profile extends baseProfile { //normal profile
-    banking: object
-}
-
-//specifically a bingo profile
-export interface bingoProfile extends baseProfile { //bingo profile
-    game_mode: "bingo"
+    banking?: {
+        balance: number,
+        transactions: transaction[]
+    },
+    game_mode?: profileGameMode
 }
 
 //harp songs
-export type harpSong = "hymn_joy" | "frere_jacques" | "amazing_grace" | "brahms" | "happy_birthday" | "greensleeves" | "jeopardy" | "minuet" | "joy_world" | "pure_imagination" | "vie_en_rose" | "fire_and_flames" | "pachelbel";
+export type harpSong = 
+    "hymn_joy" | 
+    "frere_jacques" | 
+    "amazing_grace" | 
+    "brahms" | 
+    "happy_birthday" | 
+    "greensleeves" | 
+    "jeopardy" |
+    "minuet" | 
+    "joy_world" | 
+    "pure_imagination" | 
+    "vie_en_rose" | 
+    "fire_and_flames" | 
+    "pachelbel";
 
 //slayer boss info
 export interface slayerBoss {
@@ -456,6 +473,76 @@ export interface pet {
     }
 }
 
+export type collection =
+    "LOG" | //oak wood
+    "COBBLESTONE" |
+    "BONE" |
+    "COAL" |
+    "SEEDS" |
+    "WHEAT" |
+    "PORK" |
+    "POTATO_ITEM" |
+    "CARROT_ITEM" |
+    "LEATHER" |
+    "ROTTEN_FLESH" |
+    "STRING" |
+    "SPIDER_EYE" |
+    "GOLD_INGOT" |
+    "INK_SACK:4" | //lapis lazuli. WHAT
+    "REDSTONE" |
+    "EMERALD" |
+    "SLIME_BALL" |
+    "DIAMOND" |
+    "IRON_INGOT" |
+    "SULPHUR" |
+    "ENDER_PEARL" |
+    "RAW_FISH:3" | //pufferfish
+    "OBSIDIAN" |
+    "NETHER_STALK" | //nether wart
+    "NETHERRACK" |
+    "MAGMA_CREAM" |
+    "GLOWSTONE_DUST" |
+    "QUARTZ" |
+    "LOG:2" | //birch wood
+    "LOG:1" | //spruce wood
+    "LOG:3" | //jungle wood
+    "INK_SACK:3" | //cocoa beans. WHY
+    "LOG_2" | //acacia wood. WHO DID THIS
+    "LOG_2:1" | //dark oak. ._____________.
+    "MUSHROOM_COLLECTION" | //just mushrooms
+    "RAW_FISH" | //raw fish
+    "FEATHER" |
+    "RAW_CHICKEN" |
+    "MELON" |
+    "SUGAR_CANE" |
+    "CACTUS" |
+    "CLAY_BALL" |
+    "RAW_FISH:1" | //salmon
+    "BLAZE_ROD" |
+    "GHAST_TEAR" |
+    "MUTTON" |
+    "RAW_FISH:2" | //clownfish. skyblock admins naming these
+    "SPONGE" |
+    "PRISMARINE_CRYSTALS" |
+    "PRISMARINE_SHARD" |
+    "ENDER_STONE" | //end stone
+    "GRAVEL" |
+    "WATER_LILY" | //lilypad
+    "INK_SACK" | //ink sac (apparently its spelled without the k)
+    "PUMPKIN" |
+    "ICE" |
+    "SAND" |
+    "RABBIT" |
+    "SNOW_BALL" |
+    "MITHRIL_ORE" | //mithril
+    "HARD_STONE" |
+    "GEMSTONE_COLLECTION" | //why the suffix
+    "MAGMA_FISH" |
+    "SULPHUR_ORE" | //sulphur
+    "MYCEL" | //mycelium
+    "SAND:1" | //red sand
+    "CHILI_PEPPER";
+
 //contains all the data of a profile member from the api
 export interface profileMember { //all objects can be expanded upon; all any[] | any need more info
     //misc important
@@ -490,49 +577,64 @@ export interface profileMember { //all objects can be expanded upon; all any[] |
     unlocked_coll_tiers?: string[],
     nether_island_player_data: object,
     visited_modes: string[],
-    collection: object,
+    collection: {
+        [key in collection]?: number
+    },
     
     //side quests
     harp_quest: {
         selected_song?: harpSong,
         selected_song_epoch?: number,
         claimed_talisman?: boolean,
+        
         song_hymn_joy_best_completion?: number,
         song_hymn_joy_completions?: number,
         song_hymn_joy_perfect_completions?: number,
+
         song_frere_jacques_best_completion?: number,
         song_frere_jacques_completions?: number,
         song_frere_jacques_perfect_completions?: number,
+
         song_amazing_grace_best_completion?: number,
         song_amazing_grace_completions?: number,
         song_amazing_grace_perfect_completions?: number,
+
         song_brahms_best_completion?: number,
         song_brahms_completions?: number,
         song_brahms_perfect_completions?: number,
+
         song_happy_birthday_best_completion?: number,
         song_happy_birthday_completions?: number,
         song_happy_birthday_perfect_completions?: number,
+
         song_greensleeves_best_completion?: number,
         song_greensleeves_completions?: number,
         song_greensleeves_perfect_completions?: number,
+
         song_jeopardy_best_completion?: number,
         song_jeopardy_completions?: number,
         song_jeopardy_perfect_completions?: number,
+
         song_minuet_best_completion?: number,
         song_minuet_completions?: number,
         song_minuet_perfect_completions?: number,
+
         song_joy_world_best_completion?: number,
         song_joy_world_completions?: number,
         song_joy_world_perfect_completions?: number,
+
         song_pure_imagination_best_completion?: number,
         song_pure_imagination_completions?: number,
         song_pure_imagination_perfect_completions?: number,
+
         song_vie_en_rose_best_completion?: number,
         song_vie_en_rose_completions?: number,
         song_vie_en_rose_perfect_completions?: number,
+
         song_fire_and_flames_best_completion?: number,
         song_fire_and_flames_completions?: number,
         song_fire_and_flames_perfect_completions?: number,
+
         song_pachelbel_best_completion?: number,
         song_pachelbel_completions?: number,
         song_pachelbel_perfect_completions?: number,
@@ -909,6 +1011,7 @@ export const defaultStatCaps: {
     walk_speed: 400,
     critical_chance: 100,
     attack_speed: 100,
+    fishing_speed: 300, //apparently this exists
 }
 
 export type statsList = {
@@ -3542,4 +3645,14 @@ export const petLeveling = [
     //for gdrag / future lvl > 100 pets
     0, //when it reaches lvl 100 it hatches into lvl 101, so its instant
     5555, //why hypixel why
+]
+
+export const hotmLeveling = [
+    0,
+    3000,
+    12000,
+    37000,
+    97000,
+    197000,
+    347000,
 ]

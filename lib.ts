@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps } from "./sbconstants"; //so many ;-;
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -435,6 +435,18 @@ export function sourcesToElement(sources: any, statName: statName) {
         children.push(React.createElement("h2", { style: { textAlign: "center", fontSize: "20px" } }, `This player has no ${statIdToStatName[statName] || "error"} :(`))
 
     return React.createElement("ul", {}, children);
+}
+
+export function hotmExpToLevel(exp: number): number {
+    var level = 0;
+
+    for(let i = 0; i < hotmLeveling.length; i++) {
+        if(exp >= hotmLeveling[i]) {
+            level++;
+        }
+    }
+
+    return level;
 }
 
 
@@ -1567,7 +1579,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     if(equippedPet === undefined) {
         console.warn("no equipped pet");
 
-        return {};
+        return;
     }
 
     equippedPet = {
@@ -1634,20 +1646,21 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
 
 export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string): Promise<statsCategories> {
-    // return {base: {base: baseStats}, gamer: {yes: {m_health: 1.05}}};
+    calcTemp[calcId].stats["Base Stats"] = {SAME: baseStats};
+
+    if(!data.profileData) return calcTemp[calcId].stats;
 
     var specialPetData: specialPetData = {
-        goldCollection: 49000000,
-        bankCoins: 40000000,
+        goldCollection: data.profileData.profiles[selectedProfile].members[playerUUID].collection.GOLD_INGOT || 0,
+        bankCoins: data.profileData.profiles[selectedProfile].banking?.balance || 0,
         skills: {
-            fishing: 45,
-            mining: 60,
+            fishing: Math.floor(calcTemp[calcId].skills.fishing?.levelInfo.level || 0),
+            mining: Math.floor(calcTemp[calcId].skills.mining?.levelInfo.level || 0),
         },
-        hotm: 7
+        hotm: hotmExpToLevel(data.profileData.profiles[selectedProfile].members[playerUUID].mining_core.experience || 0)
     };
 
-
-    calcTemp[calcId].stats["Base Stats"] = {SAME: baseStats}
+    await calculatePetStats(data, selectedProfile, playerUUID, specialPetData, calcId);
     await calculateSkillStats(data, selectedProfile, playerUUID, calcId);
     await calculateHotmStats(data, selectedProfile, playerUUID, calcId);
     await calculateEssenceStats(data, selectedProfile, playerUUID, calcId);
@@ -1659,8 +1672,6 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     await calculateCakeStats(data, selectedProfile, playerUUID, calcId);
     await calculateArmorStats(data, selectedProfile, playerUUID, calcId);
     await calculateEquipmentStats(data, selectedProfile, playerUUID, calcId);
-    await calculatePetStats(data, selectedProfile, playerUUID, specialPetData, calcId);
-
     await calculatePetScoreStats(data, selectedProfile, playerUUID, calcId);
 
     return calcTemp[calcId].stats
