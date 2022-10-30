@@ -77,7 +77,8 @@ export default function profileViewer(props: serverData) {
 				<main>
 					{/* <Skills skills={props.computedData.skills}/> */}
 					<Stats statValues={props.computedData.stats}
-						summedList={summed}
+						summedList={summed.summed}
+						cappedList={summed.capped}
 						sources={sources}
 					/>
 				</main>
