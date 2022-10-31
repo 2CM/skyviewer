@@ -986,14 +986,13 @@ export type statName =
 
     "p_X_farming_fortune_per_1_strength" | //mooshroom cow pet
 
-    //as
-    "a_strength_as_defense" | //baby yeti
+    "p_X_defense_per_1_strength" | //baby yeti
 
     //location buffs
     "l_all_crimson_isle" | //blaze pet
     "l_mining_fortune_crimson_isle" | //kuudra pet
     "l_combat_mining_island" | //mithril golem
-    "l_walk_speed_park" |
+    "l_walk_speed_park" | //monkey
 
     //mob damage buffs
     "d_end_mobs" | //edrag pet
@@ -2594,7 +2593,8 @@ export const petStats: {
             "Ice Shields": {
                 tier: "EPIC",
                 stats: (level, tier, special) => ({
-                    a_strength_as_defense: 0.75*level
+                    [tier == "EPIC" ? "p_X_defense_per_1_strength" : ""]: 0.005*level,
+                    [tier == "LEGENDARY" ? "p_X_defense_per_1_strength" : ""]: 0.0075*level,
                 })
             },
             "Yeti Fury": {

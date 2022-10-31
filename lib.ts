@@ -771,7 +771,11 @@ export function getStatSources(categories: statsCategories): statSources {
     }
 
     //for calculating pers
-    var summed = sumStatsSources(sources);
+    var summedRaw = sumStatsSources(sources);
+
+    var summed: statsList = {...summedRaw.summed, ...summedRaw.capped};
+
+    // console.log(summed)
 
     //calculate pers
     for(let i in keys(sources)) { //for each stat in sources
@@ -785,8 +789,8 @@ export function getStatSources(categories: statsCategories): statSources {
         var perGiving: string | number = name.split("_per_")[1].split("_")[0];
         var perRecieving: string | number = name.split("_")[0];
 
-        if(perGiving == "X") perGiving = summed.capped[stat] || 0;
-        if(perRecieving == "X") perRecieving = summed.capped[stat] || 0;
+        if(perGiving == "X") perGiving = summed[stat] || 0;
+        if(perRecieving == "X") perRecieving = summed[stat] || 0;
 
         perGiving = Number(perGiving);
         perRecieving = Number(perRecieving);
@@ -800,7 +804,7 @@ export function getStatSources(categories: statsCategories): statSources {
         var depth1Name = keys(sources[stat])[0];
         var depth2Name = keys(sources[stat][depth1Name])[0];
 
-        var gained = perRecieving*((summed.capped[givingStat] || 0)/perGiving);
+        var gained = perRecieving*((summed[givingStat] || 0)/perGiving);
 
         if(!sources[recievingStat])
             sources[recievingStat] = {};
@@ -811,7 +815,10 @@ export function getStatSources(categories: statsCategories): statSources {
         if(!sources[recievingStat][depth1Name][depth2Name])
             sources[recievingStat][depth1Name][depth2Name] = gained;
 
-        summed.capped[recievingStat] = (summed.capped[recievingStat] || 0)+gained;
+        //for cases where we have 
+        // * p_X_STAT1_per_1_STAT2
+        // * p_X_STAT3_per_1_STAT1
+        summed[recievingStat] = (summed[recievingStat] || 0)+gained;
     }
 
     //fill in (excludes special stats (m_, s_, p_, a_, l_, d_))
@@ -1573,7 +1580,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     equippedPet = {
         exp: 79200000, //from deathstreeks
         tier: "LEGENDARY",
-        type: "BLACK_CAT",
+        type: "BABY_YETI",
         active: true,
         heldItem: "MINOS_RELIC",
         candyUsed: 0,
