@@ -148,8 +148,6 @@ export function itemStatsToStatsList(itemStats: itemStats): statsList {
 export function petToLevel(pet: pet): number {
     var exp = pet.exp;
 
-    //NEED TO DO CANDY
-
     var level = 1;
 
     for(let i = 0; i < 99 + (pet.type == "GOLDEN_DRAGON" ? 100 : 0); i++) {
@@ -176,16 +174,6 @@ export function petToLevel(pet: pet): number {
     return level;
 }
 
-console.log(petToLevel({
-    exp: 79200000, //from deathstreeks
-    tier: "LEGENDARY",
-    type: "GOLDEN_DRAGON",
-    active: false,
-    heldItem: null,
-    candyUsed: 0,
-    uuid: "",
-    skin: "",
-}))
 
 //main number formatter
 export var mainFormatter = new Intl.NumberFormat("en-US", {
