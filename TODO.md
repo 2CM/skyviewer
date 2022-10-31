@@ -1,8 +1,8 @@
 - exceptions in calculateItemStats()
-- candy in petLevel()
-- verify gdrag Dragon's Greed perk strength is correct
 - haste effect only works in custom mining islands
+- kuudra update new attributes
 - pet stats
+    - candy in petLevel()
     - always active pets
     - calculateItemStats() pet exceptions using calcTemp
         - blaze pet hpb buff
