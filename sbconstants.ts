@@ -3268,7 +3268,7 @@ export const petStats: {
             "Turtle Tactics": {
                 tier: "EPIC",
                 stats: (level, tier, special) => ({
-                    m_defense: 3+0.27*level
+                    m_defense: 0.3+0.0027*level
                 })
             },
         }

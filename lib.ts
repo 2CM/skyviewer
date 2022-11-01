@@ -583,7 +583,7 @@ export var calcTemp: {
         stats: statsCategories,
         skills: allSkillExpInfo,
         other: {
-
+            hpbsDoubled?: boolean,
         }
     }        
 } = {};
@@ -856,7 +856,7 @@ export const itemStatSourceColors: {
     gemstones: "d"
 }
 
-export function calculateItemStats(item: nbtItem, baseItem: item, compact: boolean = false): statsCategory {
+export function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, ): statsCategory {
     var stats: statsCategory = {};
 
     // console.log(JSON.stringify(item));
@@ -885,9 +885,11 @@ export function calculateItemStats(item: nbtItem, baseItem: item, compact: boole
 
     //hpbs
     if (new Set(["HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"]).has(baseItem.category)) { //its an armor piece
+        var hpbBuff = calcTemp[calcId].other.hpbsDoubled ? 2 : 1;
+
         stats.hpbs = {
-            health: 4 * (item.tag.ExtraAttributes.hot_potato_count || 0),
-            defense: 2 * (item.tag.ExtraAttributes.hot_potato_count || 0),
+            health: 4 * (item.tag.ExtraAttributes.hot_potato_count || 0) * hpbBuff,
+            defense: 2 * (item.tag.ExtraAttributes.hot_potato_count || 0) * hpbBuff,
         }
     } else if (baseItem.category != "ACCESSORY") { //its probably some type of damager
         stats.hpbs = {
@@ -1290,7 +1292,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
         var formattedName = (rarityUpgrades === undefined ? "" : rarityUpgrades == 1 ? "RECOMB" : "") + colorChar + Object.values(rarityColors)[rarity] + removeStringColors(itemInfo.name);
 
-        var itemStats = calculateItemStats(tali, itemInfo, true);
+        var itemStats = calculateItemStats(tali, itemInfo, calcId, true);
 
         if(keys(itemStats.baseStats || {}).length > 0) stats.taliStats[formattedName] = itemStats.baseStats || {};
         if(keys(itemStats.enrichments || {}).length > 0) stats.enrichments[formattedName] = itemStats.enrichments || {};
@@ -1471,7 +1473,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         var category = baseItem.category;
 
-        stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem);
+        stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem, calcId);
 
         calcTemp[calcId].stats[piece.tag.display.Name] = mapObjectKeys(
             stats[piece.tag.display.Name],
@@ -1507,7 +1509,7 @@ export async function calculateEquipmentStats(data: apiData, selectedProfile: nu
 
         var category = baseItem.category;
 
-        stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem);
+        stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem, calcId);
 
         calcTemp[calcId].stats[piece.tag.display.Name] = mapObjectKeys(
             stats[piece.tag.display.Name],
@@ -1568,7 +1570,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     equippedPet = { //for testing
         exp: 79200000, //from deathstreeks
         tier: "LEGENDARY",
-        type: "BABY_YETI",
+        type: "BLAZE",
         active: true,
         heldItem: "MINOS_RELIC",
         candyUsed: 0,
@@ -1578,6 +1580,11 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
     var petInfo: petStatInfo = petStats[equippedPet.type]; //info about the pet
     var petLevel: number = petToLevel(equippedPet); //level of the pet
+
+    //hpb double exception
+    if(equippedPet.type == "BLAZE" && equippedPet.tier == "LEGENDARY") {
+        calcTemp[calcId].other.hpbsDoubled = true;
+    }
 
     var baseStats = petInfo.base(petLevel, equippedPet.tier); //base stats of the pet
 
