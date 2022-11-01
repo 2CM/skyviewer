@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling } from "./sbconstants"; //so many ;-;
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -1557,27 +1557,15 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
     var pets = data.profileData.profiles[selectedProfile].members[playerUUID].pets;
 
-    var equippedPet: pet | undefined = undefined;
+    var equippedPet: pet | undefined = pets.find(pet => pet.active == true);
 
-    var stats: statsCategory = {
-        base: {}
-    };
+    if(equippedPet === undefined) return;
 
-    for(let i = 0; i < pets.length; i++) {
-        if(pets[i].active == true) {
-            equippedPet = pets[i];
-            
-            break;
-        }
-    }
+    //seperating them because each background pet is only mentioned once but the equipped pet is mentioned a lot
+    var backgroundPetStats: statsCategories = {}; //for all pets (background pets)
+    var stats: statsCategory = {}; //for only the equipped pet
 
-    if(equippedPet === undefined) {
-        console.warn("no equipped pet");
-
-        return;
-    }
-
-    equippedPet = {
+    equippedPet = { //for testing
         exp: 79200000, //from deathstreeks
         tier: "LEGENDARY",
         type: "BABY_YETI",
@@ -1588,20 +1576,52 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
         skin: "",
     }
 
-    var recivedStats: petStatInfo = petStats[equippedPet.type];
-    var petLevel = petToLevel(equippedPet);
+    var petInfo: petStatInfo = petStats[equippedPet.type]; //info about the pet
+    var petLevel: number = petToLevel(equippedPet); //level of the pet
 
-    var baseStats = recivedStats.base(petLevel, equippedPet.tier);
+    var baseStats = petInfo.base(petLevel, equippedPet.tier); //base stats of the pet
 
+    // BABY_YETI, 100, LEGENDARY -> (gold) Baby Yeti (100)
+    function formatPet(name: string, tier: petTier, level: number): string {
+        return colorChar+rarityColors[tier]+name.replaceAll("_", " ").capitalize()+colorChar+"f"+` (${level})`;
+    }
+
+    //gets the stats of a pet's perks (ammonite is the first thing that came up)
+    function perksToStats(perks: typeof petStats.AMMONITE.perks, tier: petTier, level: number): statsCategory {
+        var perkStats: statsCategory = {};
+
+        for(let i in keys(perks)) {
+            var perkName: string = keys(perks)[i] as string;
+            var hasPerk: boolean = tierStringToNumber(tier) >= tierStringToNumber(perks[perkName].tier);
+
+            if(!hasPerk) continue;
+
+            perkStats[perkName] = perks[perkName].stats(level, tier, specialData);
+
+            if(perkName == "Chimera") { //it gives a perk on the equipped pet so we need an exception
+                stats["Bingo Chimera"] = multiplyStatsList(baseStats, perkStats.Chimera.s_pet_stat_buff || 0);
+            }
+        }
+
+        return perkStats
+    }
     
-    for(let j in keys(recivedStats.perks)) {
-        var perk: string = keys(recivedStats.perks)[j] as string;
+    //equipped pet
+    stats = perksToStats(petInfo.perks, equippedPet.tier, petLevel);
 
-        var hasPerk: boolean = tierStringToNumber(equippedPet.tier) >= tierStringToNumber(recivedStats.perks[perk].tier);
-        
-        if(!hasPerk) continue;
 
-        stats[perk] = recivedStats.perks[perk].stats(petLevel, equippedPet.tier, specialData)
+    //[kuudra, bingo, parrot, grandma wolf, spirit]
+    for(let i in alwaysActivePets) {
+        let petName = alwaysActivePets[i];
+        let pet: pet | undefined = pets.find(pet => pet.type == petName);
+
+        if(pet === undefined) continue;
+
+        let level = petToLevel(pet);
+
+        var recievedStats = perksToStats(petStats[pet.type].perks, pet.tier, level);
+
+        backgroundPetStats[formatPet(petName, pet.tier, level)] = recievedStats;
     }
 
     if(equippedPet.heldItem) {
@@ -1611,13 +1631,15 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
         stats[petItemName] = {};
 
-        if(equippedPet.heldItem == "MINOS_RELIC") {
+        if(equippedPet.heldItem == "MINOS_RELIC") { //i dont want to type m_[statName] in petItemStats
             stats[petItemName] = multiplyStatsList(baseStats, 1/3);
-        } else if(equippedPet.heldItem == "PET_ITEM_QUICK_CLAW") {
+        } else if(equippedPet.heldItem == "PET_ITEM_QUICK_CLAW") { //changes based on level
             stats[petItemName] = {mining_speed: petLevel, mining_fortune: petLevel};
-        } else {
+        } else { //its a normal pet item
             var heldItemStats = petItemStats[equippedPet.heldItem] || {};
 
+
+            //loop so we can treat m_ stats correctly
             for(let i in keys(heldItemStats)) {
                 let name: statName = keys(heldItemStats)[i];
 
@@ -1632,13 +1654,12 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
         }
     }
 
-    // console.log(stats);
-
     stats.Base = baseStats;
 
-    calcTemp[calcId].stats[colorChar+rarityColors[equippedPet.tier]+equippedPet.type.replaceAll("_", " ").capitalize()+colorChar+"f"+` (${petLevel})`] = stats;
-}
+    var mergedStats: statsCategories = {[formatPet(equippedPet.type, equippedPet.tier, petLevel)]: stats, ...backgroundPetStats};
 
+    calcTemp[calcId].stats = {...calcTemp[calcId].stats, ...mergedStats}; //because mergedStats is a statCategories
+}
 
 export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string): Promise<statsCategories> {
     calcTemp[calcId].stats["Base Stats"] = {SAME: baseStats};

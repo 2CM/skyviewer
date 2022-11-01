@@ -2888,7 +2888,7 @@ export const petStats: {
             "Kuudra Fortune": {
                 tier: "RARE",
                 stats: (level, tier, special) => ({
-                    mining_fortune: 0.5*level
+                    l_mining_fortune_crimson_isle: 0.5*level
                 })
             }
         }
