@@ -1309,7 +1309,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
     var statsMultiplier = 29.97 * Math.pow((Math.log(0.0019 * mp + 1)), 1.2);
 
     if (keys(accPowers).findIndex(key => { return key == accessory_bag_storage.selected_power }) == -1) {
-        console.error("couldnt find selected power");
+        console.error("couldnt find selected power", accessory_bag_storage.selected_power);
         return stats;
     }
 
@@ -1567,16 +1567,16 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     var backgroundPetStats: statsCategories = {}; //for all pets (background pets)
     var stats: statsCategory = {}; //for only the equipped pet
 
-    equippedPet = { //for testing
-        exp: 79200000, //from deathstreeks
-        tier: "LEGENDARY",
-        type: "BLAZE",
-        active: true,
-        heldItem: "MINOS_RELIC",
-        candyUsed: 0,
-        uuid: "",
-        skin: "",
-    }
+    // equippedPet = { //for testing
+    //     exp: 79200000, //from deathstreeks
+    //     tier: "LEGENDARY",
+    //     type: "BLAZE",
+    //     active: true,
+    //     heldItem: "MINOS_RELIC",
+    //     candyUsed: 0,
+    //     uuid: "",
+    //     skin: "",
+    // }
 
     var petInfo: petStatInfo = petStats[equippedPet.type]; //info about the pet
     var petLevel: number = petToLevel(equippedPet); //level of the pet
@@ -1588,9 +1588,9 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
     var baseStats = petInfo.base(petLevel, equippedPet.tier); //base stats of the pet
 
-    // BABY_YETI, 100, LEGENDARY -> (gold) Baby Yeti (100)
+    // BABY_YETI, 100, LEGENDARY -> (gray)[Lvl 100] (gold)Baby Yeti
     function formatPet(name: string, tier: petTier, level: number): string {
-        return colorChar+rarityColors[tier]+name.replaceAll("_", " ").capitalize()+colorChar+"f"+` (${level})`;
+        return `${colorChar}7[Lvl ${level}] ${colorChar}${rarityColors[tier]+name.replaceAll("_", " ").capitalize()}`;
     }
 
     //gets the stats of a pet's perks (ammonite is the first thing that came up)
@@ -1603,10 +1603,12 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
             if(!hasPerk) continue;
 
-            perkStats[perkName] = perks[perkName].stats(level, tier, specialData);
+            var recievedStats = perks[perkName].stats(level, tier, specialData);
 
-            if(perkName == "Chimera") { //it gives a perk on the equipped pet so we need an exception
-                stats["Bingo Chimera"] = multiplyStatsList(baseStats, perkStats.Chimera.s_pet_stat_buff || 0);
+            perkStats[`${colorChar}${rarityColors[perks[perkName].tier]}${perkName}`] = recievedStats; //color is the required rarity of the pet to get the perk
+
+            if(perkName == "Chimera") { //(from bingo pet) gives a stat boost on equipped pet so it needs an exception
+                stats[`${colorChar}${rarityColors[perks[perkName].tier]}Bingo Chimera`] = multiplyStatsList(baseStats, recievedStats.s_pet_stat_buff || 0); //color is the bingo pet rarity
             }
         }
 

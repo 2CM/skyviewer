@@ -290,7 +290,7 @@ export interface contents {
 //an accessory power
 export type accessoryPower =
     "lucky"| "pretty" | "protected" | "simple" | "warrior" | "commando" | "diciplined" | "inspired" | "ominous" | "prepared" | //default
-    "scorching" | "healthy" | "slender" | "strong" | "bizzare" | "demonic" | "hurtful" | "pleasant" | "adept" | "bloody" | "forceful" | "mythical" | "shaded" | "sighted" | "silky" | "sweet";
+    "scorching" | "healthy" | "slender" | "strong" | "bizarre" | "demonic" | "hurtful" | "pleasant" | "adept" | "bloody" | "forceful" | "mythical" | "shaded" | "sighted" | "silky" | "sweet";
 
 //what is in a tuning slot
 export interface tuningSlot {
@@ -2088,7 +2088,7 @@ export const accPowers: {
             critical_damage: 25,
         }
     },
-    bizzare: {
+    bizarre: {
         per: {
             strength: -2.4,
             intelligence: 43.2,
