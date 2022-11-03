@@ -1,1 +1,15 @@
 - exceptions in calculateItemStats()
+- haste effect only works in custom mining islands
+- kuudra update new attributes
+- pet stats
+    - test what happens with a pet stat buffing item (textbook) along with a rare bingo pet
+        - that would be really hard to do
+            - get a leg griffin during bingo and lootshare a minos relic from a champ
+            - or
+            - get 250k lapis collection, 8 ench lapis blocks, 64 enchanted paper
+- calculateItemStats() exceptions
+    - armor stat buffs
+        - blaze pet blaze armor buff
+- every other thing in skyblock
+    - skycrypt stuff
+    - dummy damage tester

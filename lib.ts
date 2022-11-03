@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors } from "./sbconstants";
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -143,6 +143,36 @@ export function itemStatsToStatsList(itemStats: itemStats): statsList {
 }
 
 // *** MISC ***
+
+//calculates pet level from a pet
+export function petToLevel(pet: pet): number {
+    var exp = pet.exp;
+
+    var level = 1;
+
+    for(let i = 0; i < 99 + (pet.type == "GOLDEN_DRAGON" ? 100 : 0); i++) {
+        var rarityOffset: number = petRarityOffset[pet.tier] || 0;
+        var toLevel: number = petLeveling[i+rarityOffset];
+
+        if(toLevel === undefined) toLevel = 1886700
+
+
+        if(exp >= toLevel) {
+            // console.log(exp+" > "+toLevel)
+
+            exp -= toLevel;
+
+            level++;
+        } else {
+            // console.log({toLevel, exp})
+
+            break;
+        }
+    }
+
+
+    return level;
+}
 
 
 //main number formatter
@@ -299,7 +329,7 @@ export function sourcesToElement(sources: any, statName: statName) {
         var sum = 0;
 
         for (let i in keys(currentSources)) {
-            var categoryName: statSource = keys(currentSources)[i] as statSource;
+            var categoryName: string = keys(currentSources)[i] as string;
             var category = currentSources[categoryName];
 
             var categoryChildren: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
@@ -351,30 +381,24 @@ export function sourcesToElement(sources: any, statName: statName) {
                 );
             }
 
-            if (keys(category).length == 1 && lastSourceName == categoryName) {
+            if (keys(category).length == 1 && lastSourceName == "SAME") {
                 elements.push(
                     React.createElement("li", { className: statStyles.statsCategory }, [ //style: {color: colorCodeToHex[statCategoryColors[categoryName]]}
-                        coloredStringToElement(`${statCategoryNames[categoryName] === undefined ? categoryName : colorChar + statCategoryColors[categoryName] + statCategoryNames[categoryName]
-                            }`),
+                        coloredStringToElement(categoryName),
                         React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(categorySum)}`)
                     ]),
                     React.createElement("br")
                 )
-
-                sum += categorySum;
-
-                continue;
+            } else {
+                elements.push(
+                    React.createElement("li", { className: statStyles.statsCategory }, [
+                        coloredStringToElement(categoryName),
+                        React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(categorySum)}`)
+                    ]),
+                    React.createElement("ul", { className: statStyles.statValue }, categoryChildren),
+                    React.createElement("br")
+                )
             }
-
-            elements.push(
-                React.createElement("li", { className: statStyles.statsCategory }, [
-                    coloredStringToElement(`${statCategoryNames[categoryName] === undefined ? categoryName : colorChar + statCategoryColors[categoryName] + statCategoryNames[categoryName]
-                        }`),
-                    React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(categorySum)}`)
-                ]),
-                React.createElement("ul", { className: statStyles.statValue }, categoryChildren),
-                React.createElement("br")
-            )
 
             sum += categorySum;
         }
@@ -399,6 +423,18 @@ export function sourcesToElement(sources: any, statName: statName) {
         children.push(React.createElement("h2", { style: { textAlign: "center", fontSize: "20px" } }, `This player has no ${statIdToStatName[statName] || "error"} :(`))
 
     return React.createElement("ul", {}, children);
+}
+
+export function hotmExpToLevel(exp: number): number {
+    var level = 0;
+
+    for(let i = 0; i < hotmLeveling.length; i++) {
+        if(exp >= hotmLeveling[i]) {
+            level++;
+        }
+    }
+
+    return level;
 }
 
 
@@ -511,7 +547,7 @@ export function skillExpToLevel(exp: number, skill: skillName, extrapolate: bool
 }
 
 //calculates all the data you need for skill exp stuff
-export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, playerUUID: string): allSkillExpInfo {
+export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, playerUUID: string, calcId: string): allSkillExpInfo {
     if (apiData.profileData === undefined) {
         console.error("profileData is undefined");
         return {};
@@ -534,11 +570,23 @@ export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, 
         };
     }
 
+    calcTemp[calcId].skills = skills;
+
     return skills;
 }
 
 // *** STATS ***
 
+//map of calculation id to stat info
+export var calcTemp: {
+    [key in string]: {
+        stats: statsCategories,
+        skills: allSkillExpInfo,
+        other: {
+            hpbsDoubled?: boolean,
+        }
+    }        
+} = {};
 
 //util to replace typing out multiplicative of every stat for sources like (edrag superior perk, superior set bonus, renowned reforge, etc)
 export function allStatsBoost(amount: number): statsList {
@@ -641,7 +689,7 @@ export type statSources = {
 };
 
 //sums up a statSources into a statsList
-export function sumStatsSources(sources: statSources): statsList {
+export function sumStatsSources(sources: statSources): {capped: statsList, summed: statsList} {
     var stats: statsList = {};
     var m_stats: statsList = {};
 
@@ -676,26 +724,39 @@ export function sumStatsSources(sources: statSources): statsList {
         }
     }
 
-    return multiplyStatsList(stats, m_stats);
+    var summed = multiplyStatsList(stats, m_stats);
+    var capped: statsList = {};
+
+    for(let i in keys(defaultStatCaps)) {
+        let statName = keys(defaultStatCaps)[i];
+
+        if(summed[statName]) {
+            var extraCap = 
+                statName == "walk_speed" ? summed.c_walk_speed :
+                0;
+
+            capped[statName] = Math.min(summed[statName] || 0, defaultStatCaps[statName] || 0)+(extraCap || 0);
+        }
+    }
+
+    return {capped, summed};
 }
 
 
 export function getStatSources(categories: statsCategories): statSources {
     var sources: any = {};
 
-    // var correctedMultipliers: statsList = {}; //to add +1 to every multiplier so a 5% (0.05) multiplier would be a 1.05 multiplier 
-
     for (let i in keys(categories)) {
-        var categoryName: string = keys(categories)[i];
-        var category: statsCategory = categories[categoryName];
+        let categoryName: string = keys(categories)[i];
+        let category: statsCategory = categories[categoryName];
 
         for (let j in keys(category)) {
-            var listName: string = keys(category)[j];
-            var list: statsList = category[listName];
+            let listName: string = keys(category)[j];
+            let list: statsList = category[listName];
 
             for (let k in keys(list)) {
-                var statName: statName = keys(list)[k];
-                var stat: number = list[statName] || 0;
+                let statName: statName = keys(list)[k];
+                let stat: number = list[statName] || 0;
 
                 if (stat == 0 || stat === undefined) continue;
 
@@ -709,6 +770,58 @@ export function getStatSources(categories: statsCategories): statSources {
         }
     }
 
+    //for calculating pers
+    var summedRaw = sumStatsSources(sources);
+
+    var summed: statsList = {...summedRaw.summed, ...summedRaw.capped};
+
+    // console.log(summed)
+
+    //calculate pers
+    for(let i in keys(sources)) { //for each stat in sources
+        let stat: statName = keys(sources)[i] as statName;
+        if(!stat.startsWith("p_")) continue; //if its not a per stat, continue
+
+        // console.log(stat)
+
+        let name = stat.slice("p_".length);
+
+        var perGiving: string | number = name.split("_per_")[1].split("_")[0];
+        var perRecieving: string | number = name.split("_")[0];
+
+        if(perGiving == "X") perGiving = summed[stat] || 0;
+        if(perRecieving == "X") perRecieving = summed[stat] || 0;
+
+        perGiving = Number(perGiving);
+        perRecieving = Number(perRecieving);
+
+        var [recievingStat, givingStat] = name.replace(/.+?_/, "").split(/_per_.+?_/) as statName[];
+
+        // console.log({perGiving, perRecieving, recievingStat, givingStat})
+
+        //because there arent any ways to get multiple of a type of per stat, ill just treat it as only one
+        //depth into sources (yes im good at variable naming)
+        var depth1Name = keys(sources[stat])[0];
+        var depth2Name = keys(sources[stat][depth1Name])[0];
+
+        var gained = perRecieving*((summed[givingStat] || 0)/perGiving);
+
+        if(!sources[recievingStat])
+            sources[recievingStat] = {};
+
+        if(!sources[recievingStat][depth1Name])
+            sources[recievingStat][depth1Name] = {};
+
+        if(!sources[recievingStat][depth1Name][depth2Name])
+            sources[recievingStat][depth1Name][depth2Name] = gained;
+
+        //for cases where we have 
+        // * p_X_STAT1_per_1_STAT2
+        // * p_X_STAT3_per_1_STAT1
+        summed[recievingStat] = (summed[recievingStat] || 0)+gained;
+    }
+
+    //fill in (excludes special stats (m_, s_, p_, a_, l_, d_))
     for (let i in keys(statIdToStatName)) {
         var statName = keys(statIdToStatName)[i];
 
@@ -721,14 +834,13 @@ export function getStatSources(categories: statsCategories): statSources {
 }
 
 
-export type itemStatSource = "hpbs" | "reforge" | "baseStats" | "starStats" | "enrichments" | "gemstones";
+export type itemStatSource = "hpbs" | "baseStats" | "starStats" | "enrichments" | "gemstones";
 
 export const itemStatSourceNames: {
     [key in itemStatSource]: string
 } = {
     hpbs: "Hot Potato Books",
-    reforge: "Reforge",
-    baseStats: "Base Value",
+    baseStats: "Base",
     starStats: "Stars",
     enrichments: "Enrichments",
     gemstones: "Gemstones"
@@ -738,14 +850,13 @@ export const itemStatSourceColors: {
     [key in itemStatSource]: colorCode
 } = {
     hpbs: "6",
-    reforge: "5",
     baseStats: "f",
     starStats: "6",
     enrichments: "b",
     gemstones: "d"
 }
 
-export function calculateItemStats(item: nbtItem, baseItem: item, compact: boolean = false): statsCategory {
+export function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, ): statsCategory {
     var stats: statsCategory = {};
 
     // console.log(JSON.stringify(item));
@@ -774,9 +885,11 @@ export function calculateItemStats(item: nbtItem, baseItem: item, compact: boole
 
     //hpbs
     if (new Set(["HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"]).has(baseItem.category)) { //its an armor piece
+        var hpbBuff = calcTemp[calcId].other.hpbsDoubled ? 2 : 1;
+
         stats.hpbs = {
-            health: 4 * (item.tag.ExtraAttributes.hot_potato_count || 0),
-            defense: 2 * (item.tag.ExtraAttributes.hot_potato_count || 0),
+            health: 4 * (item.tag.ExtraAttributes.hot_potato_count || 0) * hpbBuff,
+            defense: 2 * (item.tag.ExtraAttributes.hot_potato_count || 0) * hpbBuff,
         }
     } else if (baseItem.category != "ACCESSORY") { //its probably some type of damager
         stats.hpbs = {
@@ -809,7 +922,7 @@ export function calculateItemStats(item: nbtItem, baseItem: item, compact: boole
         if (enchantStats[enchantName] !== undefined) {
             var recievedEnchantStats = enchantStats[enchantName](enchantLevel); //variable naming :)
 
-            var sourceName: string = compact ? "enchants" : `${colorChar}b${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`
+            var sourceName: string = compact ? "enchants" : `${colorChar}${statColors[keys(recievedEnchantStats)[0]] || "f"}${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`
 
             stats[sourceName] = mergeStatsLists(stats[sourceName] || {}, recievedEnchantStats);
         } else {
@@ -827,7 +940,7 @@ export function calculateItemStats(item: nbtItem, baseItem: item, compact: boole
         if (attributeStats[attributeName]) {
             var recievedAttributeStats = attributeStats[attributeName](attributeLevel);
 
-            var sourceName: string = compact ? "attributes" : `${colorChar}b${attributeName.replaceAll("_", " ").capitalize()} ${attributeLevel}`
+            var sourceName: string = compact ? "attributes" : `${colorChar}${statColors[keys(recievedAttributeStats)[0]] || "f"}${attributeName.replaceAll("_", " ").capitalize()} ${attributeLevel}`
 
             stats[sourceName] = mergeStatsLists(stats[sourceName] || {}, recievedAttributeStats);
         } else {
@@ -945,6 +1058,13 @@ export function calculateItemStats(item: nbtItem, baseItem: item, compact: boole
                     needs research
                 vanq blaze belt
                     needs research
+        pets
+            blaze hpb doubler
+            flying fish magma lord armor buff
+        accs
+            day/night tali
+            beastmaster crest
+            pulse ring
 
     */
 
@@ -955,8 +1075,8 @@ export function calculateItemStats(item: nbtItem, baseItem: item, compact: boole
 
 
 //calculates stats given from skill level ups
-export async function calculateSkillStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
-    if (!data.profileData) return {}
+export async function calculateSkillStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return
 
     var stats: statsCategory = {};
 
@@ -965,12 +1085,15 @@ export async function calculateSkillStats(data: apiData, selectedProfile: number
 
         if (name == "dungeoneering") continue;
 
-        var levelInfo = skillExpToLevel(data.profileData.profiles[selectedProfile].members[playerUUID][skillNameToApiName[name] as keyof profileMember] as number || 0, name)
-
+        // var levelInfo = skillExpToLevel(data.profileData.profiles[selectedProfile].members[playerUUID][skillNameToApiName[name] as keyof profileMember] as number || 0, name)
+        var levelInfo = calcTemp[calcId].skills[name]?.levelInfo || {
+            level: 0
+        }
+        
         stats[colorChar + skillColors[name] + name.capitalize() + " " + Math.floor(levelInfo.level)] = skillLevelStats[name](Math.floor(levelInfo.level))
     }
 
-    return stats;
+    calcTemp[calcId].stats[colorChar+"6"+"Skills"] = stats;
 }
 
 export const fairySoulStats = {
@@ -998,8 +1121,8 @@ export async function calculateFairySoulStats(data: apiData, selectedProfile: nu
 }
 
 //NEEDS MORE TESTING; havent accounted for toggles and interface is probably wrong because i cant test around right now
-export async function calculateHotmStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
-    if (!data.profileData) return {}
+export async function calculateHotmStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var mining_core = data.profileData.profiles[selectedProfile].members[playerUUID].mining_core;
 
@@ -1015,45 +1138,43 @@ export async function calculateHotmStats(data: apiData, selectedProfile: number,
 
     if (mining_core.nodes.mining_experience) stats["Seasoned Mineman"] = { mining_wisdom: 5 + 0.1 * mining_core.nodes.mining_experience || 0 }
 
-    return stats;
+    calcTemp[calcId].stats[colorChar+"5"+"HoTM"] = stats;
 }
 
 //calculates stats given from the wither essence shop
-export async function calculateEssenceStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
-    if (!data.profileData) return {}
+export async function calculateEssenceStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var perks = data.profileData.profiles[selectedProfile].members[playerUUID].perks;
 
-    return {
+    calcTemp[calcId].stats[colorChar+"7"+"Essence Shop"] = {
         "Forbidden Health": { health: (perks.permanent_health || 0) * 2 },
         "Forbidden Defense": { defense: (perks.permanent_defense || 0) * 1 },
         "Forbidden Speed": { walk_speed: (perks.permanent_speed || 0) * 1 },
         "Forbidden Intelligence": { intelligence: (perks.permanent_intelligence || 0) * 2 },
         "Forbidden Strength": { strength: (perks.permanent_strength || 0) * 1 },
-    }
+    };
 }
 
 //calculates stats given from reaper peppers
-export async function calculatePepperStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
-    if (!data.profileData) return {}
+export async function calculatePepperStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var peppers = data.profileData.profiles[selectedProfile].members[playerUUID].reaper_peppers_eaten;
 
-    if (peppers == undefined) return {};
+    if (peppers == undefined) return;
 
-    return {
-        peppers: { health: peppers }
-    }
+    calcTemp[calcId].stats[colorChar+"c"+"Peppers"] = {peppers: {health: peppers}};
 }
 
 
 //calculates stats given from the harp
-export async function calculateHarpStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
-    if (!data.profileData) return {}
+export async function calculateHarpStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var harp_quest = data.profileData.profiles[selectedProfile].members[playerUUID].harp_quest;
 
-    if (keys(harp_quest).length == 0) return {};
+    if (keys(harp_quest).length == 0) return;
 
     var stats: statsCategory = {};
 
@@ -1065,15 +1186,15 @@ export async function calculateHarpStats(data: apiData, selectedProfile: number,
 
         if (typeof perfectCompletions != "number") continue;
 
-        stats[name] = { intelligence: (perfectCompletions >= 1 ? 1 : 0) * harpStats[name] };
+        stats[colorChar+harpColors[name]+name.replaceAll("_", " ").capitalize()] = { intelligence: (perfectCompletions >= 1 ? 1 : 0) * harpStats[name] };
     }
 
-    return stats;
+    calcTemp[calcId].stats[colorChar+"d"+"Harp"] = stats;
 }
 
 
 //calculates stats given from slayers
-export async function calculateSlayerStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
+export async function calculateSlayerStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
     if (!data.profileData) return {}
 
     var slayer_bosses = data.profileData.profiles[selectedProfile].members[playerUUID].slayer_bosses;
@@ -1109,9 +1230,9 @@ export async function calculateSlayerStats(data: apiData, selectedProfile: numbe
         }
     }
 
-    stats[colorChar + "3" + "Global Combat Wisdom Buff"] = { combat_wisdom: combatWisdomBuff }
+    stats[colorChar + "3" + "Global Combat Wisdom Buff"] = { combat_wisdom: combatWisdomBuff };
 
-    return stats;
+    calcTemp[calcId].stats[colorChar+"2"+"Slayer"] = stats;
 }
 
 export interface accStatsInterface {
@@ -1123,7 +1244,7 @@ export interface accStatsInterface {
 }
 
 //calculates stats given from accessories
-export async function calculateAccStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<accStatsInterface | undefined> {
+export async function calculateAccStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
     if (!data.profileData) return;
 
     var talisman_bag_raw = data.profileData.profiles[selectedProfile].members[playerUUID].talisman_bag;
@@ -1171,11 +1292,11 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
         var formattedName = (rarityUpgrades === undefined ? "" : rarityUpgrades == 1 ? "RECOMB" : "") + colorChar + Object.values(rarityColors)[rarity] + removeStringColors(itemInfo.name);
 
-        var itemStats = calculateItemStats(tali, itemInfo, true)
+        var itemStats = calculateItemStats(tali, itemInfo, calcId, true);
 
-        stats.taliStats[formattedName] = itemStats.baseStats || {};
-        stats.enrichments[formattedName] = itemStats.enrichments || {};
-        stats.gems[formattedName] = itemStats.gemstones || {};
+        if(keys(itemStats.baseStats || {}).length > 0) stats.taliStats[formattedName] = itemStats.baseStats || {};
+        if(keys(itemStats.enrichments || {}).length > 0) stats.enrichments[formattedName] = itemStats.enrichments || {};
+        if(keys(itemStats.gemstones || {}).length > 0) stats.gems[formattedName] = itemStats.gemstones || {};
 
         mp += mpTable[keys(mpTable)[rarity]];
     }
@@ -1188,7 +1309,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
     var statsMultiplier = 29.97 * Math.pow((Math.log(0.0019 * mp + 1)), 1.2);
 
     if (keys(accPowers).findIndex(key => { return key == accessory_bag_storage.selected_power }) == -1) {
-        console.error("couldnt find selected power");
+        console.error("couldnt find selected power", accessory_bag_storage.selected_power);
         return stats;
     }
 
@@ -1203,13 +1324,17 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
     console.log({ mp, statsMultiplier });
 
-    return stats;
+    calcTemp[calcId].stats[colorChar+"9"+"Accessory Stats"] = stats.taliStats;
+    calcTemp[calcId].stats[colorChar+"b"+"Accessory Enrichments"] = stats.enrichments;
+    calcTemp[calcId].stats[colorChar+"e"+"Accessory Tuning"] = {SAME: stats.tuning.tuning};
+    calcTemp[calcId].stats[colorChar+"d"+"Accessory Gems"] = stats.gems;
+    calcTemp[calcId].stats[colorChar+"b"+"Magic Power"] = {SAME: stats.magicPower.magicPower};
 }
 
 
 
 //calculates stats given from potions
-export async function calculatePotionStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
+export async function calculatePotionStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
     if (!data.profileData) return {};
 
     var active_effects = data.profileData.profiles[selectedProfile].members[playerUUID].active_effects;
@@ -1290,10 +1415,10 @@ export async function calculatePotionStats(data: apiData, selectedProfile: numbe
             }
         }
 
-        stats[`${effect.effect} ${effect.level}`] = effectStatsList;
+        stats[`${colorChar+effectColors[effect.effect]+effect.effect.replaceAll("_", " ").capitalize()} ${effect.level}`] = effectStatsList;
     }
 
-    return stats;
+    calcTemp[calcId].stats[colorChar+"5"+"Potions"] = stats;
 }
 
 export interface cakeStatNumberToStat {
@@ -1302,7 +1427,7 @@ export interface cakeStatNumberToStat {
 
 
 //calculates stats given from century cakes
-export async function calculateCakeStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
+export async function calculateCakeStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
     if (!data.profileData) return {};
 
     var temp_stat_buffs = data.profileData.profiles[selectedProfile].members[playerUUID].temp_stat_buffs;
@@ -1320,19 +1445,19 @@ export async function calculateCakeStats(data: apiData, selectedProfile: number,
         }
     }
 
-    return { cake: stats }
+    calcTemp[calcId].stats[colorChar+"d"+"Century Cakes"] = {SAME: stats};
 }
 
 //calculates stats given from armor
-export async function calculateArmorStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
-    if (!data.profileData) return {};
+export async function calculateArmorStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var inv_armor_raw = data.profileData.profiles[selectedProfile].members[playerUUID].inv_armor;
 
     var stats: statsCategories = {};
 
     var armor = await parseContents(inv_armor_raw) as IObjectKeys;
-    if (armor.i === undefined) return {};
+    if (armor.i === undefined) return;
 
     var armorContents: nbtItem[] = armor.i;
 
@@ -1348,22 +1473,25 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         var category = baseItem.category;
 
-        stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem);
-    }
+        stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem, calcId);
 
-    return stats;
+        calcTemp[calcId].stats[piece.tag.display.Name] = mapObjectKeys(
+            stats[piece.tag.display.Name],
+            value => itemStatSourceNames[value as itemStatSource] ?(colorChar+itemStatSourceColors[value as itemStatSource]+itemStatSourceNames[value as itemStatSource]) : value
+        );
+    }
 }
 
 //calculates stats given from equipment
-export async function calculateEquipmentStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
-    if (!data.profileData) return {};
+export async function calculateEquipmentStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var equippment_contents_raw = data.profileData.profiles[selectedProfile].members[playerUUID].equippment_contents;
 
     var stats: statsCategories = {};
 
     var equipment = await parseContents(equippment_contents_raw) as IObjectKeys;
-    if (equipment.i === undefined) return {};
+    if (equipment.i === undefined) return;
 
     var equipmentContents: nbtItem[] = equipment.i;
 
@@ -1381,16 +1509,19 @@ export async function calculateEquipmentStats(data: apiData, selectedProfile: nu
 
         var category = baseItem.category;
 
-        stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem);
-    }
+        stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem, calcId);
 
-    return stats;
+        calcTemp[calcId].stats[piece.tag.display.Name] = mapObjectKeys(
+            stats[piece.tag.display.Name],
+            value => itemStatSourceNames[value as itemStatSource] ?(colorChar+itemStatSourceColors[value as itemStatSource]+itemStatSourceNames[value as itemStatSource]) : value
+        );
+    }
 }
 
 
 //calculates stats given from pet score
-export async function calculatePetScoreStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategory> {
-    if (!data.profileData) return {};
+export async function calculatePetScoreStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
 
     var pets = data.profileData.profiles[selectedProfile].members[playerUUID].pets;
 
@@ -1419,81 +1550,156 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
 
     var stats: statsCategory = {};
 
-    stats[colorChar + "bPet Score (" + petScore + ")"] = { magic_find: mf };
-
-    return stats;
+    calcTemp[calcId].stats[colorChar + "b"+"Pet Score (" + petScore + ")"] = {SAME: {magic_find: mf}};
 }
 
 //calculates stats given from current pet
-export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
-    return {};
-}
+export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string, specialData: specialPetData, calcId: string) {
+    if (!data.profileData) return;
 
-export const statCategoryNames = {
-    base: "Base",
-    skills: "Skills",
-    hotm: "HoTM",
-    essence: "Essence Shop",
-    peppers: "Reaper Peppers",
-    harp: "Harp",
-    slayer: "Slayer",
-    taliStats: "Accessory Stats",
-    gems: "Accessory Gems",
-    magicPower: "Magic Power",
-    tuning: "Tuning",
-    enrichments: "Enrichments",
-    potions: "Effects",
-    cake: "Cake",
-}
+    var pets = data.profileData.profiles[selectedProfile].members[playerUUID].pets;
 
-export type statSource = keyof typeof statCategoryNames;
+    var equippedPet: pet | undefined = pets.find(pet => pet.active == true);
 
-export const statCategoryColors: { [key in statSource]: colorCode } = {
-    base: "f",
-    skills: "6",
-    hotm: "5",
-    essence: "7",
-    peppers: "c",
-    harp: "d",
-    slayer: "2",
-    taliStats: "9",
-    gems: "d",
-    magicPower: "b",
-    tuning: "e",
-    enrichments: "b",
-    potions: "5",
-    cake: "d",
-}
+    if(equippedPet === undefined) return;
 
-export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsCategories> {
-    // return {base: {base: baseStats}, gamer: {yes: {m_health: 1.05}}};
+    //seperating them because each background pet is only mentioned once but the equipped pet is mentioned a lot
+    var backgroundPetStats: statsCategories = {}; //for all pets (background pets)
+    var stats: statsCategory = {}; //for only the equipped pet
 
-    var returnValue: statsCategories = {
-        base: { base: baseStats },
-        skills: await calculateSkillStats(data, selectedProfile, playerUUID),
-        hotm: await calculateHotmStats(data, selectedProfile, playerUUID),
-        essence: await calculateEssenceStats(data, selectedProfile, playerUUID),
-        peppers: await calculatePepperStats(data, selectedProfile, playerUUID),
-        harp: mapObjectKeys(
-            await calculateHarpStats(data, selectedProfile, playerUUID), value => colorChar + (harpColors[value as harpSong] || "f") + (harpNames[value as harpSong] || value)
-        ),
-        slayer: await calculateSlayerStats(data, selectedProfile, playerUUID),
-        ...await calculateAccStats(data, selectedProfile, playerUUID),
-        potions: mapObjectKeys(
-            await calculatePotionStats(data, selectedProfile, playerUUID), value => colorChar + (effectColors[value.slice(0, -2) as effectName] || value) + value.replaceAll("_", " ").capitalize()
-        ),
-        cake: mapObjectKeys(
-            await calculateCakeStats(data, selectedProfile, playerUUID), value => value
-        ),
-        ...(mapObjectValues(await calculateArmorStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => (itemStatSourceNames[value as itemStatSource] || value) === undefined ? value : colorChar + (itemStatSourceColors[value as itemStatSource] || "f") + (itemStatSourceNames[value as itemStatSource] || value)))),
-        ...(mapObjectValues(await calculateEquipmentStats(data, selectedProfile, playerUUID), value => mapObjectKeys(value, value => (itemStatSourceNames[value as itemStatSource] || value) === undefined ? value : colorChar + (itemStatSourceColors[value as itemStatSource] || "f") + (itemStatSourceNames[value as itemStatSource] || value)))),
-        ...await calculatePetStats(data, selectedProfile, playerUUID)
+    // equippedPet = { //for testing
+    //     exp: 40000, //from deathstreeks
+    //     tier: "RARE",
+    //     type: "BINGO",
+    //     active: true,
+    //     heldItem: "MINOS_RELIC",
+    //     candyUsed: 0,
+    //     uuid: "",
+    //     skin: "",
+    // }
+
+    var petInfo: petStatInfo = petStats[equippedPet.type]; //info about the pet
+    var petLevel: number = petToLevel(equippedPet); //level of the pet
+
+    //hpb double exception
+    if(equippedPet.type == "BLAZE" && equippedPet.tier == "LEGENDARY") {
+        calcTemp[calcId].other.hpbsDoubled = true;
     }
 
-    var petScore = await calculatePetScoreStats(data, selectedProfile, playerUUID);
-    returnValue[keys(petScore)[0] || "error"] = petScore;
+    var baseStats = petInfo.base(petLevel, equippedPet.tier); //base stats of the pet
 
-    return returnValue;
+    // BABY_YETI, 100, LEGENDARY -> (gray)[Lvl 100] (gold)Baby Yeti
+    function formatPet(name: string, tier: petTier, level: number): string {
+        return `${colorChar}7[Lvl ${level}] ${colorChar}${rarityColors[tier]+name.replaceAll("_", " ").capitalize()}`;
+    }
+
+    //gets the stats of a pet's perks (ammonite is the first thing that came up)
+    function perksToStats(perks: typeof petStats.AMMONITE.perks, tier: petTier, level: number): statsCategory {
+        var perkStats: statsCategory = {};
+
+        for(let i in keys(perks)) {
+            var perkName: string = keys(perks)[i] as string;
+            var hasPerk: boolean = tierStringToNumber(tier) >= tierStringToNumber(perks[perkName].tier);
+
+            if(!hasPerk) continue;
+
+            var recievedStats = perks[perkName].stats(level, tier, specialData);
+
+            perkStats[`${colorChar}${rarityColors[perks[perkName].tier]}${perkName}`] = recievedStats; //color is the required rarity of the pet to get the perk
+
+            if(perkName == "Chimera") { //(from bingo pet) gives a stat boost on equipped pet so it needs an exception
+                stats[`${colorChar}${rarityColors[perks[perkName].tier]}Bingo Chimera`] = multiplyStatsList(baseStats, recievedStats.s_pet_stat_buff || 0); //color is the bingo pet rarity
+            }
+        }
+
+        return perkStats
+    }
+
+    //equipped pet
+    stats = perksToStats(petInfo.perks, equippedPet.tier, petLevel);
+
+
+    //[kuudra, bingo, parrot, grandma wolf, spirit]
+    for(let i in alwaysActivePets) {
+        let petName = alwaysActivePets[i];
+        let pet: pet | undefined = pets.find(pet => pet.type == petName);
+
+        if(pet === undefined) continue;
+
+        let level = petToLevel(pet);
+
+        var recievedStats = perksToStats(petStats[pet.type].perks, pet.tier, level);
+
+        backgroundPetStats[formatPet(petName, pet.tier, level)] = recievedStats;
+    }
+
+    if(equippedPet.heldItem) {
+        var petItemName = petItemNames[equippedPet.heldItem];
+
+        petItemName = petItemNames[equippedPet.heldItem];
+
+        stats[petItemName] = {};
+
+        if(equippedPet.heldItem == "MINOS_RELIC") { //i dont want to type m_[statName] in petItemStats
+            stats[petItemName] = multiplyStatsList(baseStats, 1/3);
+        } else if(equippedPet.heldItem == "PET_ITEM_QUICK_CLAW") { //changes based on level
+            stats[petItemName] = {mining_speed: petLevel, mining_fortune: petLevel};
+        } else { //its a normal pet item
+            var heldItemStats = petItemStats[equippedPet.heldItem] || {};
+
+
+            //loop so we can treat m_ stats correctly
+            for(let i in keys(heldItemStats)) {
+                let name: statName = keys(heldItemStats)[i];
+
+                if(name.startsWith("m_")) {
+                    var realName: statName = name.slice("m_".length) as statName;
+
+                    stats[petItemName][realName] = (baseStats[realName] || 0) * (heldItemStats[name] || 0);
+                } else {
+                    stats[petItemName][name] = (heldItemStats[name] || 0)
+                }
+            }
+        }
+    }
+
+    stats.Base = baseStats;
+
+    var mergedStats: statsCategories = {...backgroundPetStats, [formatPet(equippedPet.type, equippedPet.tier, petLevel)]: stats};
+
+    calcTemp[calcId].stats = {...calcTemp[calcId].stats, ...mergedStats}; //because mergedStats is a statCategories
+}
+
+export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string): Promise<statsCategories> {
+    calcTemp[calcId].stats["Base Stats"] = {SAME: baseStats};
+
+    if(!data.profileData) return calcTemp[calcId].stats;
+
+    var specialPetData: specialPetData = {
+        goldCollection: data.profileData.profiles[selectedProfile].members[playerUUID].collection.GOLD_INGOT || 0,
+        bankCoins: data.profileData.profiles[selectedProfile].banking?.balance || 0,
+        skills: {
+            fishing: Math.floor(calcTemp[calcId].skills.fishing?.levelInfo.level || 0),
+            mining: Math.floor(calcTemp[calcId].skills.mining?.levelInfo.level || 0),
+        },
+        hotm: hotmExpToLevel(data.profileData.profiles[selectedProfile].members[playerUUID].mining_core.experience || 0)
+    };
+
+    await calculatePetStats(data, selectedProfile, playerUUID, specialPetData, calcId);
+    await calculateSkillStats(data, selectedProfile, playerUUID, calcId);
+    await calculateHotmStats(data, selectedProfile, playerUUID, calcId);
+    await calculateEssenceStats(data, selectedProfile, playerUUID, calcId);
+    await calculatePepperStats(data, selectedProfile, playerUUID, calcId);
+    await calculateHarpStats(data, selectedProfile, playerUUID, calcId)
+    await calculateSlayerStats(data, selectedProfile, playerUUID, calcId);
+    await calculateAccStats(data, selectedProfile, playerUUID, calcId);
+    await calculatePotionStats(data, selectedProfile, playerUUID, calcId);
+    await calculateCakeStats(data, selectedProfile, playerUUID, calcId);
+    await calculateArmorStats(data, selectedProfile, playerUUID, calcId);
+    await calculateEquipmentStats(data, selectedProfile, playerUUID, calcId);
+    await calculatePetScoreStats(data, selectedProfile, playerUUID, calcId);
+
+    return calcTemp[calcId].stats
 
 
     /*
@@ -1537,5 +1743,6 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
         misc 
             peppers (Y)
             fairy souls
+            community shop upgrades
     */
 }
