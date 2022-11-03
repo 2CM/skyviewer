@@ -1568,9 +1568,9 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     var stats: statsCategory = {}; //for only the equipped pet
 
     // equippedPet = { //for testing
-    //     exp: 79200000, //from deathstreeks
-    //     tier: "LEGENDARY",
-    //     type: "BLAZE",
+    //     exp: 40000, //from deathstreeks
+    //     tier: "RARE",
+    //     type: "BINGO",
     //     active: true,
     //     heldItem: "MINOS_RELIC",
     //     candyUsed: 0,
@@ -1614,7 +1614,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
         return perkStats
     }
-    
+
     //equipped pet
     stats = perksToStats(petInfo.perks, equippedPet.tier, petLevel);
 
@@ -1665,7 +1665,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
     stats.Base = baseStats;
 
-    var mergedStats: statsCategories = {[formatPet(equippedPet.type, equippedPet.tier, petLevel)]: stats, ...backgroundPetStats};
+    var mergedStats: statsCategories = {...backgroundPetStats, [formatPet(equippedPet.type, equippedPet.tier, petLevel)]: stats};
 
     calcTemp[calcId].stats = {...calcTemp[calcId].stats, ...mergedStats}; //because mergedStats is a statCategories
 }
