@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName } from "./sbconstants"; //so many ;-;
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -435,6 +435,27 @@ export function hotmExpToLevel(exp: number): number {
     }
 
     return level;
+}
+
+export function calculateBestiaryLevel(name: bestiaryMobFamily, kills: number): number {
+    var isBoss = bestiaryBosses.includes(name);
+    var familyLevel = 0;
+
+    if(!isBoss) {
+        for(let i = 0; i < (maxBestiaryLevels[name] || 41); i++) {
+            // console.log({i})
+
+            if(kills >= (bestiaryLeveling.generic[i] || (100000+100000*(i-12)))) {
+                // console.log({kills, req: bestiaryLeveling.generic[i] || (100000+100000*(i-12))});
+
+                familyLevel++;
+            } else {
+                break;
+            }
+        }
+    }
+
+    return familyLevel;
 }
 
 
@@ -1670,6 +1691,28 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     calcTemp[calcId].stats = {...calcTemp[calcId].stats, ...mergedStats}; //because mergedStats is a statCategories
 }
 
+//calculates stats given from bestiary milestones
+export async function calculateBestiaryStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
+
+    var bestiary = data.profileData.profiles[selectedProfile].members[playerUUID].bestiary;
+
+    var health = 1;
+
+    for(let i in keys(bestiaryInfo)) {
+        var name: bestiaryMobFamily = keys(bestiaryInfo)[i];
+        var kills = bestiary[`kills_family_${name}`] || 0;
+        var familyLevel = 0;
+
+        familyLevel = calculateBestiaryLevel(name, kills);
+
+        console.log({name, kills, familyLevel});
+    }
+
+    calcTemp[calcId].stats[`${colorChar}${"c"}Bestiary Milestone`] = {SAME: {health: health}};
+}
+
+
 export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string): Promise<statsCategories> {
     calcTemp[calcId].stats["Base Stats"] = {SAME: baseStats};
 
@@ -1698,6 +1741,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     await calculateArmorStats(data, selectedProfile, playerUUID, calcId);
     await calculateEquipmentStats(data, selectedProfile, playerUUID, calcId);
     await calculatePetScoreStats(data, selectedProfile, playerUUID, calcId);
+    await calculateBestiaryStats(data, selectedProfile, playerUUID, calcId);
 
     return calcTemp[calcId].stats
 
@@ -1732,8 +1776,8 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
             booster cookie
 
         pets
-            pet stats
-            pet items
+            pet stats (Y)
+            pet items (Y)
             pet score (Y)
             
         pickable
@@ -1744,5 +1788,6 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
             peppers (Y)
             fairy souls
             community shop upgrades
+            tia fairy abiphone quest
     */
 }

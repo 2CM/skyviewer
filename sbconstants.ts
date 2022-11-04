@@ -543,6 +543,93 @@ export type collection =
     "SAND:1" | //red sand
     "CHILI_PEPPER";
 
+
+//each bestiary family and its children
+export const bestiaryInfo = {
+    //private island
+    "zombie": [
+        "zombie_1", //this one can be found in the graveyard
+        "zombie_15"
+    ],
+
+    //hub
+
+    //spiders den
+
+    //crimson isle
+
+    //the end
+    "enderman": [
+        "enderman_42",
+        "enderman_45",
+        "enderman_50"
+    ],
+
+    //deep caverns
+
+    //the park
+
+    //spooky festival
+
+    //catacombs
+} as const;
+
+export const bestiaryLeveling = {
+    generic: [
+        10,
+        25,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000,
+        25000,
+        50000,
+        100000,
+    ],
+    bosses: [
+        2,
+        5,
+        10,
+        20,
+        30,
+        40,
+        50,
+        75,
+        100,
+        150,
+        200,
+        300,
+    ]
+}
+
+
+export type bestiaryMob = typeof bestiaryInfo[keyof typeof bestiaryInfo][number]; //enderman_42 | enderman_45 | enderman_50 | zombie_1 | zombie_15
+export type bestiaryMobFamily = keyof typeof bestiaryInfo; //enderman | zombie
+export type bestiaryInteractionType = "kills" | "deaths";
+
+export const bestiaryBosses: bestiaryMobFamily[] = [
+    "brood_mother_spider", //brood mother   
+    "arachne",
+    "ashfang",
+    "bladesoul",
+    "mage_outlaw",
+    "barbarian_duke_x",
+    "corrupted_protector", //why hypixel
+    "dragon", //ender dragon
+    "headless_horseman",
+]
+
+export const maxBestiaryLevels: {
+    [key in bestiaryMobFamily]?: number
+} = {
+    //all private island families are max 5
+    zombie: 5
+}
+
+
 //contains all the data of a profile member from the api
 export interface profileMember { //all objects can be expanded upon; all any[] | any need more info
     //misc important
@@ -742,7 +829,13 @@ export interface profileMember { //all objects can be expanded upon; all any[] |
     }
     jacob2: object,
     experimentation?: object,
-    bestiary: object,
+    bestiary: {
+        [key in 
+            `${bestiaryInteractionType}_${bestiaryMob}` |
+            `${bestiaryInteractionType}_family_${bestiaryMobFamily}` |
+            "migrated_stats"
+        ]?: key extends "migrated_stats" ? boolean : number //why cant i just say {[key in x]?: number, migrated_stats: boolean} :(
+    },
     soulflow?: number,
     
     //effects / buffs
