@@ -440,18 +440,19 @@ export function hotmExpToLevel(exp: number): number {
 export function calculateBestiaryLevel(name: bestiaryMobFamily, kills: number): number {
     var isBoss = bestiaryBosses.includes(name);
     var familyLevel = 0;
+    var cap = (maxBestiaryLevels[name] || 41);
 
-    if(!isBoss) {
-        for(let i = 0; i < (maxBestiaryLevels[name] || 41); i++) {
-            // console.log({i})
+    for(let i = 0; i < cap; i++) {
+        let expRequired =
+            bestiaryLeveling[isBoss ? "bosses" : "generic"][i] ||
+            ((isBoss ? 300 : 100000) + (isBoss ? 100 : 100000) * (i - 12));
 
-            if(kills >= (bestiaryLeveling.generic[i] || (100000+100000*(i-12)))) {
-                // console.log({kills, req: bestiaryLeveling.generic[i] || (100000+100000*(i-12))});
+        if(kills >= expRequired) {
+            // console.log({kills, expRequired});
 
-                familyLevel++;
-            } else {
-                break;
-            }
+            familyLevel++;
+        } else {
+            break;
         }
     }
 
@@ -1697,7 +1698,7 @@ export async function calculateBestiaryStats(data: apiData, selectedProfile: num
 
     var bestiary = data.profileData.profiles[selectedProfile].members[playerUUID].bestiary;
 
-    var health = 1;
+    var tiersUnlocked = 0;
 
     for(let i in keys(bestiaryInfo)) {
         var name: bestiaryMobFamily = keys(bestiaryInfo)[i];
@@ -1706,10 +1707,17 @@ export async function calculateBestiaryStats(data: apiData, selectedProfile: num
 
         familyLevel = calculateBestiaryLevel(name, kills);
 
-        console.log({name, kills, familyLevel});
+        // console.log({name, kills, familyLevel});
+
+        tiersUnlocked += familyLevel;
     }
 
-    calcTemp[calcId].stats[`${colorChar}${"c"}Bestiary Milestone`] = {SAME: {health: health}};
+    // console.log(tiers);
+
+    var milestones = Math.floor(tiersUnlocked/10);
+    var health = milestones*2;
+
+    calcTemp[calcId].stats[`${colorChar}${"c"}Bestiary Milestone (${milestones})`] = {SAME: {health: health}};
 }
 
 
@@ -1766,7 +1774,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
 
         milestone stats
             skill stats (Y)
-            bestiary milestone
+            bestiary milestone (M)
             slayers (Y)
             harp intelligence (Y)
 

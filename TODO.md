@@ -9,8 +9,7 @@
             - get 250k lapis collection, 8 ench lapis blocks, 64 enchanted paper
 - bestiary stats
     - type out bestiaryInfo
-    - bosses vs generic
-    - milestones
+        - catacombs specifics
 - calculateItemStats() exceptions
     - armor stat buffs
         - blaze pet blaze armor buff
