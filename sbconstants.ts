@@ -543,6 +543,545 @@ export type collection =
     "SAND:1" | //red sand
     "CHILI_PEPPER";
 
+
+//each bestiary family and its children
+export const bestiaryInfo = {
+    //private island
+    "cave_spider": [
+        "cave_spider_1",
+        "cave_spider_2",
+        "cave_spider_3",
+        "cave_spider_4",
+        "cave_spider_5",
+        "cave_spider_6",
+        "cave_spider_7",
+        "cave_spider_8",
+        "cave_spider_9",
+        "cave_spider_10",
+        "cave_spider_11",
+        "cave_spider_12",
+        "cave_spider_13",
+        "cave_spider_14",
+        "cave_spider_15",
+    ],
+    "enderman_private": [ //only island family with the _private suffix
+        "enderman_1",
+        "enderman_2",
+        "enderman_3",
+        "enderman_4",
+        "enderman_5",
+        "enderman_6",
+        "enderman_7",
+        "enderman_8",
+        "enderman_9",
+        "enderman_10",
+        "enderman_11",
+        "enderman_12",
+        "enderman_13",
+        "enderman_14",
+        "enderman_15",
+    ],
+    "skeleton": [
+        "skeleton_1",
+        "skeleton_2",
+        "skeleton_3",
+        "skeleton_4",
+        "skeleton_5",
+        "skeleton_6",
+        "skeleton_7",
+        "skeleton_8",
+        "skeleton_9",
+        "skeleton_10",
+        "skeleton_11",
+        "skeleton_12",
+        "skeleton_13",
+        "skeleton_14",
+        "skeleton_15",
+    ],
+    "slime": [
+        "slime_1",
+        "slime_2",
+        "slime_3",
+        "slime_4",
+        "slime_5",
+        "slime_6",
+        "slime_7",
+        "slime_8",
+        "slime_9",
+        "slime_10",
+        "slime_11",
+        "slime_12",
+        "slime_13",
+        "slime_14",
+        "slime_15",
+    ],
+    "spider": [
+        "spider_1",
+        "spider_2",
+        "spider_3",
+        "spider_4",
+        "spider_5",
+        "spider_6",
+        "spider_7",
+        "spider_8",
+        "spider_9",
+        "spider_10",
+        "spider_11",
+        "spider_12",
+        "spider_13",
+        "spider_14",
+        "spider_15",
+    ],
+    "witch": [
+        "witch_1",
+        "witch_2",
+        "witch_3",
+        "witch_4",
+        "witch_5",
+        "witch_6",
+        "witch_7",
+        "witch_8",
+        "witch_9",
+        "witch_10",
+        "witch_11",
+        "witch_12",
+        "witch_13",
+        "witch_14",
+        "witch_15",
+    ],
+    "zombie": [
+        "zombie_1", //this one can be found in the graveyard
+        "zombie_2",
+        "zombie_3",
+        "zombie_4",
+        "zombie_5",
+        "zombie_6",
+        "zombie_7",
+        "zombie_8",
+        "zombie_9",
+        "zombie_10",
+        "zombie_11",
+        "zombie_12",
+        "zombie_13",
+        "zombie_14",
+        "zombie_15",
+    ],
+
+    //hub
+    "unburried_zombie": [ //crypt ghoul
+        "unburried_zombie_30", //normal ones
+        "unburried_zombie_60", //golden ghoul
+    ],
+    "old_wolf": [
+        "old_wolf_50",
+    ],
+    "ruin_wolf": [
+        "ruin_wolf_50",
+    ],
+    "zombie_villager": [
+        "zombie_villager_1"
+    ],
+
+    //spiders den
+    "arachne": [
+        "arachne_300",
+        "arachne_500",
+    ],
+    "arachne_brood": [
+        "arachne_brood_100",
+        "arachne_brood_200",
+    ],
+    "arachne_keeper": [
+        "arachne_keeper_100"
+    ],
+    "brood_mother_spider": [
+        "brood_mother_spider_12"
+    ],
+    "dasher_spider": [
+        "dasher_spider_4",
+        "dasher_spider_6",
+        "dasher_spider_12",
+        "dasher_spider_42",
+        "dasher_spider_45",
+        "dasher_spider_50",
+    ],
+    "respawning_skeleton": [ //gravel skeleton
+        "respawning_skeleton_2"
+    ],
+    "random_slime": [ //rain slime
+        "random_slime_8"
+    ],
+    "spider_jockey": [
+        "spider_jockey_3",
+        "spider_jockey_5",
+        "spider_jockey_42",
+    ],
+    "splitter_spider": [
+        "splitter_spider_2",
+        "splitter_spider_4",
+        "splitter_spider_6",
+        "splitter_spider_42",
+        "splitter_spider_45",
+        "splitter_spider_50",
+    ],
+    "voracious_spider": [
+        "voracious_spider_10",
+        "voracious_spider_42",
+        "voracious_spider_45",
+        "voracious_spider_50",
+    ],
+    "weaver_spider": [
+        "voracious_spider_3",
+        "voracious_spider_4",
+        "voracious_spider_5",
+        "voracious_spider_6",
+        "voracious_spider_42",
+        "voracious_spider_45",
+        "voracious_spider_50",
+    ],
+
+    //crimson isle
+    "ashfang": [
+        "ashfang_200"
+    ],
+    "barbarian_duke_x": [
+        "barbarian_duke_x_200"
+    ],
+    "bladesoul": [
+        "bladesoul_200"
+    ],
+    "blaze": [
+        "blaze_12",
+        "blaze_15",
+        "blaze_70",
+        "bezal_80",
+        "flare_90",
+        "mutated_blaze_70", //very good sorting bestiary list by levels hypixel
+        "smoldering_blaze_95",
+        "old_blaze_110",
+    ],
+    "flaming_spider": [
+        "flaming_spider_80"
+    ],
+    "ghast": [
+        "ghast_17",
+        "ghast_85",
+        "ghast_90",
+    ],
+    "mage_outlaw": [
+        "mage_outlaw_200"
+    ],
+    "magma_boss": [
+        "magma_boss_500"
+    ],
+    "magma_cube": [
+        "magma_cube_3",
+        "magma_cube_6",
+        "magma_cube_75",
+        "magma_cube_9",
+        "fireball_magma_cube_75", //both 75 ones have the same name in the game. this is the one with the leg/rngesus loot
+        "pack_magma_cube_90",
+        "magma_slug_200",
+        "baby_magma_slug_200",
+    ],
+    "matcho": [
+        "matcho_100"
+    ],
+    "charging_mushroom_cow": [
+        "charging_mushroom_cow_80"
+    ],
+    "pigman": [
+        "pigman_12",
+        "magma_cube_rider_90",
+        "kada_knight_90",
+    ],
+    "wither_skeleton": [
+        "wither_skeleton_10",
+        "wither_skeleton_70",
+    ],
+    "wither_spectre": [
+        "wither_spectre_70"
+    ],
+
+    //the end
+    "dragon": [
+        "young_dragon_100",
+        "old_dragon_100",
+        "strong_dragon_100",
+        "wise_dragon_100",
+        "unstable_dragon_100",
+        "protector_dragon_100",
+        "superior_dragon_100",
+        //what about holy dragon ;-;
+    ],
+    "enderman": [
+        "enderman_42",
+        "enderman_45",
+        "enderman_50"
+    ],
+    "endermite": [
+        "endermite_37",
+        "endermite_40",
+        "endermite_50",
+    ],
+    "corrupted_protector": [ //endstone protector
+        "corrupted_protector_100"
+    ],
+    "obsidian_wither": [ //obsidian defender
+        "obsidian_wither_55"
+    ],
+    "voidling_extremist": [
+        "voidling_extremist_100"
+    ],
+    "voidling_fanatic": [
+        "voidling_fanatic_85"
+    ],
+    "watcher": [
+        "watcher"
+    ],
+    "zealot_enderman": [
+        "zealot_enderman_55",
+        "zealot_bruiser_100",
+    ],
+
+    //deep caverns
+    "automaton": [
+        "automaton_100",
+        "automaton_150",
+    ],
+    "butterfly": [
+        "butterfly_100"
+    ],
+    "emerald_slime": [
+        "emerald_slime_5",
+        "emerald_slime_10",
+        "emerald_slime_15",
+    ],
+    "caverns_ghost": [
+        "caverns_ghost_250"
+    ],
+    "goblin": [ //whos steve jobs?
+        "goblin_weakling_melee_25", //normal one
+        "goblin_weakling_bow_25", //fireslinger
+        "goblin_knife_thrower_25", //knifethrower
+        "goblin_battler_60", //pitfighter
+        "goblin_flamethrower_100", //goblin flamethrower
+        "goblin_creepertamer_90", //creeperlobber (BE MENU IS WRONG)
+        "goblin_muderlover_150", //muderlover (BE MENU IS WRONG)
+        "goblin_weakling_melee_5", //weakling
+        "goblin_weakling_bow_5", //fireslinger
+    ],
+    "team_treasurite": [
+        "team_treasurite_grunt_50",
+        "team_treasurite_viper_100",
+        "team_treasurite_wendy_100",
+        "team_treasurite_sebastian_100",
+        "team_treasurite_corleone_200",
+    ],
+    "ice_walker": [
+        "ice_walker_45"
+    ],
+    "lapis_zombie": [
+        "lapis_zombie_7"
+    ],
+    "diamond_skeleton": [
+        "diamond_skeleton_15",
+        "diamond_skeleton_20",
+    ],
+    "diamond_zombie": [
+        "diamond_zombie_15",
+        "diamond_zombie_20",
+    ],
+    "redstone_pigman": [
+        "redstone_pigman_10"
+    ],
+    "sludge": [
+        "sludge_100",
+        "sludge_10",
+        "sludge_5",
+    ],
+    "invisible_creeper": [
+        "invisible_creeper_3"
+    ],
+    "thyst": [
+        "thyst_20"
+    ],
+    "treasure_hoarder": [
+        "treasure_hoarder_70"
+    ],
+    "worms": [
+        "worm_5",
+        "scatha_10"
+    ],
+    "yog": [
+        "yog_100"
+    ],
+
+    //the park
+    "howling_spirit": [
+        "howling_spirit_35"
+    ],
+    "pack_spirit": [
+        "pack_spirit_30"
+    ],
+    "soul_of_the_alpha": [
+        "soul_of_the_alpha_55"
+    ],
+
+    //spooky festival
+    "batty_witch": [
+        "batty_witch_60",
+    ],
+    "headless_horseman": [
+        "horseman_horse_100"
+    ],
+    "phantom_spirit": [
+        "phantom_spirit_35"
+    ],
+    "scary_jerry": [
+        "scary_jerry_30"
+    ],
+    "trick_or_treater": [
+        "trick_or_treater_30"
+    ],
+    "wither_gourd": [
+        "wither_gourd_40"
+    ],
+    "wraith": [
+        "wraith_50"
+    ],
+
+    //catacombs ;-------------;
+    "diamond_guy": [
+        "master_diamond_guy_120",
+        "master_diamond_guy_110",
+        "master_diamond_guy_140",
+        "master_diamond_guy_130",
+        "master_diamond_guy_160",
+        "master_diamond_guy_150",
+        "master_diamond_guy_170",
+        "master_diamond_guy_100",
+        "diamond_guy_80",
+        "diamond_guy_170",
+        "master_diamond_guy_80", //cant find it in ealman
+        "diamond_guy_160",
+        "master_diamond_guy_90",
+        "diamond_guy_150", //cant find it in ealman
+        "diamond_guy_140",
+        "diamond_guy_130",
+        "diamond_guy_120",
+        "diamond_guy_110",
+        "diamond_guy_100",
+        "diamond_guy_90",
+    ],
+    "cellar_spider": [
+        "cellar_spider_45",
+        "cellar_spider_125",
+        "cellar_spider_95",
+        "cellar_spider_105",
+        "cellar_spider_75",
+        "cellar_spider_115", //cant find it in ealman
+        "cellar_spider_85",
+        "cellar_spider_65",
+        "master_cellar_spider_45", //cant find it in ealman
+        "master_cellar_spider_65",
+        "master_cellar_spider_75", //cant find it in ealman
+        "master_cellar_spider_85",
+        "master_cellar_spider_95",
+        "master_cellar_spider_105",
+        "master_cellar_spider_125",
+        "master_cellar_spider_115",
+    ],
+    "crypt_dreadlord": [],
+    "crypt_lurker": [],
+    "crypt_souleater": [],
+    "king_midas": [],
+    "lonely_spider": [],
+    "lost_adventurer": [],
+    "scared_skeleton": [],
+    "shadow_assassin": [],
+    "skeleton_grunt": [],
+    "skeleton_master": [],
+    "skeleton_soldier": [],
+    "skeletor": [],
+    "sniper_skeleton": [],
+    "super_archer": [],
+    "super_tank_zombie": [],
+    "crypt_tank_zombie": [],
+    "watcher_summon_undead": [], //undead
+    "dungeon_respawning_skeleton": [],
+    "crypt_witherskeleton": [],
+    "zombie_commander": [],
+    "zombie_grunt": [],
+    "zombie_knight": [],
+    "zombie_soldier": [],
+} as const;
+
+export const bestiaryLeveling = {
+    generic: [
+        10,
+        25,
+        100,
+        250,
+        500,
+        1000,
+        2500,
+        5000,
+        10000,
+        25000,
+        50000,
+        100000,
+    ],
+    bosses: [
+        2,
+        5,
+        10,
+        20,
+        30,
+        40,
+        50,
+        75,
+        100,
+        150,
+        200,
+        300,
+    ]
+}
+
+
+export type bestiaryMob = typeof bestiaryInfo[keyof typeof bestiaryInfo][number]; //enderman_42 | enderman_45 | enderman_50 | zombie_1 | zombie_15
+export type bestiaryMobFamily = keyof typeof bestiaryInfo; //enderman | zombie
+export type bestiaryInteractionType = "kills" | "deaths";
+
+export const bestiaryBosses: bestiaryMobFamily[] = [
+    "brood_mother_spider",
+    "arachne",
+
+    "ashfang",
+    "bladesoul",
+    "mage_outlaw",
+    "barbarian_duke_x",
+
+    "corrupted_protector", //why hypixel
+    "dragon", //ender dragon
+
+    "headless_horseman",
+]
+
+export const maxBestiaryLevels: {
+    [key in bestiaryMobFamily]?: number
+} = {
+    //all private island families are max 5
+    cave_spider: 5,
+    enderman_private: 5,
+    slime: 5,
+    spider: 5,
+    witch: 5,
+    skeleton: 5,
+    zombie: 5,
+}
+
+
 //contains all the data of a profile member from the api
 export interface profileMember { //all objects can be expanded upon; all any[] | any need more info
     //misc important
@@ -742,7 +1281,13 @@ export interface profileMember { //all objects can be expanded upon; all any[] |
     }
     jacob2: object,
     experimentation?: object,
-    bestiary: object,
+    bestiary: {
+        [key in 
+            `${bestiaryInteractionType}_${bestiaryMob}` |
+            `${bestiaryInteractionType}_family_${bestiaryMobFamily}` |
+            "migrated_stats"
+        ]?: key extends "migrated_stats" ? boolean : number //why cant i just say {[key in x]?: number, migrated_stats: boolean} :(
+    },
     soulflow?: number,
     
     //effects / buffs
