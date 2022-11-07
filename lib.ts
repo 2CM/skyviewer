@@ -1703,9 +1703,7 @@ export async function calculateBestiaryStats(data: apiData, selectedProfile: num
     for(let i in keys(bestiaryInfo)) {
         var name: bestiaryMobFamily = keys(bestiaryInfo)[i];
         var kills = bestiary[`kills_family_${name}`] || 0;
-        var familyLevel = 0;
-
-        familyLevel = calculateBestiaryLevel(name, kills);
+        var familyLevel = calculateBestiaryLevel(name, kills);;
 
         // console.log({name, kills, familyLevel});
 
@@ -1714,8 +1712,8 @@ export async function calculateBestiaryStats(data: apiData, selectedProfile: num
 
     // console.log(tiers);
 
-    var milestones = Math.floor(tiersUnlocked/10);
-    var health = milestones*2;
+    var milestones = Math.floor(tiersUnlocked/10); //you gain a milestone for every 10 tiers unlocked
+    var health = milestones*2; //you gain 2 health per milestone
 
     calcTemp[calcId].stats[`${colorChar}${"c"}Bestiary Milestone (${milestones})`] = {SAME: {health: health}};
 }
@@ -1774,7 +1772,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
 
         milestone stats
             skill stats (Y)
-            bestiary milestone (M)
+            bestiary milestone (Y)
             slayers (Y)
             harp intelligence (Y)
 

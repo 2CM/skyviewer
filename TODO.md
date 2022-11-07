@@ -7,9 +7,7 @@
             - get a leg griffin during bingo and lootshare a minos relic from a champ
             - or
             - get 250k lapis collection, 8 ench lapis blocks, 64 enchanted paper
-- bestiary stats
-    - type out bestiaryInfo
-        - catacombs specifics
+- type out bestiaryInfo catacombs specifics
 - calculateItemStats() exceptions
     - armor stat buffs
         - blaze pet blaze armor buff
