@@ -143,6 +143,7 @@ export interface nbtItem {
             },
             rarity_upgrades?: number, //reomb
             talisman_enrichment?: statName, //enrichment
+            model: string, //abicase
         }
     },
     Damage: number
@@ -1081,6 +1082,64 @@ export const maxBestiaryLevels: {
     zombie: 5,
 }
 
+export type crimsonIsleFaction = "mages" | "barbarians";
+
+export type crimsonIsleMiniboss = "BARBARIAN_DUKE_X" | "BLADESOUL" | "MAGE_OUTLAW" | "ASHFANG";
+
+export type abiphoneContact = 
+    "anita" |
+    "aranya" |
+    "blacksmith" |
+    "builder" |
+    "captain_ahone" |
+    "dean" |
+    "duncan" |
+    "dusk" |
+    "community_shop" | //elizabeth
+    "elle" |
+    "spooky" | //fear mongerer
+    "forge_foreman" | //fred
+    "gemstone" | //geo
+    "pet_collector" | //george
+    "igrupan" |
+    "jacob" |
+    "arrow_forger" | //jax
+    "drill_fuel_mechanic" | //hotraeline greatforge
+    "pet_sitter" | //kat
+    "kaus" |
+    "slayer" | //maddox
+    "thaumaturgist" | //maxwell
+    "gatekeeper" | //mort
+    "ophelia" |
+    "oringo" |
+    "pablo" |
+    "plumber" | //plumber joe
+    "queen_mismyla" |
+    "queen" | //queen nyx. WHAT
+    "rollim" |
+    "telekinesis_applier" | //rusty
+    "shady_bartender" | //shifty
+    "sirih" |
+    "st_jerry" |
+    "suus" |
+    "fairy" | //tia
+    "tomioka" |
+    "trevor_the_trapper" |
+    "trinity" |
+    "walter" |
+    "zog";
+
+export type abicaseModel = 
+    "BLUE_RED" 
+
+export type dojoChallenge = 
+    "mob_kb" | //force
+    "wall_jump" | //stamina
+    "archer" | //mastery
+    "sword_swap" | //discipline
+    "snake" | //swiftness
+    "fireball" | //control
+    "lock_head"; //tenacity
 
 //contains all the data of a profile member from the api
 export interface profileMember { //all objects can be expanded upon; all any[] | any need more info
@@ -1114,7 +1173,52 @@ export interface profileMember { //all objects can be expanded upon; all any[] |
     crafted_generators?: string[],
     visited_zones?: string[],
     unlocked_coll_tiers?: string[],
-    nether_island_player_data: object,
+    nether_island_player_data?: {
+        kuudra_completed_tiers: {
+            none?: number,
+            hot?: number,
+            burning?: number,
+            fiery?: number,
+            infernal?: number,
+        },
+        dojo: {
+            [key in `dojo_${"time" | "points"}_${dojoChallenge}`]?: number //dojo_time_fireball
+        },
+        abiphone: {
+            contact_data: {
+                [key in abiphoneContact]?: {
+                    talked_to?: boolean,
+                    completed_quest?: boolean,
+                    last_call?: number, //timestamp
+                    specific?: {
+                        unlocked_target_practice_iv?: boolean, //arrow_forger
+                        last_reward_year?: number, //st_jerry
+                        color_index_given?: number, //gemstone
+                        gave_saving_grace?: boolean, //gatekeeper
+                    },
+                }
+            },
+            games: {
+                snake_best_score?: number,
+                tic_tac_toe_draws?: number,
+                tic_tac_toe_losses?: number,
+            },
+            operator_chip: {
+                repaired_index?: number
+            },
+            active_contacts?: abiphoneContact[],
+            trio_contact_addons: number,
+        },
+        matriarch: {
+            pearls_collected: number,
+            last_attempt: number, //timestamp
+            recent_refreshes?: number[], //timestamp
+        },
+        selected_faction?: crimsonIsleFaction,
+        mages_reputation?: number,
+        barbarians_reputation?: number,
+        last_minibosses_killed?: crimsonIsleMiniboss[]
+    },
     visited_modes: string[],
     collection: {
         [key in collection]?: number
