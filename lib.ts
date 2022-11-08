@@ -142,6 +142,10 @@ export function itemStatsToStatsList(itemStats: itemStats): statsList {
     return stats;
 }
 
+export function isNbtItem(arg: any): arg is nbtItem {
+    return arg.id !== undefined && arg.tag !== undefined;
+}
+
 // *** MISC ***
 
 //calculates pet level from a pet
@@ -879,7 +883,7 @@ export const itemStatSourceColors: {
     gemstones: "d"
 }
 
-export function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, ): statsCategory {
+export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, ): Promise<statsCategory> {
     var stats: statsCategory = {};
 
     // console.log(JSON.stringify(item));
@@ -1062,34 +1066,18 @@ export function calculateItemStats(item: nbtItem, baseItem: item, calcId: string
     }
 
     //exceptions here
-    /*
-    
-    exceptions include
-        enchants
-            bit shop enchants
-        armor
-            bulwark sets
-        abilities
-            equipment
-                vanq magma necklace
-                    needs research
-                vanq glowstone gauntlet
-                    needs research
-                synthesizers
-                    needs research
-                vanq ghast cloak
-                    needs research
-                vanq blaze belt
-                    needs research
-        pets
-            blaze hpb doubler
-            flying fish magma lord armor buff
-        accs
-            day/night tali
-            beastmaster crest
-            pulse ring
 
-    */
+    if(item.tag.ExtraAttributes.id == "NEW_YEAR_CAKE_BAG") {
+        var contents = ((await parseContents({
+            type: 0,
+            data: Buffer.from(item.tag.ExtraAttributes.new_year_cake_bag_data).toString("base64")
+        }) as any).i || []) as (nbtItem | {})[]; //i hate it too
+        
+        contents = contents.filter(val => isNbtItem(val)) as nbtItem[]; //filter out {}
+        
+        if(!stats.baseStats) stats.baseStats = {};
+        stats.baseStats.health = (stats.baseStats.health || 0) + contents.length
+    }
 
     // console.log(stats);
 
@@ -1307,6 +1295,11 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
             continue;
         }
 
+        // console.log({[itemAttributes.id]: keys(itemAttributes).map(key => {
+        //     return !["timestamp", "rarity_upgrades", "id", "uuid", "originTag", "modifier", "talisman_enrichment"].includes(key) ? 
+        //     key+": "+(typeof itemAttributes[key] == "object" ? JSON.stringify(itemAttributes[key]) : itemAttributes[key]) : "";
+        // }).filter(val => val != "")})
+
         if (itemInfo.category !== "ACCESSORY") continue;
 
         var rarityIndex = tierStringToNumber(itemInfo.tier || "COMMON");
@@ -1316,7 +1309,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
         var formattedName = (rarityUpgrades === undefined ? "" : rarityUpgrades == 1 ? "RECOMB" : "") + colorChar + Object.values(rarityColors)[rarity] + removeStringColors(itemInfo.name);
 
-        var itemStats = calculateItemStats(tali, itemInfo, calcId, true);
+        var itemStats = await calculateItemStats(tali, itemInfo, calcId, true);
 
         if(keys(itemStats.baseStats || {}).length > 0) stats.taliStats[formattedName] = itemStats.baseStats || {};
         if(keys(itemStats.enrichments || {}).length > 0) stats.enrichments[formattedName] = itemStats.enrichments || {};
@@ -1333,23 +1326,28 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
         }
     }
 
-    if (accessory_bag_storage.selected_power === undefined) {
-        console.warn("no selected power");
-        return stats;
+    var selectedPower = accessory_bag_storage.selected_power
+
+    if (accessory_bag_storage.selected_power === undefined) console.warn("no selected power");
+
+    if (keys(accPowers).findIndex(key => {return key == accessory_bag_storage.selected_power}) == -1) {
+        console.warn("couldnt find selected power", accessory_bag_storage.selected_power);
+
+        selectedPower = undefined;
     }
 
     var statsMultiplier = 29.97 * Math.pow((Math.log(0.0019 * mp + 1)), 1.2);
 
-    if (keys(accPowers).findIndex(key => { return key == accessory_bag_storage.selected_power }) == -1) {
-        console.error("couldnt find selected power", accessory_bag_storage.selected_power);
-        return stats;
-    }
+    if(selectedPower) {
+        var selectedPowerStats = accPowers[selectedPower];
 
-    var selectedPowerStats = accPowers[accessory_bag_storage.selected_power];
+        stats.magicPower.magicPower = multiplyStatsList(selectedPowerStats.per, statsMultiplier);
 
-    stats.magicPower.magicPower = multiplyStatsList(selectedPowerStats.per, statsMultiplier);
-    if (selectedPowerStats.extra) {
-        stats.magicPower.magicPower = mergeStatsLists(stats.magicPower.magicPower, selectedPowerStats.extra || {});
+        if (selectedPowerStats.extra) {
+            stats.magicPower.magicPower = mergeStatsLists(stats.magicPower.magicPower, selectedPowerStats.extra || {});
+        }
+
+        calcTemp[calcId].stats[colorChar+"b"+"Magic Power ("+mp+")"] = {SAME: stats.magicPower.magicPower};
     }
 
     stats.tuning.tuning = multiplyStatsList((accessory_bag_storage.tuning.slot_0 ? accessory_bag_storage.tuning.slot_0 : {}) as statsList, tuningValues)
@@ -1360,7 +1358,6 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
     calcTemp[calcId].stats[colorChar+"b"+"Accessory Enrichments"] = stats.enrichments;
     calcTemp[calcId].stats[colorChar+"e"+"Accessory Tuning"] = {SAME: stats.tuning.tuning};
     calcTemp[calcId].stats[colorChar+"d"+"Accessory Gems"] = stats.gems;
-    calcTemp[calcId].stats[colorChar+"b"+"Magic Power ("+mp+")"] = {SAME: stats.magicPower.magicPower};
 }
 
 
@@ -1491,11 +1488,13 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     var armor = await parseContents(inv_armor_raw) as IObjectKeys;
     if (armor.i === undefined) return;
 
-    var armorContents: nbtItem[] = armor.i;
+    var armorContents: (nbtItem | {})[] = armor.i;
 
 
     for (let i in armorContents) {
-        var piece: nbtItem = armorContents[i];
+        var piece: nbtItem | {} = armorContents[i];
+
+        if(!isNbtItem(piece)) continue;
 
         var baseItem = await itemIdToItem(piece.tag.ExtraAttributes.id);
         if (!baseItem) {
@@ -1505,7 +1504,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         var category = baseItem.category;
 
-        stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem, calcId);
+        stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId);
 
         calcTemp[calcId].stats[piece.tag.display.Name] = mapObjectKeys(
             stats[piece.tag.display.Name],
@@ -1525,13 +1524,13 @@ export async function calculateEquipmentStats(data: apiData, selectedProfile: nu
     var equipment = await parseContents(equippment_contents_raw) as IObjectKeys;
     if (equipment.i === undefined) return;
 
-    var equipmentContents: nbtItem[] = equipment.i;
+    var equipmentContents: (nbtItem | {})[] = equipment.i;
 
 
     for (let i in equipmentContents) {
-        var piece: nbtItem = equipmentContents[i];
+        var piece: nbtItem | {} = equipmentContents[i];
 
-        if (keys(piece).length == 0) continue;
+        if(!isNbtItem(piece)) continue;
 
         var baseItem = await itemIdToItem(piece.tag.ExtraAttributes.id);
         if (!baseItem) {
@@ -1541,7 +1540,7 @@ export async function calculateEquipmentStats(data: apiData, selectedProfile: nu
 
         var category = baseItem.category;
 
-        stats[piece.tag.display.Name] = calculateItemStats(piece, baseItem, calcId);
+        stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId);
 
         calcTemp[calcId].stats[piece.tag.display.Name] = mapObjectKeys(
             stats[piece.tag.display.Name],
@@ -1737,7 +1736,7 @@ export async function calculateAbiphoneStats(data: apiData, selectedProfile: num
 
     calcTemp[calcId].other.abiphoneContacts = abiphone.active_contacts?.length || 0; //for calculateAccStats abicase mp buffs
 
-    calcTemp[calcId].stats[`${colorChar}${5}9F™ Operator Chip`] = {SAME: {health: abiphone.operator_chip.repaired_index !== undefined ? (abiphone.operator_chip.repaired_index+1)*2 : 0}};
+    calcTemp[calcId].stats[`${colorChar}${5}9F™ Operator Chip`] = {SAME: {health: abiphone.operator_chip?.repaired_index !== undefined ? (abiphone.operator_chip.repaired_index+1)*2 : 0}};
 }
 
 

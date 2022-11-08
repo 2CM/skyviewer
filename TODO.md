@@ -8,8 +8,61 @@
             - get 250k lapis collection, 8 ench lapis blocks, 64 enchanted paper
 - type out bestiaryInfo catacombs specifics
 - calculateItemStats() exceptions
-    - armor stat buffs
-        - blaze pet blaze armor buff
+    - beastmaster
+    - pulse ring
+    - day/night crystal
+    - blood god crest
+
+    - ancient reforge
+
+    - young armor speed
+    - mastiff
+    - fairy armor
+    - tara helm
+    - warden helm
+    - farm suit/armor
+    - mushroom/batperson armor
+    - angler armor
+    - lapis armor
+    - miners outfit
+    - goblin armor
+    - rampart
+    - armor of the pack?
+    - armor of magma
+    - emerald armor
+    - tux
+    - ender armor
+    - speedster armor
+    - glacite
+    - berserker armor
+    - old dragon armor
+    - superior armor
+    - holy dragon
+    - magma lord
+    - heavy/super heavy armor
+    - skeletor armor
+    - lantern helmet
+    - zombie heart family
+    - krampus helmet
+    - racing helmet
+    - obsidian chestplate
+    - make stereo pants nullify ALL stats
+    - farmer/ranchers boots
+
+    - ender equipment/dragonfade cloak
+    - lava shell necklace
+    - synths
+    - vanq ghast cloak
+    - vanq blaze belt
+    - vanq glowstone gauntlet
+    - vanq magma necklace
+    - hegemony artifact
+
+    - bat pet night stat buff
+    - s_(ARMOR) stats
+    - l stats
+    - griffin potion effects
+    - bit shop enchants
 - every other thing in skyblock
     - skycrypt stuff
     - dummy damage tester
