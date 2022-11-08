@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling } from "./sbconstants"; //so many ;-;
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -606,6 +606,7 @@ export var calcTemp: {
         skills: allSkillExpInfo,
         other: {
             hpbsDoubled?: boolean,
+            abiphoneContacts?: number,
         }
     }        
 } = {};
@@ -1293,6 +1294,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
     taliContents = taliContents.filter(value => keys(value).length);
 
     var mp = 0;
+    var abicaseFound = false;
 
     for (let i = 0; i < taliContents.length; i++) {
         var tali: nbtItem = taliContents[i];
@@ -1321,6 +1323,14 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
         if(keys(itemStats.gemstones || {}).length > 0) stats.gems[formattedName] = itemStats.gemstones || {};
 
         mp += mpTable[keys(mpTable)[rarity]];
+
+        if(itemId == "ABICASE" && abicaseFound == false && itemAttributes.model) {
+            mp += Math.floor((calcTemp[calcId].other.abiphoneContacts || 0)/2);
+
+            stats.taliStats[formattedName] = mergeStatsLists(stats.taliStats[formattedName], abicaseStats[itemAttributes.model] || {})
+
+            abicaseFound = true;
+        }
     }
 
     if (accessory_bag_storage.selected_power === undefined) {
@@ -1350,7 +1360,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
     calcTemp[calcId].stats[colorChar+"b"+"Accessory Enrichments"] = stats.enrichments;
     calcTemp[calcId].stats[colorChar+"e"+"Accessory Tuning"] = {SAME: stats.tuning.tuning};
     calcTemp[calcId].stats[colorChar+"d"+"Accessory Gems"] = stats.gems;
-    calcTemp[calcId].stats[colorChar+"b"+"Magic Power"] = {SAME: stats.magicPower.magicPower};
+    calcTemp[calcId].stats[colorChar+"b"+"Magic Power ("+mp+")"] = {SAME: stats.magicPower.magicPower};
 }
 
 
@@ -1718,6 +1728,18 @@ export async function calculateBestiaryStats(data: apiData, selectedProfile: num
     calcTemp[calcId].stats[`${colorChar}${"c"}Bestiary Milestone (${milestones})`] = {SAME: {health: health}};
 }
 
+export async function calculateAbiphoneStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    if (!data.profileData) return;
+
+    var abiphone = data.profileData.profiles[selectedProfile].members[playerUUID].nether_island_player_data?.abiphone;
+
+    if(!abiphone) return;
+
+    calcTemp[calcId].other.abiphoneContacts = abiphone.active_contacts?.length || 0; //for calculateAccStats abicase mp buffs
+
+    calcTemp[calcId].stats[`${colorChar}${5}9F™ Operator Chip`] = {SAME: {health: abiphone.operator_chip.repaired_index !== undefined ? (abiphone.operator_chip.repaired_index+1)*2 : 0}};
+}
+
 
 export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string): Promise<statsCategories> {
     calcTemp[calcId].stats["Base Stats"] = {SAME: baseStats};
@@ -1735,6 +1757,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     };
 
     await calculatePetStats(data, selectedProfile, playerUUID, specialPetData, calcId);
+    await calculateAbiphoneStats(data, selectedProfile, playerUUID, calcId)
     await calculateSkillStats(data, selectedProfile, playerUUID, calcId);
     await calculateHotmStats(data, selectedProfile, playerUUID, calcId);
     await calculateEssenceStats(data, selectedProfile, playerUUID, calcId);
@@ -1792,8 +1815,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
             
         misc 
             peppers (Y)
-            fairy souls
             community shop upgrades
-            tia fairy abiphone quest
+            abiphone (Y)
     */
 }

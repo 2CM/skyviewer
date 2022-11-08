@@ -1,4 +1,3 @@
-- exceptions in calculateItemStats()
 - haste effect only works in custom mining islands
 - kuudra update new attributes
 - pet stats
