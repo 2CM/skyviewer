@@ -143,7 +143,7 @@ export interface nbtItem {
             },
             rarity_upgrades?: number, //reomb
             talisman_enrichment?: statName, //enrichment
-            model: string, //abicase
+            model?: abicaseModel, //abicase
         }
     },
     Damage: number
@@ -1130,7 +1130,24 @@ export type abiphoneContact =
     "zog";
 
 export type abicaseModel = 
-    "BLUE_RED" 
+    "SUMSUNG_1" | //G3
+    "SUMSUNG_2" | //GG
+    "BLUE_BLUE" | //blue blue
+    "BLUE_RED" | //blue red
+    "BLUE_GREEN" | //blue green
+    "BLUE_AQUA" | //light blue
+    "BLUE_YELLOW" | //blue yellow
+    "REZAR"; //rezar
+
+export const abicaseStats: {
+    [key in abicaseModel]?: statsList
+} = {
+    BLUE_RED: {combat_wisdom: 1.5},
+    BLUE_BLUE: {mining_wisdom: 1.5},
+    BLUE_GREEN: {foraging_wisdom: 1.5},
+    BLUE_YELLOW: {farming_wisdom: 1.5},
+    BLUE_AQUA: {fishing_wisdom: 1.5},
+}
 
 export type dojoChallenge = 
     "mob_kb" | //force

@@ -7,7 +7,6 @@
             - or
             - get 250k lapis collection, 8 ench lapis blocks, 64 enchanted paper
 - type out bestiaryInfo catacombs specifics
-- type out abicase models
 - calculateItemStats() exceptions
     - armor stat buffs
         - blaze pet blaze armor buff
