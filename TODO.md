@@ -7,9 +7,9 @@
             - or
             - get 250k lapis collection, 8 ench lapis blocks, 64 enchanted paper
 - type out bestiaryInfo catacombs specifics
+- no duplicate talis
 - calculateItemStats() exceptions
     - beastmaster
-    - pulse ring
     - day/night crystal
     - blood god crest
 

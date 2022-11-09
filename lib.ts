@@ -146,6 +146,28 @@ export function isNbtItem(arg: any): arg is nbtItem {
     return arg.id !== undefined && arg.tag !== undefined;
 }
 
+export async function getItemRarity(item: nbtItem, baseItem?: item): Promise<number> {
+    baseItem = baseItem || (await itemIdToItem(item.tag.ExtraAttributes.id));
+
+    if(!baseItem) return 0;
+
+    var baseRarity = tierStringToNumber(baseItem.tier || "COMMON");
+    var recomb = item.tag.ExtraAttributes.rarity_upgrades || 0;
+    var extraRarity = 0;
+
+    if(item.tag.ExtraAttributes.id == "PULSE_RING") {
+        var pulseRingCharge = item.tag.ExtraAttributes.thunder_charge || 0;
+
+        extraRarity =
+            pulseRingCharge >= 5000000 ? 3 :
+            pulseRingCharge >= 1000000 ? 2 :
+            pulseRingCharge >= 150000 ? 1 :
+            0;
+    }
+
+    return baseRarity+recomb+extraRarity;
+}
+
 // *** MISC ***
 
 //calculates pet level from a pet
@@ -901,9 +923,7 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
     */
 
 
-    var rarityUpgrades = item.tag.ExtraAttributes.rarity_upgrades;
-
-    var rarity = tierStringToNumber(baseItem.tier || "COMMON") + (rarityUpgrades || 0);
+    var rarity = await getItemRarity(item, baseItem);
 
     //base stats
     if (baseItem.stats) {
@@ -1077,6 +1097,17 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         
         if(!stats.baseStats) stats.baseStats = {};
         stats.baseStats.health = (stats.baseStats.health || 0) + contents.length
+    }
+
+    if(item.tag.ExtraAttributes.id == "PULSE_RING") {
+        if(!stats.baseStats) stats.baseStats = {};
+        stats.baseStats = {magic_find: 
+            0.25*( //get extra pulse ring rarity
+                rarity-
+                tierStringToNumber(baseItem.tier || "COMMON")-
+                (item.tag.ExtraAttributes.rarity_upgrades || 0)
+            )+0.25 //it starts at 0.25
+        };
     }
 
     // console.log(stats);
@@ -1275,10 +1306,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
     var taliBag = await parseContents(talisman_bag_raw) as IObjectKeys;
     if (taliBag.i === undefined) return;
 
-    var inv = await parseContents(inv_raw) as IObjectKeys;
-    if (inv.i === undefined) return;
-
-    var taliContents: nbtItem[] = inv.i.concat(taliBag.i);
+    var taliContents: nbtItem[] = taliBag.i;
     taliContents = taliContents.filter(value => keys(value).length);
 
     var mp = 0;
@@ -1302,10 +1330,8 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
         if (itemInfo.category !== "ACCESSORY") continue;
 
-        var rarityIndex = tierStringToNumber(itemInfo.tier || "COMMON");
-
-        var rarityUpgrades: number | undefined = itemAttributes.rarity_upgrades;
-        var rarity: number = rarityIndex + (rarityUpgrades === undefined ? 0 : rarityUpgrades == 1 ? 1 : 0);
+        var rarityUpgrades: number = itemAttributes.rarity_upgrades || 0;
+        var rarity: number = await getItemRarity(tali, itemInfo);
 
         var formattedName = (rarityUpgrades === undefined ? "" : rarityUpgrades == 1 ? "RECOMB" : "") + colorChar + Object.values(rarityColors)[rarity] + removeStringColors(itemInfo.name);
 
@@ -1336,7 +1362,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
         selectedPower = undefined;
     }
 
-    var statsMultiplier = 29.97 * Math.pow((Math.log(0.0019 * mp + 1)), 1.2);
+    var statsMultiplier = 29.97 * Math.pow((Math.log(0.0019 * mp + 1)), 1.2); //i am maths enjoyer :)))
 
     if(selectedPower) {
         var selectedPowerStats = accPowers[selectedPower];
