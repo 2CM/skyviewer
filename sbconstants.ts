@@ -1240,6 +1240,91 @@ export type dojoChallenge =
     "fireball" | //control
     "lock_head"; //tenacity
 
+export type dungeonClass = 
+    "healer" |
+    "mage" |
+    "berserk" |
+    "archer" |
+    "tank";
+
+//info for each floor
+export type floorsInfo<floors extends number[], value = number> = {
+    [key in floors[number]]?: value
+}
+
+export type dungeonTypeInfo<floors extends number[]> = {
+    experience?: number,
+    tier_completions: floorsInfo<floors>,
+    highest_tier_completed?: floors[number],
+    times_played?: floorsInfo<floors>,
+    mobs_killed?: floorsInfo<floors>,
+    watcher_kills?: floorsInfo<floors>,
+    most_mobs_killed?: floorsInfo<floors>,
+    most_healing?: floorsInfo<floors>,
+    most_damage_healer?: floorsInfo<floors>,
+    most_damage_mage?: floorsInfo<floors>,
+    most_damage_berserk?: floorsInfo<floors>,
+    most_damage_archer?: floorsInfo<floors>,
+    most_damage_tank?: floorsInfo<floors>,
+    best_score?: floorsInfo<floors>,
+    fastest_time?: floorsInfo<floors>,
+    fastest_time_s?: floorsInfo<floors>,
+    fastest_time_s_plus?: floorsInfo<floors>,
+    milestone_completions?: floorsInfo<floors>,
+    best_runs?: floorsInfo<floors, {
+        timestamp: number,
+        score_exploration: number,
+        score_speed: number,
+        score_skill: number,
+        score_bonus: number,
+        dungeon_class: dungeonClass,
+        teammates: string[] //uuids
+        elapsed_time: number,
+        damage_dealt: number,
+        deaths: number,
+        mobs_killed: number,
+        secrets_found: number,
+        damage_mitigated: number,
+        ally_healing?: number,
+    }[]>
+}
+
+export type dungeonType = "catacombs" | "master_catacombs";
+
+export type dungeonRun = {
+    run_id: string,
+    completion_ts: number,
+    dungeon_type: dungeonType,
+    dungeon_tier: number,
+    participants: {
+        player_uuid: string,
+        display_name: string,
+        class_milestone: number,
+    }[]
+}
+
+export type dungeonChestType = 
+    "wood" |
+    "gold" |
+    "diamond" |
+    "emerald" |
+    "obsidian" |
+    "bedrock";
+
+export type dungeonChest = {
+    run_id: string,
+    chest_id: string,
+    treasure_type: dungeonChestType,
+    rewards: {
+        rewards: string[],
+        rolled_rng_meter_randomly: boolean
+    },
+    quality: number,
+    shiny_eligible: boolean,
+    paid: boolean,
+    rerolls: number,
+}
+
 //contains all the data of a profile member from the api
 export interface profileMember { //all objects can be expanded upon; all any[] | any need more info
     //misc important
@@ -1465,7 +1550,28 @@ export interface profileMember { //all objects can be expanded upon; all any[] |
     },
 
     //misc
-    dungeons: object,
+    dungeons: {
+        dungeon_types: {
+            catacombs: dungeonTypeInfo<[0,1,2,3,4,5,6,7]>, //normal catacombs have entrance
+            master_catacombs: dungeonTypeInfo<[1,2,3,4,5,6,7]>, //while mm doesnt
+        },
+        player_classes: { //is that a java reference????
+            [key in dungeonClass]: {
+                experience: number,
+            }
+        },
+        //journals
+        dungeons_blah_blah?: `${"malik" | "ophelia" | "gatekeeper"}_first_talk`[], //H Y P I X E L  :)))))))))))))))
+        selected_dungeon_class?: dungeonClass,
+        daily_runs?: {
+            current_day_stamp: number,
+            completed_runs_count: number,
+        },
+        treasures?: {
+            runs: dungeonRun[],
+            chests: dungeonChest[],
+        }
+    },
     perks: { //essence shops
         permanent_health: number,
         permanent_defense: number,
@@ -1919,7 +2025,7 @@ export const statChars: statIdMap<string> = {
 }
 
 export const reforgeStats: {
-    [key: string]: (tier: number) => statsList
+    [key: string]: (tier: number, special: {cata: number}) => statsList
 } = {
     ...{ //melee (sword and fishing rod)
         gentle: tier => ({
@@ -1984,6 +2090,7 @@ export const reforgeStats: {
         suspicious: tier => ({ // +15 weapon damage
             critical_chance: [1,2,3,5,7,10][tier],
             critical_damage: [30,40,50,65,85,110][tier],
+            s_damage: 15,
         }),
         gilded: tier => ({
             strength: [0,0,0,0,75,90][tier],
@@ -1992,8 +2099,8 @@ export const reforgeStats: {
             strength: tier >= 2 ? 165 : 0,
             intelligence: tier == 4 ? 65 : 0,
         }),
-        withered: tier => ({
-            strength: [60,75,90,110,135,170][tier] // +1 str per cata level
+        withered: (tier, special) => ({
+            strength: [60,75,90,110,135,170][tier] + special.cata // +1 str per cata level
         }),
         bulky: tier => ({
             health: [4,6,9,12,15,20][tier],
@@ -2138,16 +2245,18 @@ export const reforgeStats: {
 
         perfect: tier => ({ //+2% def
             defense: [25,35,50,65,80,110][tier],
+            m_defense: 0.02,
         }),
         necrotic: tier => ({
             intelligence: [30,60,90,120,150,200][tier],
         }),
-        ancient: tier => ({ //+1 cd per cata level
+        ancient: (tier, special) => ({ //+1 cd per cata level
             health: 7,
             defense: 7,
             strength: [4,8,12,18,25,35][tier],
             critical_chance: [3,5,7,9,12,15][tier],
             intelligence: [6,9,12,16,20,25][tier],
+            critical_damage: special.cata
         }),
         spiked: tier => ({
             health: [2,3,4,6,8,10][tier],
@@ -2168,6 +2277,7 @@ export const reforgeStats: {
             critical_damage: [3,4,6,8,10,12][tier],
             attack_speed: [1,1,2,3,4,5][tier],
             intelligence: [3,4,6,8,10,12][tier],
+            ...allStatsBoost(0.01)
         }),
         cubic: tier => ({ // -2% damage from nether mobs
             strength: [3,5,7,10,12,15][tier],
@@ -4403,4 +4513,31 @@ export const hotmLeveling = [
     97000,
     197000,
     347000,
+]
+
+export const hecatombHealth = [
+    0.0,
+    2.6,
+    3.2,
+    3.8,
+    4.4,
+    5.0,
+    5.6,
+    6.2,
+    6.8,
+    7.4,
+    8.0,
+]
+
+export const hecatombLeveling = [
+    0,
+    2,
+    5,
+    10,
+    20,
+    30,
+    40,
+    60,
+    80,
+    100,
 ]

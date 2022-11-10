@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { allSkillExpInfo } from "../lib";
+import { allSkillExpInfo, keys } from "../lib";
 import { skillCaps, skillName } from "../sbconstants";
 import SkillLevel from "./skillLevel";
 
@@ -14,8 +14,8 @@ export default function Skills({skills}: props) {
         setDisplayType(displayType+1);
     }
 
-    var skillLevels: JSX.Element[] = Object.keys(skillCaps).map(name => {
-        if(name == "dungeonnering") return <></>;
+    var skillLevels: JSX.Element[] = keys(skillCaps).map(name => {
+        if(name == "dungeoneering") return <></>;
 
         var skillExpInfos = skills[name as keyof typeof skills];
 

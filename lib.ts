@@ -517,7 +517,7 @@ export interface skillExpInfos {
 
 //skill exp info about all skills
 export type allSkillExpInfo = {
-    [key in Exclude<skillName, "dungeoneering">]?: skillExpInfos
+    [key in skillName]?: skillExpInfos
 }
 
 
@@ -606,9 +606,13 @@ export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, 
     for (let i = 0; i < keys(skillCaps).length; i++) {
         var name: skillName = keys(skillCaps)[i];
 
-        if (name == "dungeoneering") continue;
+        var skillExp: number;
 
-        var skillExp: number = apiData.profileData.profiles[selectedProfile].members[playerUUID][skillNameToApiName[name] as keyof profileMember] as number;
+        if (name == "dungeoneering") {
+            skillExp = apiData.profileData.profiles[selectedProfile].members[playerUUID].dungeons.dungeon_types.catacombs.experience || 0;
+        } else {
+            skillExp = apiData.profileData.profiles[selectedProfile].members[playerUUID][skillNameToApiName[name] as keyof profileMember] as number;
+        }
 
 
         skills[name] = {
@@ -905,7 +909,7 @@ export const itemStatSourceColors: {
     gemstones: "d"
 }
 
-export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, ): Promise<statsCategory> {
+export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false): Promise<statsCategory> {
     var stats: statsCategory = {};
 
     // console.log(JSON.stringify(item));
@@ -948,8 +952,10 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
     var reforge: string | undefined = item.tag.ExtraAttributes.modifier;
 
     if (reforge !== undefined && reforge !== "none" && baseItem.category !== "ACCESSORY") {
+        var formattedReforge = compact ? "reforge" : `${colorChar}5${reforge.capitalize()}`;
+
         if (reforgeStats[reforge] !== undefined) {
-            stats[compact ? "reforge" : `${colorChar}5${reforge.capitalize()}`] = reforgeStats[reforge](Math.min(rarity, 5));
+            stats[formattedReforge] = reforgeStats[reforge](Math.min(rarity, 5), {cata: Math.floor(calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0)});
         } else {
             console.warn(`${reforge} reforge on ${item.tag.display.Name} is not in reforgeStats`);
         }
@@ -1101,7 +1107,7 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     if(item.tag.ExtraAttributes.id == "PULSE_RING") {
         if(!stats.baseStats) stats.baseStats = {};
-        
+
         stats.baseStats.magic_find = (stats.baseStats.magic_find || 0) +
             0.25*( //get extra pulse ring rarity
                 rarity-
@@ -1801,6 +1807,11 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     await calculateEquipmentStats(data, selectedProfile, playerUUID, calcId);
     await calculatePetScoreStats(data, selectedProfile, playerUUID, calcId);
     await calculateBestiaryStats(data, selectedProfile, playerUUID, calcId);
+
+    //catacombs level stats (not worth creating a function for)
+    calcTemp[calcId].stats[`${colorChar}${"c"}Dungeoneering Level`] = {SAME: 
+        skillLevelStats.dungeoneering(Math.floor(calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0))
+    }
 
     return calcTemp[calcId].stats
 

@@ -11,9 +11,6 @@
 - calculateItemStats() exceptions
     - beastmaster
     - day/night crystal
-    - blood god crest
-
-    - ancient reforge
 
     - young armor speed
     - mastiff
