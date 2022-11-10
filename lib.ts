@@ -1101,13 +1101,18 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     if(item.tag.ExtraAttributes.id == "PULSE_RING") {
         if(!stats.baseStats) stats.baseStats = {};
-        stats.baseStats = {magic_find: 
+        
+        stats.baseStats.magic_find = (stats.baseStats.magic_find || 0) +
             0.25*( //get extra pulse ring rarity
                 rarity-
                 tierStringToNumber(baseItem.tier || "COMMON")-
                 (item.tag.ExtraAttributes.rarity_upgrades || 0)
             )+0.25 //it starts at 0.25
-        };
+    }
+    if(item.tag.ExtraAttributes.id == "BLOOD_GOD_CREST") {
+        if(!stats.baseStats) stats.baseStats = {};
+        
+        stats.baseStats.strength = (stats.baseStats.strength || 0) + Math.floor(Math.log10(item.tag.ExtraAttributes.blood_god_kills || 0)+1);
     }
 
     // console.log(stats);
