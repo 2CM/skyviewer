@@ -3227,7 +3227,10 @@ export type petName =
     "SNAIL" |
     "MOOSHROOM_COW" |
     "KUUDRA" |
-    "DROPLET_WISP" |
+    "DROPLET_WISP" | //yes, apparently these are all different pets :)))
+    "FROST_WISP" |
+    "GLACIAL_WISP" |
+    "SUBZERO_WISP" |
     "BINGO";
 
 //pet exp types
@@ -3296,6 +3299,9 @@ export const petTypes: {
     MOOSHROOM_COW: "farming",
     KUUDRA: "combat",
     DROPLET_WISP: "gabagool",
+    FROST_WISP: "gabagool",
+    GLACIAL_WISP: "gabagool",
+    SUBZERO_WISP: "gabagool",
     BINGO: "all"
 }
 
@@ -4131,11 +4137,39 @@ export const petStats: {
             },
         }
     },
-    "DROPLET_WISP": { //oh boy
+    "DROPLET_WISP": {
         base: (level, tier) => ({
-            [tier !== "UNCOMMON" ? "true_defense" : ""]: (tier == "RARE" ? 0.15 : tier == "EPIC" ? 0.3 : 0.35)*level,
-            health: (tier == "UNCOMMON" ? 1 : tier == "RARE" ? 2.5 : tier == "EPIC" ? 4 : 6)*level,
-            [tier !== "UNCOMMON" ? "intelligence" : ""]: (tier == "RARE" ? 0.5 : tier == "EPIC" ? 1.25 : 2.5)*level,
+            health: 1*level,
+        }),
+        perks: {
+
+        }
+    },
+    "FROST_WISP": {
+        base: (level, tier) => ({
+            true_defense: 0.15*level,
+            health: 2.5*level,
+            intelligence: 0.5*level,
+        }),
+        perks: {
+
+        }
+    },
+    "GLACIAL_WISP": {
+        base: (level, tier) => ({
+            true_defense: 0.3*level,
+            health: 4*level,
+            intelligence: 1.25*level,
+        }),
+        perks: {
+
+        }
+    },
+    "SUBZERO_WISP": {
+        base: (level, tier) => ({
+            true_defense: 0.35*level,
+            health: 6*level,
+            intelligence: 2.5*level,
         }),
         perks: {
 
@@ -4541,3 +4575,26 @@ export const hecatombLeveling = [
     80,
     100,
 ]
+
+export type skyblockLocation = 
+    "dynamic" |  //island
+    "hub" | 
+    "winter" |  //jerry
+
+    "farming_1" |  //barn / desert
+
+    "mining_1" |  //gold mine
+    "mining_2" |  //deep caverns
+    "mining_3" |  //dwarven mines
+    "crystal_hollows" | //rip mining_4
+
+    "foraging_1" |  //park
+    
+    "combat_1" |  //spiders den
+    "crimson_isle" |  //must have been combat_2 before the update
+    "combat_3" |  //end
+
+    "dungeon_hub" | 
+    "dungeon" | //all dungeons
+
+    "instanced"; //kuudra .-.

@@ -6,7 +6,7 @@ import { allSkillExpInfo, calculateAllSkillExp, calculateStats, getMostRecentPro
 import Skills from "../../components/skills";
 import Stats from "../../components/stats";
 import { GetServerSideProps } from "next";
-import { baseProfile, item } from "../../sbconstants";
+import { baseProfile, item, skyblockLocation } from "../../sbconstants";
 import { randomBytes } from "crypto";
 
 
@@ -16,29 +16,50 @@ export interface dataContext {
 	}
 }
 
-export interface serverData {
-	computedData: {
-		stats: statsCategories,
-		skills: allSkillExpInfo
+export type apiError = {success: false};
+
+export type profileData = {
+	success: true,
+	profiles: baseProfile[],
+}
+
+export type itemsData = {
+	success: true,
+	lastUpdated: number,
+	items: item[],
+}
+
+export type statusData = {
+	success: true,
+	uuid: string,
+	session: {
+		online: false
+	} | {
+		online: true,
+		gameType: Exclude<string, "SKYBLOCK">,
+	} | {
+		online: true,
+		gameType: "SKYBLOCK",
+		mode: skyblockLocation,
 	}
 }
 
 export interface apiData {
-	profileData?: {
-		success: boolean,
-		profiles: baseProfile[]
-	},
-	itemsData?: {
-		success: boolean,
-		lastUpdated: number,
-		items: item[]
-	}
+	profileData: profileData,
+	itemsData: itemsData,
+	statusData?: statusData,
 }
 
 interface serverSideProps {
 	props: serverData
 }
 
+export interface serverData {
+	computedData: {
+		stats: statsCategories,
+		skills: allSkillExpInfo
+	},
+}
 
 export var dataContext: Context<dataContext> = createContext({});
 
@@ -48,21 +69,6 @@ export default function profileViewer(props: serverData) {
 
 	var [data, setData] = useState<dataContext>({});
 	
-	
-	useEffect(() => {
-		var doAsyncStuff = async () => {
-			setData({
-				data: {
-					selectedProfile: 3
-				}
-			});
-
-			console.log(props)
-		}
-
-		doAsyncStuff();
-	}, [])
-
 	var sources = getStatSources(props.computedData.stats);
 	var summed = sumStatsSources(sources);
 
@@ -91,41 +97,37 @@ export default function profileViewer(props: serverData) {
 export const getServerSideProps: GetServerSideProps = async (context) => {
 	console.log("-----------------------------------------------------------------------")
 
-	var staticFileName =
+	const staticFileName =
 		context.params?.profileName == "2CGI" ? "skyblockprofile.json" :
 		context.params?.profileName == "breefing" ? "breefingprofile.json" :
 		context.params?.profileName == "refraction" ? "refractionprofile.json" :
-		"skyblockprofile.json"
+		"skyblockprofile.json";
 
-	var playerUUID =
+	const playerUUID =
 		context.params?.profileName == "2CGI" ? "86a6f490bf424769a625a266aa89e8d0" :
 		context.params?.profileName == "breefing" ? "6d2564e80798417c877f799e9727e2bd" :
-		"refraction" ? "28667672039044989b0019b14a2c34d6" :
+		context.params?.profileName == "refraction" ? "28667672039044989b0019b14a2c34d6" :
 		"86a6f490bf424769a625a266aa89e8d0";
 
-	var apiData: apiData = {
-		profileData: JSON.parse(readFileSync("testContent/"+staticFileName, "utf8")),
-		itemsData: JSON.parse(readFileSync("testContent/items.json", "utf8")),
-	}
+	
+	const profileData = JSON.parse(readFileSync("testContent/"+staticFileName, "utf8")) as profileData | apiError;
+	const itemsData = JSON.parse(readFileSync("testContent/items.json", "utf8")) as itemsData | apiError;
+	const statusData = JSON.parse(readFileSync("testContent/status.json", "utf8")) as statusData | apiError;
 
-	var returnValue: serverSideProps = {
-		props: {
-			computedData: {
-				stats: {},
-				skills: {},
-			}
-		}
-	}
+	if(!profileData.success) throw new Error("profile data was invalid");
+	if(!itemsData.success) throw new Error("items data was invalid");
+	if(!statusData.success) console.warn("statusData was unsuccessful"); //its not critical. you just wont know the extra stats given from location buffs (like the extra stuff on rampart armor)
 
-	if(!apiData.profileData) throw new Error("eeeeee")
-	if(apiData.profileData.success === false) throw new Error("eefe")
+	var apiData: apiData = { profileData, itemsData };
+
+	if(statusData.success) apiData.statusData = statusData;
 	
 	var selectedProfile = getMostRecentProfile(apiData.profileData.profiles, playerUUID);
 
 	await initItems(apiData);
 
 	
-    var calcId = randomBytes(64).toString("base64");
+    var calcId = randomBytes(64).toString("base64"); //generate a random uuid for the calculation
 
     calcTemp[calcId] = {
         stats: {},
@@ -137,6 +139,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
 	calculateAllSkillExp(apiData, selectedProfile, playerUUID, calcId);
 	await calculateStats(apiData, selectedProfile, playerUUID, calcId);
+
+	var returnValue: serverSideProps = {
+		props: {
+			computedData: {
+				stats: {},
+				skills: {},
+			},
+		}
+	}
 
 	returnValue.props.computedData.skills = calcTemp[calcId].skills;
 	returnValue.props.computedData.stats = calcTemp[calcId].stats;

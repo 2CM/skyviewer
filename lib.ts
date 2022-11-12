@@ -114,10 +114,6 @@ export async function initItems(data: apiData) {
 
     console.log("initing items")
 
-    if (data.itemsData === undefined) { //couldnt get the itemsData from the apiData
-        throw new Error("eee")
-    }
-
     items = data.itemsData.items;
 
     //initiates the itemsIndex (Map<string, number>), used for going from item id -> index of items[]
@@ -596,11 +592,6 @@ export function skillExpToLevel(exp: number, skill: skillName, extrapolate: bool
 
 //calculates all the data you need for skill exp stuff
 export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, playerUUID: string, calcId: string): allSkillExpInfo {
-    if (apiData.profileData === undefined) {
-        console.error("profileData is undefined");
-        return {};
-    }
-
     var skills: allSkillExpInfo = {};
 
     for (let i = 0; i < keys(skillCaps).length; i++) {
@@ -1129,8 +1120,6 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
 //calculates stats given from skill level ups
 export async function calculateSkillStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return
-
     var stats: statsCategory = {};
 
     for (let i = 0; i < keys(skillCaps).length; i++) { //for each skill
@@ -1146,7 +1135,7 @@ export async function calculateSkillStats(data: apiData, selectedProfile: number
         stats[colorChar + skillColors[name] + name.capitalize() + " " + Math.floor(levelInfo.level)] = skillLevelStats[name](Math.floor(levelInfo.level))
     }
 
-    calcTemp[calcId].stats[colorChar+"6"+"Skills"] = stats;
+    calcTemp[calcId].stats[`${colorChar}${"6"}Skills`] = stats;
 }
 
 export const fairySoulStats = {
@@ -1158,8 +1147,6 @@ export const fairySoulStats = {
 
 //yes i know they got revamped ill do that later
 export async function calculateFairySoulStats(data: apiData, selectedProfile: number, playerUUID: string): Promise<statsList> {
-    if (!data.profileData) return {}
-
     var exchanges = data.profileData.profiles[selectedProfile].members[playerUUID].fairy_exchanges;
 
     if (exchanges === undefined) return {};
@@ -1175,8 +1162,6 @@ export async function calculateFairySoulStats(data: apiData, selectedProfile: nu
 
 //NEEDS MORE TESTING; havent accounted for toggles and interface is probably wrong because i cant test around right now
 export async function calculateHotmStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return;
-
     var mining_core = data.profileData.profiles[selectedProfile].members[playerUUID].mining_core;
 
     var stats: statsCategory = {};
@@ -1191,40 +1176,34 @@ export async function calculateHotmStats(data: apiData, selectedProfile: number,
 
     if (mining_core.nodes.mining_experience) stats["Seasoned Mineman"] = { mining_wisdom: 5 + 0.1 * mining_core.nodes.mining_experience || 0 }
 
-    calcTemp[calcId].stats[colorChar+"5"+"HoTM"] = stats;
+    calcTemp[calcId].stats[`${colorChar}${"5"}HoTM`] = stats;
 }
 
 //calculates stats given from the wither essence shop
 export async function calculateEssenceStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return;
-
     var perks = data.profileData.profiles[selectedProfile].members[playerUUID].perks;
 
-    calcTemp[calcId].stats[colorChar+"7"+"Essence Shop"] = {
-        "Forbidden Health": { health: (perks.permanent_health || 0) * 2 },
-        "Forbidden Defense": { defense: (perks.permanent_defense || 0) * 1 },
-        "Forbidden Speed": { walk_speed: (perks.permanent_speed || 0) * 1 },
-        "Forbidden Intelligence": { intelligence: (perks.permanent_intelligence || 0) * 2 },
-        "Forbidden Strength": { strength: (perks.permanent_strength || 0) * 1 },
+    calcTemp[calcId].stats[`${colorChar}${"7"}Essence Shop`] = {
+        [`${colorChar}${"c"}Forbidden Health`]: { health: (perks.permanent_health || 0) * 2 },
+        [`${colorChar}${"a"}Forbidden Defense`]: { defense: (perks.permanent_defense || 0) * 1 },
+        [`${colorChar}${"f"}Forbidden Speed`]: { walk_speed: (perks.permanent_speed || 0) * 1 },
+        [`${colorChar}${"b"}Forbidden Intelligence`]: { intelligence: (perks.permanent_intelligence || 0) * 2 },
+        [`${colorChar}${"c"}Forbidden Strength`]: { strength: (perks.permanent_strength || 0) * 1 },
     };
 }
 
 //calculates stats given from reaper peppers
 export async function calculatePepperStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return;
-
     var peppers = data.profileData.profiles[selectedProfile].members[playerUUID].reaper_peppers_eaten;
 
     if (peppers == undefined) return;
 
-    calcTemp[calcId].stats[colorChar+"c"+"Peppers"] = {peppers: {health: peppers}};
+    calcTemp[calcId].stats[`${colorChar}${"c"}Peppers`] = {SAME: {health: peppers}};
 }
 
 
 //calculates stats given from the harp
 export async function calculateHarpStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return;
-
     var harp_quest = data.profileData.profiles[selectedProfile].members[playerUUID].harp_quest;
 
     if (keys(harp_quest).length == 0) return;
@@ -1242,14 +1221,12 @@ export async function calculateHarpStats(data: apiData, selectedProfile: number,
         stats[colorChar+harpColors[name]+name.replaceAll("_", " ").capitalize()] = { intelligence: (perfectCompletions >= 1 ? 1 : 0) * harpStats[name] };
     }
 
-    calcTemp[calcId].stats[colorChar+"d"+"Harp"] = stats;
+    calcTemp[calcId].stats[`${colorChar}${"d"}Harp`] = stats;
 }
 
 
 //calculates stats given from slayers
 export async function calculateSlayerStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return {}
-
     var slayer_bosses = data.profileData.profiles[selectedProfile].members[playerUUID].slayer_bosses;
 
     var stats: statsCategory = {};
@@ -1264,7 +1241,7 @@ export async function calculateSlayerStats(data: apiData, selectedProfile: numbe
         var rewardedStats: statsList = {};
         var highestClaimed: number = keys(boss.claimed_levels).length == 0 ? 0 : 1; //highest level claimed
 
-        for (let j = 0; j < 9; j++) { //for each level of it
+        for (let j = 0; j < 10; j++) { //for each level of it
             var claimed = boss.claimed_levels["level_" + j as keyof typeof boss.claimed_levels] !== undefined || boss.claimed_levels["level_" + j + "_special" as keyof typeof boss.claimed_levels] !== undefined; //if you claimed the level reward
             if (!claimed) continue; //if you didnt, continue
 
@@ -1285,7 +1262,7 @@ export async function calculateSlayerStats(data: apiData, selectedProfile: numbe
 
     stats[colorChar + "3" + "Global Combat Wisdom Buff"] = { combat_wisdom: combatWisdomBuff };
 
-    calcTemp[calcId].stats[colorChar+"2"+"Slayer"] = stats;
+    calcTemp[calcId].stats[`${colorChar}${"2"}Slayer`] = stats;
 }
 
 export interface accStatsInterface {
@@ -1298,8 +1275,6 @@ export interface accStatsInterface {
 
 //calculates stats given from accessories
 export async function calculateAccStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return;
-
     var talisman_bag_raw = data.profileData.profiles[selectedProfile].members[playerUUID].talisman_bag;
     var inv_raw = data.profileData.profiles[selectedProfile].members[playerUUID].inv_contents
     var accessory_bag_storage = data.profileData.profiles[selectedProfile].members[playerUUID].accessory_bag_storage;
@@ -1384,25 +1359,23 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
             stats.magicPower.magicPower = mergeStatsLists(stats.magicPower.magicPower, selectedPowerStats.extra || {});
         }
 
-        calcTemp[calcId].stats[colorChar+"b"+"Magic Power ("+mp+")"] = {SAME: stats.magicPower.magicPower};
+        calcTemp[calcId].stats[`${colorChar}${"b"}Magic Power (${mp})`] = {SAME: stats.magicPower.magicPower};
     }
 
     stats.tuning.tuning = multiplyStatsList((accessory_bag_storage.tuning.slot_0 ? accessory_bag_storage.tuning.slot_0 : {}) as statsList, tuningValues)
 
     console.log({ mp, statsMultiplier });
 
-    calcTemp[calcId].stats[colorChar+"9"+"Accessory Stats"] = stats.taliStats;
-    calcTemp[calcId].stats[colorChar+"b"+"Accessory Enrichments"] = stats.enrichments;
-    calcTemp[calcId].stats[colorChar+"e"+"Accessory Tuning"] = {SAME: stats.tuning.tuning};
-    calcTemp[calcId].stats[colorChar+"d"+"Accessory Gems"] = stats.gems;
+    calcTemp[calcId].stats[`${colorChar}${"9"}Accessory Stats`] = stats.taliStats;
+    calcTemp[calcId].stats[`${colorChar}${"b"}Accessory Enrichments`] = stats.enrichments;
+    calcTemp[calcId].stats[`${colorChar}${"e"}Accessory Tuning`] = {SAME: stats.tuning.tuning};
+    calcTemp[calcId].stats[`${colorChar}${"d"}Accessory Gems`] = stats.gems;
 }
 
 
 
 //calculates stats given from potions
 export async function calculatePotionStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return {};
-
     var active_effects = data.profileData.profiles[selectedProfile].members[playerUUID].active_effects;
     var disabled_effects = data.profileData.profiles[selectedProfile].members[playerUUID].disabled_potion_effects || [];
 
@@ -1484,7 +1457,7 @@ export async function calculatePotionStats(data: apiData, selectedProfile: numbe
         stats[`${colorChar+effectColors[effect.effect]+effect.effect.replaceAll("_", " ").capitalize()} ${effect.level}`] = effectStatsList;
     }
 
-    calcTemp[calcId].stats[colorChar+"5"+"Potions"] = stats;
+    calcTemp[calcId].stats[`${colorChar}${"5"}Potions`] = stats;
 }
 
 export interface cakeStatNumberToStat {
@@ -1494,8 +1467,6 @@ export interface cakeStatNumberToStat {
 
 //calculates stats given from century cakes
 export async function calculateCakeStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return {};
-
     var temp_stat_buffs = data.profileData.profiles[selectedProfile].members[playerUUID].temp_stat_buffs;
 
     if (!temp_stat_buffs) return {};
@@ -1511,13 +1482,11 @@ export async function calculateCakeStats(data: apiData, selectedProfile: number,
         }
     }
 
-    calcTemp[calcId].stats[colorChar+"d"+"Century Cakes"] = {SAME: stats};
+    calcTemp[calcId].stats[`${colorChar}${"d"}Century Cakes`] = {SAME: stats};
 }
 
 //calculates stats given from armor
 export async function calculateArmorStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return;
-
     var inv_armor_raw = data.profileData.profiles[selectedProfile].members[playerUUID].inv_armor;
 
     var stats: statsCategories = {};
@@ -1552,8 +1521,6 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
 //calculates stats given from equipment
 export async function calculateEquipmentStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return;
-
     var equippment_contents_raw = data.profileData.profiles[selectedProfile].members[playerUUID].equippment_contents;
 
     var stats: statsCategories = {};
@@ -1589,8 +1556,6 @@ export async function calculateEquipmentStats(data: apiData, selectedProfile: nu
 
 //calculates stats given from pet score
 export async function calculatePetScoreStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return;
-
     var pets = data.profileData.profiles[selectedProfile].members[playerUUID].pets;
 
     var petScore = 0;
@@ -1623,8 +1588,6 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
 
 //calculates stats given from current pet
 export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string, specialData: specialPetData, calcId: string) {
-    if (!data.profileData) return;
-
     var pets = data.profileData.profiles[selectedProfile].members[playerUUID].pets;
 
     var equippedPet: pet | undefined = pets.find(pet => pet.active == true);
@@ -1646,7 +1609,14 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     //     skin: "",
     // }
 
-    var petInfo: petStatInfo = petStats[equippedPet.type]; //info about the pet
+    var petInfo: petStatInfo | undefined = petStats[equippedPet.type]; //info about the pet
+
+    if(!petInfo) {
+        console.log(`couldnt find pet ${equippedPet}`);
+
+        return;
+    }
+
     var petLevel: number = petToLevel(equippedPet); //level of the pet
 
     //hpb double exception
@@ -1740,8 +1710,6 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
 //calculates stats given from bestiary milestones
 export async function calculateBestiaryStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return;
-
     var bestiary = data.profileData.profiles[selectedProfile].members[playerUUID].bestiary;
 
     var tiersUnlocked = 0;
@@ -1765,8 +1733,6 @@ export async function calculateBestiaryStats(data: apiData, selectedProfile: num
 }
 
 export async function calculateAbiphoneStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    if (!data.profileData) return;
-
     var abiphone = data.profileData.profiles[selectedProfile].members[playerUUID].nether_island_player_data?.abiphone;
 
     if(!abiphone) return;
@@ -1780,8 +1746,6 @@ export async function calculateAbiphoneStats(data: apiData, selectedProfile: num
 export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string): Promise<statsCategories> {
     calcTemp[calcId].stats["Base Stats"] = {SAME: baseStats};
 
-    if(!data.profileData) return calcTemp[calcId].stats;
-
     var specialPetData: specialPetData = {
         goldCollection: data.profileData.profiles[selectedProfile].members[playerUUID].collection.GOLD_INGOT || 0,
         bankCoins: data.profileData.profiles[selectedProfile].banking?.balance || 0,
@@ -1793,7 +1757,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     };
 
     await calculatePetStats(data, selectedProfile, playerUUID, specialPetData, calcId);
-    await calculateAbiphoneStats(data, selectedProfile, playerUUID, calcId)
+    await calculateAbiphoneStats(data, selectedProfile, playerUUID, calcId);
     await calculateSkillStats(data, selectedProfile, playerUUID, calcId);
     await calculateHotmStats(data, selectedProfile, playerUUID, calcId);
     await calculateEssenceStats(data, selectedProfile, playerUUID, calcId);
