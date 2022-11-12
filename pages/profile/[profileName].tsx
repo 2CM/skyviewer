@@ -29,6 +29,8 @@ export type itemsData = {
 	items: item[],
 }
 
+export type hypixelGame = "SKYBLOCK" | "other game";
+
 export type statusData = {
 	success: true,
 	uuid: string,
@@ -36,10 +38,10 @@ export type statusData = {
 		online: false
 	} | {
 		online: true,
-		gameType: Exclude<string, "SKYBLOCK">,
+		gameType: Exclude<hypixelGame, "SKYBLOCK">,
 	} | {
 		online: true,
-		gameType: "SKYBLOCK",
+		gameType: Extract<hypixelGame, "SKYBLOCK">,
 		mode: skyblockLocation,
 	}
 }

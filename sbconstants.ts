@@ -1,6 +1,6 @@
 //file containing a bunch of raw data not found in api about skyblock
 
-import { allStatsBoost } from "./lib";
+import { allStatsBoost, combatStatsBoost, mapObjectKeys } from "./lib";
 
 //tier of an item
 export type itemTier = "COMMON" | "UNCOMMON" | "RARE" | "EPIC" | "LEGENDARY" | "MYTHIC" | "DIVINE" | "SPECIAL" | "VERY_SPECIAL";
@@ -1842,12 +1842,6 @@ export type statName =
 
     "p_X_defense_per_1_strength" | //baby yeti
 
-    //location buffs
-    "l_all_crimson_isle" | //blaze pet
-    "l_mining_fortune_crimson_isle" | //kuudra pet
-    "l_combat_mining_island" | //mithril golem
-    "l_walk_speed_park" | //monkey
-
     //mob damage buffs
     "d_end_mobs" | //edrag pet
     "d_slimes" | // magma cube
@@ -3312,7 +3306,8 @@ export interface specialPetData {
     skills: {
         [key in skillName]?: number
     },
-    hotm: number
+    hotm: number,
+    location: skyblockLocation | undefined
 }
 
 //info about stats of a pet
@@ -3525,7 +3520,7 @@ export const petStats: {
             "Nether Embodiment": {
                 tier: "EPIC",
                 stats: (level, tier, special) => ({
-                    l_all_crimson_isle: 0.1*level
+                    ...mapObjectKeys(allStatsBoost(0.001*level), key => special.location == "crimson_isle" ? key : "")
                 })
             },
             "Bling Armor": {
@@ -3752,7 +3747,7 @@ export const petStats: {
             "Kuudra Fortune": {
                 tier: "RARE",
                 stats: (level, tier, special) => ({
-                    l_mining_fortune_crimson_isle: 0.5*level
+                    mining_fortune: special.location == "crimson_isle" ? 0.005*level : 0
                 })
             }
         }
@@ -3823,7 +3818,7 @@ export const petStats: {
             "Danger Adverse": {
                 tier: "LEGENDARY",
                 stats: (level, tier, special) => ({
-                    l_combat_mining_island: 0.2*level,
+                    ...(special.location ? (["mining_1", "mining_2", "mining_3", "crystal_hollows"] as skyblockLocation[]).includes(special.location) ? combatStatsBoost(0.002*level) : {} : {})
                 })
             },
         }
@@ -3843,7 +3838,7 @@ export const petStats: {
             "Vine Swing": {
                 tier: "LEGENDARY",
                 stats: (level, tier, special) => ({
-                    l_walk_speed_park: (tier == "RARE" ? 0.75 : 1)*level,
+                    walk_speed: special.location == "foraging_1" ? (tier == "RARE" ? 0.008 : 0.01)*level : 0
                 })
             },
         }

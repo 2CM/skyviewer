@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats } from "./sbconstants"; //so many ;-;
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -49,7 +49,7 @@ Number.prototype.compact = function () {
 }
 
 //maps values of an object
-function mapObjectKeys<Type extends object>(obj: Type, callbackfn: (value: keyof Type, index: number, array: any[]) => string): Type {
+export function mapObjectKeys<Type extends object>(obj: Type, callbackfn: (value: keyof Type, index: number, array: any[]) => string): Type {
     var newObj: Type | any = {};
 
     for (let i = 0; i < keys(obj).length; i++) {
@@ -63,7 +63,7 @@ function mapObjectKeys<Type extends object>(obj: Type, callbackfn: (value: keyof
 }
 
 //maps values of an object
-function mapObjectValues<Type extends object>(obj: Type, callbackfn: (value: Type[keyof Type], index: number, array: any[]) => Type[keyof Type]): Type {
+export function mapObjectValues<Type extends object>(obj: Type, callbackfn: (value: Type[keyof Type], index: number, array: any[]) => Type[keyof Type]): Type {
     var newObj: Type | any = {};
 
     for (let i = 0; i < keys(obj).length; i++) {
@@ -649,6 +649,17 @@ export function allStatsBoost(amount: number): statsList {
         m_magic_find: 1,
         m_pet_luck: 1,
         m_sea_creature_chance: 1,
+    }, amount);
+}
+
+//same as allStatsBoost except for only combat stats
+export function combatStatsBoost(amount: number): statsList {
+    return multiplyStatsList({
+        m_health: 1,
+        m_defense: 1,
+        m_strength: 1,
+        m_critical_chance: 1,
+        m_critical_damage: 1,
     }, amount);
 }
 
@@ -1598,16 +1609,16 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     var backgroundPetStats: statsCategories = {}; //for all pets (background pets)
     var stats: statsCategory = {}; //for only the equipped pet
 
-    // equippedPet = { //for testing
-    //     exp: 40000, //from deathstreeks
-    //     tier: "RARE",
-    //     type: "BINGO",
-    //     active: true,
-    //     heldItem: "MINOS_RELIC",
-    //     candyUsed: 0,
-    //     uuid: "",
-    //     skin: "",
-    // }
+    equippedPet = { //for testing
+        exp: 5038804, //from deathstreeks
+        tier: "LEGENDARY",
+        type: "MITHRIL_GOLEM",
+        active: true,
+        heldItem: "MINOS_RELIC",
+        candyUsed: 0,
+        uuid: "",
+        skin: "",
+    }
 
     var petInfo: petStatInfo | undefined = petStats[equippedPet.type]; //info about the pet
 
@@ -1753,8 +1764,11 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
             fishing: Math.floor(calcTemp[calcId].skills.fishing?.levelInfo.level || 0),
             mining: Math.floor(calcTemp[calcId].skills.mining?.levelInfo.level || 0),
         },
-        hotm: hotmExpToLevel(data.profileData.profiles[selectedProfile].members[playerUUID].mining_core.experience || 0)
+        hotm: hotmExpToLevel(data.profileData.profiles[selectedProfile].members[playerUUID].mining_core.experience || 0),
+        location: data.statusData?.session.online && data.statusData.session.gameType == "SKYBLOCK" ? data.statusData.session.mode : undefined
     };
+
+    console.log(specialPetData.location)
 
     await calculatePetStats(data, selectedProfile, playerUUID, specialPetData, calcId);
     await calculateAbiphoneStats(data, selectedProfile, playerUUID, calcId);
@@ -1762,7 +1776,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     await calculateHotmStats(data, selectedProfile, playerUUID, calcId);
     await calculateEssenceStats(data, selectedProfile, playerUUID, calcId);
     await calculatePepperStats(data, selectedProfile, playerUUID, calcId);
-    await calculateHarpStats(data, selectedProfile, playerUUID, calcId)
+    await calculateHarpStats(data, selectedProfile, playerUUID, calcId);
     await calculateSlayerStats(data, selectedProfile, playerUUID, calcId);
     await calculateAccStats(data, selectedProfile, playerUUID, calcId);
     await calculatePotionStats(data, selectedProfile, playerUUID, calcId);
