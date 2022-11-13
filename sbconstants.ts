@@ -4593,3 +4593,33 @@ export type skyblockLocation =
     "dungeon" | //all dungeons
 
     "instanced"; //kuudra .-.
+
+export const fullSets = {
+    "YOUNG_DRAGON": [
+        "YOUNG_DRAGON_HELMET",
+        "YOUNG_DRAGON_CHESTPLATE",
+        "YOUNG_DRAGON_LEGGINGS",
+        "YOUNG_DRAGON_BOOTS",
+    ],
+    // "DEBUG": [
+    //     "WITHER_GOGGLES",
+    //     "WISE_WITHER_CHESTPLATE",
+    //     "WISE_WITHER_LEGGINGS",
+    //     "WISE_WITHER_BOOTS",
+    // ],
+    // "DEBUG_EQUIPMENT": [
+    //     "VANQUISHED_MAGMA_NECKLACE",
+    //     "VANQUISHED_GHAST_CLOAK",
+    //     "IMPLOSION_BELT",
+    //     "VANQUISHED_GLOWSTONE_GAUNTLET",
+    // ],
+} as const;
+
+export type fullSetName = keyof typeof fullSets;
+export type fullSetPiece = typeof fullSets[keyof typeof fullSets][number];
+
+export const fullSetNames: {
+    [key in fullSetName]: string
+} = {
+    "YOUNG_DRAGON": "Young Blood",
+}

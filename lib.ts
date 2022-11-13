@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation } from "./sbconstants"; //so many ;-;
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -105,20 +105,43 @@ export async function itemIdToItem(id: string): Promise<item | undefined> {
 }
 
 //initiates itemIdToItem system
-export async function initItems(data: apiData) {
+export function initItems(data: apiData) {
     if (itemsIndex.size != 0) { //guard so we dont do it again
         console.warn("items already inited");
 
         return;
     }
 
-    console.log("initing items")
+    console.log("initing items");
 
     items = data.itemsData.items;
 
     //initiates the itemsIndex (Map<string, number>), used for going from item id -> index of items[]
     for (let i = 0; i < items.length; i++) {
         itemsIndex.set(items[i].id, i);
+    }
+}
+
+export var fullSetsIndex = new Map<fullSetPiece, fullSetName>();
+
+export function initFullSets() {
+    if (fullSetsIndex.size != 0) { //guard so we dont do it again
+        console.warn("full sets already inited");
+
+        return;
+    }
+
+    console.log("initing sets");
+
+    for(let i in keys(fullSets)) {
+        let setName = keys(fullSets)[i]; //YOUNG_DRAGON
+        let setPieces = fullSets[setName]; //["YOUNG_DRAGON_${'HELMET' | 'CHESTPLATE' | 'LEGGINGS' | 'BOOTS'}"];
+
+        for(let j in setPieces) {
+            let pieceName = setPieces[j]; //["YOUNG_DRAGON_HELMET"]
+
+            fullSetsIndex.set(pieceName, setName); //fullSetIndex["YOUNG_DRAGON_BOOTS"] -> "YOUNG_DRAGON"; 
+        }
     }
 }
 
@@ -1496,17 +1519,23 @@ export async function calculateCakeStats(data: apiData, selectedProfile: number,
     calcTemp[calcId].stats[`${colorChar}${"d"}Century Cakes`] = {SAME: stats};
 }
 
-//calculates stats given from armor
+//calculates stats given from armor and equipment
 export async function calculateArmorStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
     var inv_armor_raw = data.profileData.profiles[selectedProfile].members[playerUUID].inv_armor;
+    var equippment_contents_raw = data.profileData.profiles[selectedProfile].members[playerUUID].equippment_contents;
 
     var stats: statsCategories = {};
 
-    var armor = await parseContents(inv_armor_raw) as IObjectKeys;
+    var armor = await parseContents(inv_armor_raw) as any;
     if (armor.i === undefined) return;
 
-    var armorContents: (nbtItem | {})[] = armor.i;
+    var equipment = await parseContents(equippment_contents_raw) as any;
+    if (equipment.i === undefined) return;
 
+    var armorContents: (nbtItem | {})[] = [...armor.i, ...equipment.i];
+
+    var foundSetPieces = new Set<fullSetPiece>();
+    var foundSetNames = new Set<fullSetName>();
 
     for (let i in armorContents) {
         var piece: nbtItem | {} = armorContents[i];
@@ -1521,49 +1550,51 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         var category = baseItem.category;
 
-        stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId);
+        var pieceFullSetName = fullSetsIndex.get(baseItem.id as fullSetPiece);
 
-        calcTemp[calcId].stats[piece.tag.display.Name] = mapObjectKeys(
-            stats[piece.tag.display.Name],
-            value => itemStatSourceNames[value as itemStatSource] ?(colorChar+itemStatSourceColors[value as itemStatSource]+itemStatSourceNames[value as itemStatSource]) : value
-        );
-    }
-}
-
-//calculates stats given from equipment
-export async function calculateEquipmentStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    var equippment_contents_raw = data.profileData.profiles[selectedProfile].members[playerUUID].equippment_contents;
-
-    var stats: statsCategories = {};
-
-    var equipment = await parseContents(equippment_contents_raw) as IObjectKeys;
-    if (equipment.i === undefined) return;
-
-    var equipmentContents: (nbtItem | {})[] = equipment.i;
-
-
-    for (let i in equipmentContents) {
-        var piece: nbtItem | {} = equipmentContents[i];
-
-        if(!isNbtItem(piece)) continue;
-
-        var baseItem = await itemIdToItem(piece.tag.ExtraAttributes.id);
-        if (!baseItem) {
-            console.warn("piece baseItem is undefined");
-            continue;
+        if(pieceFullSetName !== undefined) {
+            foundSetNames.add(pieceFullSetName);
+            foundSetPieces.add(baseItem.id as fullSetPiece);
         }
 
-        var category = baseItem.category;
-
         stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId);
 
         calcTemp[calcId].stats[piece.tag.display.Name] = mapObjectKeys(
             stats[piece.tag.display.Name],
-            value => itemStatSourceNames[value as itemStatSource] ?(colorChar+itemStatSourceColors[value as itemStatSource]+itemStatSourceNames[value as itemStatSource]) : value
+            value => itemStatSourceNames[value as itemStatSource] ? 
+                colorChar+itemStatSourceColors[value as itemStatSource]+itemStatSourceNames[value as itemStatSource]
+                : value
         );
     }
-}
 
+    // console.log({foundSetNames, foundSetPieces});
+
+    var verifiedFullSets = new Set(foundSetNames);
+
+    //check which full sets we actually have
+    for(let i in [...foundSetNames]) {
+        let foundSetName = [...foundSetNames][i];
+
+        for(let j in fullSets[foundSetName]) {
+            let setPieceName = fullSets[foundSetName][j];
+
+            if(!foundSetPieces.has(setPieceName)) {
+                verifiedFullSets.delete(foundSetName);
+            }
+        }
+    }
+
+    // console.log(verifiedFullSets);
+
+    for(let i in [...verifiedFullSets]) {
+        let fullSetName = [...verifiedFullSets][i];
+
+        //full set bonuses go here
+        if(fullSetName == "YOUNG_DRAGON") {
+            calcTemp[calcId].stats[fullSetNames[fullSetName] || fullSetName] = {SAME: {c_walk_speed: 100, walk_speed: 70}}
+        }
+    }
+}
 
 //calculates stats given from pet score
 export async function calculatePetScoreStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
@@ -1768,8 +1799,6 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
         location: data.statusData?.session.online && data.statusData.session.gameType == "SKYBLOCK" ? data.statusData.session.mode : undefined
     };
 
-    console.log(specialPetData.location)
-
     await calculatePetStats(data, selectedProfile, playerUUID, specialPetData, calcId);
     await calculateAbiphoneStats(data, selectedProfile, playerUUID, calcId);
     await calculateSkillStats(data, selectedProfile, playerUUID, calcId);
@@ -1782,7 +1811,6 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     await calculatePotionStats(data, selectedProfile, playerUUID, calcId);
     await calculateCakeStats(data, selectedProfile, playerUUID, calcId);
     await calculateArmorStats(data, selectedProfile, playerUUID, calcId);
-    await calculateEquipmentStats(data, selectedProfile, playerUUID, calcId);
     await calculatePetScoreStats(data, selectedProfile, playerUUID, calcId);
     await calculateBestiaryStats(data, selectedProfile, playerUUID, calcId);
 

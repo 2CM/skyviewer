@@ -2,7 +2,7 @@ import { useRouter } from "next/router"
 import Head from "next/head";
 import { Context, createContext, useEffect, useState} from 'react'
 import { readFileSync } from "fs";
-import { allSkillExpInfo, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, sumStatsSources, getStatSources, statsCategories, keys, calcTemp } from "../../lib";
+import { allSkillExpInfo, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, sumStatsSources, getStatSources, statsCategories, keys, calcTemp, initFullSets } from "../../lib";
 import Skills from "../../components/skills";
 import Stats from "../../components/stats";
 import { GetServerSideProps } from "next";
@@ -126,7 +126,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 	
 	var selectedProfile = getMostRecentProfile(apiData.profileData.profiles, playerUUID);
 
-	await initItems(apiData);
+	initItems(apiData);
+	initFullSets();
 
 	
     var calcId = randomBytes(64).toString("base64"); //generate a random uuid for the calculation
