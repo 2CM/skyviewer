@@ -14,7 +14,6 @@
 
     - tara helm
     - warden helm
-    - farm suit/armor
     - mushroom/batperson armor
     - angler armor
     - lapis armor

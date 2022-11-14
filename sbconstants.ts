@@ -4616,6 +4616,18 @@ export const fullSets = {
         "FAIRY_CHESTPLATE",
         "FAIRY_LEGGINGS",
         "FAIRY_BOOTS",
+    ],
+    "FARM_SUIT": [
+        "FARM_SUIT_HELMET",
+        "FARM_SUIT_CHESTPLATE",
+        "FARM_SUIT_LEGGINGS",
+        "FARM_SUIT_BOOTS",
+    ],
+    "FARM_ARMOR": [
+        "FARM_ARMOR_HELMET",
+        "FARM_ARMOR_CHESTPLATE",
+        "FARM_ARMOR_LEGGINGS",
+        "FARM_ARMOR_BOOTS",
     ]
     // "DEBUG": [
     //     "WITHER_GOGGLES",
@@ -4639,5 +4651,7 @@ export const fullSetNames: {
 } = {
     "YOUNG_DRAGON": "Young Blood",
     "MASTIFF": "Absolute Unit",
-    "FAIRY": "Fairy's Outfit"
+    "FAIRY": "Fairy's Outfit",
+    "FARM_SUIT": "Bonus Speed", //really hypixel
+    "FARM_ARMOR": "Bonus Speed", //really
 }
