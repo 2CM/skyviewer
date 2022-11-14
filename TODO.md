@@ -12,7 +12,6 @@
     - beastmaster
     - day/night crystal
 
-    - young armor speed
     - mastiff
     - fairy armor
     - tara helm

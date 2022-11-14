@@ -1823,6 +1823,8 @@ export type statName =
 
     "s_no_speed" | //snail pet
 
+    "s_critical_hit_multiplier" | //mastiff
+
     //y per x
     //per stats get applied after multiplication
     "p_X_strength_per_5_magic_find" | //gdrag
@@ -1841,6 +1843,8 @@ export type statName =
     "p_X_farming_fortune_per_1_strength" | //mooshroom cow pet
 
     "p_X_defense_per_1_strength" | //baby yeti
+
+    "p_X_health_per_1_critical_damage" | //mastiff
 
     //mob damage buffs
     "d_end_mobs" | //edrag pet
@@ -4601,6 +4605,12 @@ export const fullSets = {
         "YOUNG_DRAGON_LEGGINGS",
         "YOUNG_DRAGON_BOOTS",
     ],
+    "MASTIFF": [
+        "MASTIFF_HELMET",
+        "MASTIFF_CHESTPLATE",
+        "MASTIFF_LEGGINGS",
+        "MASTIFF_BOOTS",
+    ]
     // "DEBUG": [
     //     "WITHER_GOGGLES",
     //     "WISE_WITHER_CHESTPLATE",
@@ -4622,4 +4632,5 @@ export const fullSetNames: {
     [key in fullSetName]: string
 } = {
     "YOUNG_DRAGON": "Young Blood",
+    "MASTIFF": "Absolute Unit"
 }
