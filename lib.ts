@@ -1592,8 +1592,16 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
         //full set bonuses go here
         if(fullSetName == "YOUNG_DRAGON") {
             calcTemp[calcId].stats[fullSetNames[fullSetName] || fullSetName] = {SAME: {c_walk_speed: 100, walk_speed: 70}}
-        } else if(fullSetName == "MASTIFF") {
-            calcTemp[calcId].stats[fullSetNames[fullSetName] || fullSetName] = {SAME: {p_X_health_per_1_critical_damage: 50}}
+        } else
+        
+        if(fullSetName == "MASTIFF") {
+            calcTemp[calcId].stats[fullSetNames[fullSetName] || fullSetName] = {SAME: {p_X_health_per_1_critical_damage: 50, s_critical_hit_multiplier: 0.5}}
+        } else
+        
+        if(fullSetName == "FAIRY") {
+            calcTemp[calcId].stats[fullSetNames[fullSetName] || fullSetName] = {SAME: {
+                health: data.profileData.profiles[selectedProfile].members[playerUUID].fairy_souls_collected
+            }}
         }
     }
 }

@@ -4610,6 +4610,12 @@ export const fullSets = {
         "MASTIFF_CHESTPLATE",
         "MASTIFF_LEGGINGS",
         "MASTIFF_BOOTS",
+    ],
+    "FAIRY": [
+        "FAIRY_HELMET",
+        "FAIRY_CHESTPLATE",
+        "FAIRY_LEGGINGS",
+        "FAIRY_BOOTS",
     ]
     // "DEBUG": [
     //     "WITHER_GOGGLES",
@@ -4632,5 +4638,6 @@ export const fullSetNames: {
     [key in fullSetName]: string
 } = {
     "YOUNG_DRAGON": "Young Blood",
-    "MASTIFF": "Absolute Unit"
+    "MASTIFF": "Absolute Unit",
+    "FAIRY": "Fairy's Outfit"
 }

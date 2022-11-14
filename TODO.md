@@ -12,8 +12,6 @@
     - beastmaster
     - day/night crystal
 
-    - mastiff
-    - fairy armor
     - tara helm
     - warden helm
     - farm suit/armor
