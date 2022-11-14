@@ -41,7 +41,7 @@ export interface itemStats {
     RUNECRAFTING_WISDOM?: number,
     SOCIAL_WISDOM?: number,
     FISHING_SPEED?: number,
-    HEALTH_REGEN?: number,
+    health_regeneration?: number,
     VITALITY?: number,
     MENDING?: number,
 }
@@ -413,7 +413,7 @@ export const effectStats: {
         }),
         "invisibility": level => ({}),
         "regeneration": level => ({
-            health_regen: [5, 10, 15, 20, 25, 30, 40, 50, 60][level-1]
+            health_regeneration: [5, 10, 15, 20, 25, 30, 40, 50, 60][level-1]
         }),
         "weakness": level => ({}),
         "slowness": level => ({
@@ -1752,7 +1752,7 @@ export type statName =
     "runecrafting_wisdom" |
     "social_wisdom" |
     "fishing_speed" |
-    "health_regen" |
+    "health_regeneration" |
     "vitality" |
     "mending" |
 
@@ -1788,7 +1788,7 @@ export type statName =
     "m_runecrafting_wisdom" |
     "m_social_wisdom" |
     "m_fishing_speed" |
-    "m_health_regen" |
+    "m_health_regeneration" |
     "m_vitality" |
     "m_mending" |
 
@@ -1825,6 +1825,8 @@ export type statName =
 
     "s_critical_hit_multiplier" | //mastiff
 
+    "s_aotd_ability_bonus" | //sup armor
+
     //y per x
     //per stats get applied after multiplication
     "p_X_strength_per_5_magic_find" | //gdrag
@@ -1845,6 +1847,8 @@ export type statName =
     "p_X_defense_per_1_strength" | //baby yeti
 
     "p_X_health_per_1_critical_damage" | //mastiff
+
+    "p_X_walk_speed_per_50_defense" | //heavy armor
 
     //mob damage buffs
     "d_end_mobs" | //edrag pet
@@ -1895,7 +1899,7 @@ export const statIdToStatName: statIdMap<string> = {
     breaking_power: "Breaking Power",
     pristine: "Pristine",
     fishing_speed: "Fishing Speed",
-    health_regen: "Health Regen",
+    health_regeneration: "Health Regen",
     vitality: "Vitality",
     mending: "Mending",
     combat_wisdom: "Combat Wisdom",
@@ -1942,7 +1946,7 @@ export const baseStats: statsList = {
     runecrafting_wisdom: 0,
     social_wisdom: 0,
     fishing_speed: 0,
-    health_regen: 100,
+    health_regeneration: 100,
     vitality: 100,
     mending: 100,
 }
@@ -1967,7 +1971,7 @@ export const statColors: statIdMap<colorCode> = {
     foraging_fortune: "6",
     pristine: "5",
     fishing_speed: "b",
-    health_regen: "c",
+    health_regeneration: "c",
     vitality: "4",
     sea_creature_chance: "3",
     attack_speed: "e",
@@ -2004,7 +2008,7 @@ export const statChars: statIdMap<string> = {
     foraging_fortune: "☘",
     pristine: "✧",
     fishing_speed: "☂",
-    health_regen: "❣",
+    health_regeneration: "❣",
     vitality: "♨",
     sea_creature_chance: "α",
     attack_speed: "⚔",
@@ -2352,7 +2356,7 @@ export const enchantStats: {
             defense: [4,8,12,16,20,25,30][level-1],
         }),
         rejuvenate: level => ({
-            health_regen: 2*level,
+            health_regeneration: 2*level,
         }),
         true_protection: level => ({
             true_defense: 5,
@@ -2557,7 +2561,7 @@ export const attributeStats: {
         walk_speed: 5*level
     }),
     life_regeneration: level => ({
-        health_regen: 1.25*level
+        health_regeneration: 1.25*level
     }),
     mana_pool: level => ({
         intelligence: 20*level
@@ -2705,7 +2709,7 @@ export const slayerStats: {
         {health: 4},
         {health: 4},
         {health: 5},
-        {health: 5, health_regen: 50},
+        {health: 5, health_regeneration: 50},
         {health: 6},
     ],
     spider: [
@@ -3736,7 +3740,7 @@ export const petStats: {
     "JELLYFISH": {
         base: (level, tier) => ({
             health: 2*level,
-            health_regen: 1*level,
+            health_regeneration: 1*level,
         }),
         perks: {
 
@@ -4628,7 +4632,49 @@ export const fullSets = {
         "FARM_ARMOR_CHESTPLATE",
         "FARM_ARMOR_LEGGINGS",
         "FARM_ARMOR_BOOTS",
-    ]
+    ],
+    "ANGLER": [
+        "ANGLER_HELMET",
+        "ANGLER_CHESTPLATE",
+        "ANGLER_LEGGINGS",
+        "ANGLER_BOOTS",
+    ],
+    "LAPIS_ARMOR": [
+        "LAPIS_ARMOR_HELMET",
+        "LAPIS_ARMOR_CHESTPLATE",
+        "LAPIS_ARMOR_LEGGINGS",
+        "LAPIS_ARMOR_BOOTS",
+    ],
+    "EMERALD_ARMOR": [
+        "EMERALD_ARMOR_HELMET",
+        "EMERALD_ARMOR_CHESTEPLATE",
+        "EMERALD_ARMOR_LEGGINGS",
+        "EMERALD_ARMOR_BOOTS",
+    ],
+    "SPEEDSTER": [
+        "SPEEDSTER_HELMET",
+        "SPEEDSTER_CHESTEPLATE",
+        "SPEEDSTER_LEGGINGS",
+        "SPEEDSTER_BOOTS",
+    ],
+    "GLACITE": [
+        "GLACITE_HELMET",
+        "GLACITE_CHESTEPLATE",
+        "GLACITE_LEGGINGS",
+        "GLACITE_BOOTS",
+    ],
+    "SUPERIOR_DRAGON": [
+        "SUPERIOR_DRAGON_HELMET",
+        "SUPERIOR_DRAGON_CHESTEPLATE",
+        "SUPERIOR_DRAGON_LEGGINGS",
+        "SUPERIOR_DRAGON_BOOTS",
+    ],
+    "HOLY_DRAGON": [
+        "HOLY_DRAGON_HELMET",
+        "HOLY_DRAGON_CHESTEPLATE",
+        "HOLY_DRAGON_LEGGINGS",
+        "HOLY_DRAGON_BOOTS",
+    ],
     // "DEBUG": [
     //     "WITHER_GOGGLES",
     //     "WISE_WITHER_CHESTPLATE",
@@ -4654,4 +4700,11 @@ export const fullSetNames: {
     "FAIRY": "Fairy's Outfit",
     "FARM_SUIT": "Bonus Speed", //really hypixel
     "FARM_ARMOR": "Bonus Speed", //really
+    "ANGLER": "Deepness Within",
+    "LAPIS_ARMOR": "Health", //bruh
+    "EMERALD_ARMOR": "Tank",
+    "SPEEDSTER": "Bonus Speed", //.____.
+    "GLACITE": "Expert Miner",
+    "SUPERIOR_DRAGON": "Superior Blood",
+    "HOLY_DRAGON": "Holy Blood",
 }

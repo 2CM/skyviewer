@@ -1434,7 +1434,7 @@ export async function calculatePotionStats(data: apiData, selectedProfile: numbe
         }
 
         if (effect.effect == "dungeon") {
-            stats.dungeon.health_regen = effectStats.regeneration([1, 2, 3, 3, 3, 4, 4][effect.level]).health_regen;
+            stats.dungeon.health_regeneration = effectStats.regeneration([1, 2, 3, 3, 3, 4, 4][effect.level]).health_regeneration;
 
             stats.dungeon.strength = effectStats.strength([3, 3, 3, 4, 4, 4, 5][effect.level]).strength
 
@@ -1466,8 +1466,8 @@ export async function calculatePotionStats(data: apiData, selectedProfile: numbe
                     effectStatsList.health = effectStatsList.health || 0;
                     effectStatsList.health *= 1.05;
 
-                    effectStatsList.health_regen = effectStatsList.health_regen || 0;
-                    effectStatsList.health_regen *= 1.05;
+                    effectStatsList.health_regeneration = effectStatsList.health_regeneration || 0;
+                    effectStatsList.health_regeneration *= 1.05;
                     break;
                 case "dr_paper":
                     effectStatsList.health = effectStatsList.health || 0;
@@ -1617,6 +1617,42 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
             if(calcTemp[calcId].status == "farming_1") {
                 calcTemp[calcId].stats[formattedName] = {SAME: {walk_speed: 25}};
             }
+        } else
+
+        if(fullSetName == "ANGLER") {
+            calcTemp[calcId].stats[formattedName] = {SAME: {health: 10*Math.floor((calcTemp[calcId].skills.fishing?.levelInfo.level || 1)/10)}};
+        } else 
+
+        if(fullSetName == "LAPIS_ARMOR") {
+            calcTemp[calcId].stats[formattedName] = {SAME: {health: 60}};
+        } else 
+
+        if(fullSetName == "EMERALD_ARMOR") {
+            let emeraldCollection = data.profileData.profiles[selectedProfile].members[playerUUID].collection.EMERALD || 0;
+
+            calcTemp[calcId].stats[formattedName] = {SAME: {
+                health: Math.min(Math.floor(emeraldCollection/3000), 350),
+                defense: Math.min(Math.floor(emeraldCollection/3000), 350),
+            }};
+        } else 
+
+        if(fullSetName == "SPEEDSTER") {
+            calcTemp[calcId].stats[formattedName] = {SAME: {walk_speed: 20}};
+        } else 
+
+        if(fullSetName == "GLACITE") {
+            calcTemp[calcId].stats[formattedName] = {SAME: {mining_speed: 2*Math.floor(calcTemp[calcId].skills.mining?.levelInfo.level || 1)}};
+        } else 
+
+        if(fullSetName == "SUPERIOR_DRAGON") {
+            calcTemp[calcId].stats[formattedName] = {SAME: {
+                s_aotd_ability_bonus: 0.5,
+                ...allStatsBoost(0.05)
+            }};
+        } else 
+
+        if(fullSetName == "HOLY_DRAGON") {
+            calcTemp[calcId].stats[formattedName] = {SAME: {health_regeneration: 200}};
         }
     }
 }
