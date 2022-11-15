@@ -135,6 +135,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     calcTemp[calcId] = {
         stats: {},
         skills: {},
+		status: undefined,
         other: {
 
         },

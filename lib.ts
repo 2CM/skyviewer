@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames } from "./sbconstants"; //so many ;-;
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames, ExtraAttributes } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -1129,7 +1129,7 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         
         if(!stats.baseStats) stats.baseStats = {};
         stats.baseStats.health = (stats.baseStats.health || 0) + contents.length
-    }
+    } else
 
     if(item.tag.ExtraAttributes.id == "PULSE_RING") {
         if(!stats.baseStats) stats.baseStats = {};
@@ -1140,11 +1140,20 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
                 tierStringToNumber(baseItem.tier || "COMMON")-
                 (item.tag.ExtraAttributes.rarity_upgrades || 0)
             )+0.25 //it starts at 0.25
-    }
+    } else
+
     if(item.tag.ExtraAttributes.id == "BLOOD_GOD_CREST") {
         if(!stats.baseStats) stats.baseStats = {};
         
         stats.baseStats.strength = (stats.baseStats.strength || 0) + Math.floor(Math.log10(item.tag.ExtraAttributes.blood_god_kills || 0)+1);
+    } else
+
+    if(item.tag.ExtraAttributes.id.startsWith("SYNTHESIZER_V")) {
+        let synthTier = +(item.tag.ExtraAttributes.id.at(-1) || "1")-1;
+
+        if(synthTier >= 0) stats[`${colorChar}${"c"}X`] = {health: (item.tag.ExtraAttributes.EXE || 0)};
+        if(synthTier >= 1) stats[`${colorChar}${"a"}Y`] = {defense: (item.tag.ExtraAttributes.WAI || 0)};
+        if(synthTier >= 2) stats[`${colorChar}${"b"}Z`] = {intelligence: (item.tag.ExtraAttributes.ZEE || 0)};
     }
 
     // console.log(stats);

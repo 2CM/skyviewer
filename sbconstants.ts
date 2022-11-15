@@ -111,6 +111,111 @@ export interface item {
     id: string,
 }
 
+export type ExtraAttributes = {
+    modifier?: string, //reforge
+    attributes?: {
+        [key in keyof typeof attributeStats]: number
+    },
+    id: string,
+    uuid?: string,
+    timestamp: string,
+    enchantments?: {
+        [key: string]: number
+    },
+    hot_potato_count?: number,
+    dungeon_item_level?: number, //dungeon stars
+    gems?: { //gemstones
+        [key: string]: itemGemstoneSlotType
+    },
+    rarity_upgrades?: number, //reomb
+    stats_book?: number,
+    runes?: {
+        [key in string]: number 
+    }[], //multiple runes update????
+    art_of_war_count?: number,
+    artOfPeaceApplied?: number,
+    ability_scroll?: witherScrollType[],
+    champion_combat_xp?: number,
+    compact_blocks?: number,
+    expertise_kills?: number,
+    farmed_cultivating?: number,
+    hecatomb_s_runs?: number,
+    donated_museum?: number,
+    power_ability_scroll?: `${Capitalize<gemstone>}_POWER_SCROLL`,
+    anvil_uses?: number,
+    ethermerge?: number,
+    tuned_transmission?: number,
+    necromancer_souls?: {
+        mob_id: string,
+    }[],
+    potion_level?: number,
+    potion?: effectName,
+    effects?: {
+        level: number,
+        effect: effectName,
+        duration_ticks: number,
+    }[],
+    potion_type?: string
+    splash?: number,
+    potion_name?: string,
+    dungeon_potion?: number,
+    item_tier?: number,
+    baseStatBoostPercentage?: number,
+    farming_for_dummies_count?: number,
+    mined_crops?: number, //for math hoes
+    magma_cube_absorber?: number, //magma necklace
+    ghast_blaster?: number, //ghast cloak
+    glowing?: number, //glowstone gauntlet
+    EXE?: number,            
+    WAI?: number,            
+    ZEE?: number,            
+
+
+    party_hat_year?: number,
+    party_hat_color?: string,
+    talisman_enrichment?: statName, //enrichment
+    model?: abicaseModel, //abicase
+    thunder_charge?: number, //pulse ring
+    "pandora-rarity"?: itemTier, //what the fuck hypixel (pandoras box)
+    winning_bid?: number, //hegemony artifact
+    boss_tier?: number, //kuudra core
+    new_years_cake?: number,
+
+    //personal deletor
+    personal_deletor_0?: string,
+    personal_deletor_1?: string,
+    personal_deletor_2?: string,
+    personal_deletor_3?: string,
+    personal_deletor_4?: string,
+    personal_deletor_5?: string,
+    personal_deletor_6?: string,
+    personal_deletor_7?: string,
+    personal_deletor_8?: string,
+    personal_deletor_9?: string,
+    personal_deletor_10?: string,
+    personal_deletor_11?: string,
+
+    //personal compactor
+    personal_compactor_0?: string,
+    personal_compactor_1?: string,
+    personal_compactor_2?: string,
+    personal_compactor_3?: string,
+    personal_compactor_4?: string,
+    personal_compactor_5?: string,
+    personal_compactor_6?: string,
+    personal_compactor_7?: string,
+    personal_compactor_8?: string,
+    personal_compactor_9?: string,
+    personal_compactor_10?: string,
+    personal_compactor_11?: string,
+
+    tune?: number, //melody hair
+    year?: number, //great spook acc
+    edition?: number, //great spook acc
+    blood_god_kills?: number, //blood god crest
+    new_year_cake_bag_data?: any
+}
+
 //info found on the nbt data of an item
 export interface nbtItem {
     id: number
@@ -127,106 +232,7 @@ export interface nbtItem {
             Lore: string[],
             Name: string
         },
-        ExtraAttributes: {
-            modifier?: string, //reforge
-            attributes?: {
-                [key in keyof typeof attributeStats]: number
-            },
-            id: string,
-            uuid?: string,
-            timestamp: string,
-            enchantments?: {
-                [key: string]: number
-            },
-            hot_potato_count?: number,
-            dungeon_item_level?: number, //dungeon stars
-            gems?: { //gemstones
-                [key: string]: itemGemstoneSlotType
-            },
-            rarity_upgrades?: number, //reomb
-            stats_book?: number,
-            runes?: {
-                [key in string]: number 
-            }[], //multiple runes update????
-            art_of_war_count?: number,
-            artOfPeaceApplied?: number,
-            ability_scroll?: witherScrollType[],
-            champion_combat_xp?: number,
-            compact_blocks?: number,
-            expertise_kills?: number,
-            farmed_cultivating?: number,
-            hecatomb_s_runs?: number,
-            donated_museum?: number,
-            power_ability_scroll?: `${Capitalize<gemstone>}_POWER_SCROLL`,
-            anvil_uses?: number,
-            ethermerge?: number,
-            tuned_transmission?: number,
-            necromancer_souls?: {
-                mob_id: string,
-            }[],
-            potion_level?: number,
-            potion?: effectName,
-            effects?: {
-                level: number,
-                effect: effectName,
-                duration_ticks: number,
-            }[],
-            potion_type?: string
-            splash?: number,
-            potion_name?: string,
-            dungeon_potion?: number,
-            item_tier?: number,
-            baseStatBoostPercentage?: number,
-            farming_for_dummies_count?: number,
-            mined_crops?: number, //for math hoes
-            magma_cube_absorber?: number, //magma necklace
-            ghast_blaster?: number, //ghast cloak
-            glowing?: number, //glowstone gauntlet
-
-            party_hat_year?: number,
-            party_hat_color?: string,
-            talisman_enrichment?: statName, //enrichment
-            model?: abicaseModel, //abicase
-            thunder_charge?: number, //pulse ring
-            "pandora-rarity"?: itemTier, //what the fuck hypixel (pandoras box)
-            winning_bid?: number, //hegemony artifact
-            boss_tier?: number, //kuudra core
-            new_years_cake?: number,
-
-            //personal deletor
-            personal_deletor_0?: string,
-            personal_deletor_1?: string,
-            personal_deletor_2?: string,
-            personal_deletor_3?: string,
-            personal_deletor_4?: string,
-            personal_deletor_5?: string,
-            personal_deletor_6?: string,
-            personal_deletor_7?: string,
-            personal_deletor_8?: string,
-            personal_deletor_9?: string,
-            personal_deletor_10?: string,
-            personal_deletor_11?: string,
-
-            //personal compactor
-            personal_compactor_0?: string,
-            personal_compactor_1?: string,
-            personal_compactor_2?: string,
-            personal_compactor_3?: string,
-            personal_compactor_4?: string,
-            personal_compactor_5?: string,
-            personal_compactor_6?: string,
-            personal_compactor_7?: string,
-            personal_compactor_8?: string,
-            personal_compactor_9?: string,
-            personal_compactor_10?: string,
-            personal_compactor_11?: string,
-
-            tune?: number, //melody hair
-            year?: number, //great spook acc
-            edition?: number, //great spook acc
-            blood_god_kills?: number, //blood god crest
-            new_year_cake_bag_data?: any
-        }
+        ExtraAttributes: ExtraAttributes
     },
     Damage: number
 }

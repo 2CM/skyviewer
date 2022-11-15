@@ -36,7 +36,6 @@
 
     - ender equipment/dragonfade cloak
     - lava shell necklace
-    - synths
 
     - bat pet night stat buff
     - s_(ARMOR) stats
