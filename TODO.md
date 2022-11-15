@@ -17,7 +17,6 @@
     - mushroom/batperson armor
     - miners outfit
     - goblin armor
-    - rampart
     - armor of the pack?
     - armor of magma
     - tux

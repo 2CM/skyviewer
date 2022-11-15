@@ -1154,6 +1154,16 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         if(synthTier >= 0) stats[`${colorChar}${"c"}X`] = {health: (item.tag.ExtraAttributes.EXE || 0)};
         if(synthTier >= 1) stats[`${colorChar}${"a"}Y`] = {defense: (item.tag.ExtraAttributes.WAI || 0)};
         if(synthTier >= 2) stats[`${colorChar}${"b"}Z`] = {intelligence: (item.tag.ExtraAttributes.ZEE || 0)};
+    } else
+
+    if(item.tag.ExtraAttributes.id.startsWith("RAMPART")) {
+        if(calcTemp[calcId].status == "crimson_isle") {
+            stats[`${colorChar}${"c"}Crimson Isle Buff`] = {
+                health: 50,
+                strength: 20,
+                critical_damage: 15,
+            };
+        }
     }
 
     // console.log(stats);
