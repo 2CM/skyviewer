@@ -1362,7 +1362,11 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
         if(keys(itemStats.enrichments || {}).length > 0) stats.enrichments[formattedName] = itemStats.enrichments || {};
         if(keys(itemStats.gemstones || {}).length > 0) stats.gems[formattedName] = itemStats.gemstones || {};
 
-        mp += mpTable[keys(mpTable)[rarity]];
+        let mpGiven = mpTable[keys(mpTable)[rarity]];
+
+        if(itemInfo.id == "HEGEMONY_ARTIFACT") mpGiven *= 2; //it gives double mp
+
+        mp += mpGiven;
 
         if(itemId == "ABICASE" && abicaseFound == false && itemAttributes.model) {
             mp += Math.floor((calcTemp[calcId].other.abiphoneContacts || 0)/2);
