@@ -25,7 +25,6 @@
     - berserker armor
     - old dragon armor
     - magma lord
-    - heavy/super heavy armor
     - skeletor armor
     - lantern helmet
     - zombie heart family
@@ -38,10 +37,6 @@
     - ender equipment/dragonfade cloak
     - lava shell necklace
     - synths
-    - vanq ghast cloak
-    - vanq blaze belt
-    - vanq glowstone gauntlet
-    - vanq magma necklace
     - hegemony artifact
 
     - bat pet night stat buff

@@ -1827,6 +1827,8 @@ export type statName =
 
     "s_aotd_ability_bonus" | //sup armor
 
+    "s_damage_reduction" |
+
     //y per x
     //per stats get applied after multiplication
     "p_X_strength_per_5_magic_find" | //gdrag
@@ -4675,6 +4677,24 @@ export const fullSets = {
         "HOLY_DRAGON_LEGGINGS",
         "HOLY_DRAGON_BOOTS",
     ],
+    "HEAVY": [
+        "HEAVY_HELMET",
+        "HEAVY_CHESTEPLATE",
+        "HEAVY_LEGGINGS",
+        "HEAVY_BOOTS",
+    ],
+    "SUPER_HEAVY": [
+        "SUPER_HEAVY_HELMET",
+        "SUPER_HEAVY_CHESTEPLATE",
+        "SUPER_HEAVY_LEGGINGS",
+        "SUPER_HEAVY_BOOTS",
+    ],
+    "VANQUISHED": [
+        "VANQUISHED_MAGMA_NECKLACE",
+        "VANQUISHED_GHAST_CLOAK",
+        "VANQUISHED_BLAZE_BELT",
+        "VANQUISHED_GLOWSTONE_GAUNTLET",
+    ]
     // "DEBUG": [
     //     "WITHER_GOGGLES",
     //     "WISE_WITHER_CHESTPLATE",
@@ -4707,4 +4727,7 @@ export const fullSetNames: {
     "GLACITE": "Expert Miner",
     "SUPERIOR_DRAGON": "Superior Blood",
     "HOLY_DRAGON": "Holy Blood",
+    "HEAVY": "Vindicate",
+    "SUPER_HEAVY": "Vindicate",
+    "VANQUISHED": "Vanquisher Set" //c r e a t i v e
 }

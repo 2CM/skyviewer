@@ -1653,7 +1653,17 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         if(fullSetName == "HOLY_DRAGON") {
             calcTemp[calcId].stats[formattedName] = {SAME: {health_regeneration: 200}};
+        } else
+
+        if(fullSetName == "HEAVY" || fullSetName == "SUPER_HEAVY") {
+            calcTemp[calcId].stats[formattedName] = {SAME: {p_X_walk_speed_per_50_defense: 1}};
+        } else
+
+        if(fullSetName == "VANQUISHED") {
+            calcTemp[calcId].stats[formattedName] = {SAME: {s_damage_reduction: -0.1}};
         }
+
+        
     }
 }
 
