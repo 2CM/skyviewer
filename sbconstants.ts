@@ -112,15 +112,15 @@ export interface item {
 }
 
 export type ExtraAttributes = {
-    modifier?: string, //reforge
+    modifier?: reforgeName, //reforge
     attributes?: {
-        [key in keyof typeof attributeStats]: number
+        [key in attributeName]?: number
     },
     id: string,
     uuid?: string,
     timestamp: string,
     enchantments?: {
-        [key: string]: number
+        [key in enchantName]?: number
     },
     hot_potato_count?: number,
     dungeon_item_level?: number, //dungeon stars
@@ -130,7 +130,7 @@ export type ExtraAttributes = {
     rarity_upgrades?: number, //reomb
     stats_book?: number,
     runes?: {
-        [key in string]: number 
+        [key in string]?: number 
     }[], //multiple runes update????
     art_of_war_count?: number,
     artOfPeaceApplied?: number,
@@ -173,7 +173,7 @@ export type ExtraAttributes = {
 
     party_hat_year?: number,
     party_hat_color?: string,
-    talisman_enrichment?: statName, //enrichment
+    talisman_enrichment?: enrichmentType, //enrichment
     model?: abicaseModel, //abicase
     thunder_charge?: number, //pulse ring
     "pandora-rarity"?: itemTier, //what the fuck hypixel (pandoras box)
@@ -219,7 +219,7 @@ export type ExtraAttributes = {
 //info found on the nbt data of an item
 export interface nbtItem {
     id: number
-    count: number,
+    Count: number,
     tag: {
         HideFlags: number,
         SkullOwner?: { //for items that are player heads
@@ -1761,8 +1761,9 @@ export type statName =
     "health_regeneration" |
     "vitality" |
     "mending" |
+    "damage" | //apparently damage is a stat
 
-//multiplicative
+    //multiplicative
     "m_health" |
     "m_defense" |
     "m_true_defense" |
@@ -1799,7 +1800,6 @@ export type statName =
     "m_mending" |
 
     //special
-    "s_damage" |
     "s_golden_damage" | //gdrag
 
     "s_yeti_sword_intelligence" | //baby yeti
@@ -2034,9 +2034,76 @@ export const statChars: statIdMap<string> = {
     social_wisdom: "☯",
 }
 
+export const reforges = [
+    "none",
+    "gentle",
+    "odd",
+    "fast",
+    "fair",
+    "epic",
+    "sharp",
+    "heroic",
+    "spicy",
+    "legendary",
+    "dirty",
+    "fabled",
+    "suspicious",
+    "gilded",
+    "warped",
+    "withered",
+    "bulky",
+    "salty",
+    "treacherous",
+    "stiff",
+    "lucky",
+    "pichin",
+    "deadly",
+    "fine",
+    "grand",
+    "hasty",
+    "neat",
+    "rapid",
+    "unreal",
+    "awkward",
+    "rich",
+    "precise",
+    "spritual",
+    "headstrong",
+    "clean",
+    "fierce",
+    "heavy",
+    "light",
+    "mythic",
+    "pure",
+    "smart",
+    "titanic",
+    "wise",
+    "perfect",
+    "necrotic",
+    "ancient",
+    "spiked",
+    "renowned",
+    "cubic",
+    "hyper",
+    "reinforced",
+    "loving",
+    "ridiculous",
+    "empowered",
+    "giant",
+    "submerged",
+    "jaded",
+    "waxed",
+    "fortified",
+    "strengthened",
+    "glistening"
+] as const;
+
+export type reforgeName = typeof reforges[number];
+
 export const reforgeStats: {
-    [key: string]: (tier: number, special: {cata: number}) => statsList
+    [key in reforgeName]: (tier: number) => statsList
 } = {
+    none: tier => ({}),
     ...{ //melee (sword and fishing rod)
         gentle: tier => ({
             strength: [3,5,7,10,15,20][tier],
@@ -2099,8 +2166,7 @@ export const reforgeStats: {
         }),
         suspicious: tier => ({ // +15 weapon damage
             critical_chance: [1,2,3,5,7,10][tier],
-            critical_damage: [30,40,50,65,85,110][tier],
-            s_damage: 15,
+            critical_damage: [30,40,50,65,85,110][tier]
         }),
         gilded: tier => ({
             strength: [0,0,0,0,75,90][tier],
@@ -2109,8 +2175,8 @@ export const reforgeStats: {
             strength: tier >= 2 ? 165 : 0,
             intelligence: tier == 4 ? 65 : 0,
         }),
-        withered: (tier, special) => ({
-            strength: [60,75,90,110,135,170][tier] + special.cata // +1 str per cata level
+        withered: tier => ({
+            strength: [60,75,90,110,135,170][tier]
         }),
         bulky: tier => ({
             health: [4,6,9,12,15,20][tier],
@@ -2255,18 +2321,16 @@ export const reforgeStats: {
 
         perfect: tier => ({ //+2% def
             defense: [25,35,50,65,80,110][tier],
-            m_defense: 0.02,
         }),
         necrotic: tier => ({
             intelligence: [30,60,90,120,150,200][tier],
         }),
-        ancient: (tier, special) => ({ //+1 cd per cata level
+        ancient: tier => ({ //+1 cd per cata level
             health: 7,
             defense: 7,
             strength: [4,8,12,18,25,35][tier],
             critical_chance: [3,5,7,9,12,15][tier],
             intelligence: [6,9,12,16,20,25][tier],
-            critical_damage: special.cata
         }),
         spiked: tier => ({
             health: [2,3,4,6,8,10][tier],
@@ -2287,7 +2351,6 @@ export const reforgeStats: {
             critical_damage: [3,4,6,8,10,12][tier],
             attack_speed: [1,1,2,3,4,5][tier],
             intelligence: [3,4,6,8,10,12][tier],
-            ...allStatsBoost(0.01)
         }),
         cubic: tier => ({ // -2% damage from nether mobs
             strength: [3,5,7,10,12,15][tier],
@@ -2350,9 +2413,21 @@ export const reforgeStats: {
     }
 }
 
+export const enchants = [
+    "big_brain",
+    "growth",
+    "protection",
+    "rejuvenate",
+    "true_protection",
+    "smarty_pants",
+    "sugar_rush",
+] as const;
+
+export type enchantName = typeof enchants[number];
+
 export const enchantStats: {
-    [key: string]: (level: number) => statsList
-} = { //doing this without a 2nd monitor and youtube is impossible AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    [key in enchantName]?: (level: number) => statsList
+} = {
     ...{ //armor
         big_brain: level => ({
             intelligence: 5*level,
@@ -2558,9 +2633,20 @@ export const gemstoneRarities: {
     perfect: "LEGENDARY"
 }
 
+export const attributes = [
+    "attack_speed",
+    "speed",
+    "life_regeneration",
+    "mana_pool",
+    "fishing_experience",
+    "fishing_speed",
+    "hunter"
+] as const;
+
+export type attributeName = typeof attributes[number];
 
 export const attributeStats: {
-    [key: string]: (level: number) => statsList
+    [key in attributeName]?: (level: number) => statsList
 } = {
     attack_speed: level => ({
         attack_speed: level
@@ -2775,9 +2861,23 @@ export const slayerColors: {[key in slayerName]: colorCode} = {
     blaze: "6",
 }
 
+export type enrichmentType = 
+    "walk_speed" |
+    "intelligence" |
+    "critical_damage" |
+    "critical_chance" |
+    "strength" |
+    "defense" |
+    "health" |
+    "magic_find" |
+    "ferocity" |
+    "sea_creature_chance" |
+    "attack_speed";
 
 //map of enrichment -> stat given
-export const enrichmentStats = {
+export const enrichmentStats: {
+    [key in enrichmentType]: number
+} = {
     walk_speed: 1,
     intelligence: 2,
     critical_damage: 1,
@@ -3419,7 +3519,7 @@ export const petStats: {
             "Legendary Treasure": {
                 tier: "LEGENDARY",
                 stats: (level, tier, special) => ({
-                    s_damage: Math.floor(special.bankCoins/1000000)*(0.125 + 0.00125*(level-100))*(level < 100 ? 0 : 1),
+                    damage: Math.floor(special.bankCoins/1000000)*(0.125 + 0.00125*(level-100))*(level < 100 ? 0 : 1),
                 })
             },
         }

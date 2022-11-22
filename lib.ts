@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames, ExtraAttributes } from "./sbconstants"; //so many ;-;
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames, ExtraAttributes, enchantName, reforgeName, attributeName, enchants, attributes } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -14,6 +14,10 @@ interface IObjectKeys {
 
     [key: string]: any;
 }
+
+//function that retuns undefined
+//useful for cases where you need to call a function that might not exist
+const UNDEFINEDFUNC = () => {return undefined};
 
 //function that returns all the keys of an object BUT respects object key type
 export function keys<Type extends object>(obj: Type): (keyof Type)[] {
@@ -913,27 +917,25 @@ export function getStatSources(categories: statsCategories): statSources {
 }
 
 
-export type itemStatSource = "hpbs" | "baseStats" | "starStats" | "enrichments" | "gemstones";
+// export type itemStatSource = "hpbs" | "baseStats" | "starStats" | "enrichments" | "gemstones";
 
 export const itemStatSourceNames: {
-    [key in itemStatSource]: string
+    [key in string]: string
 } = {
     hpbs: "Hot Potato Books",
     baseStats: "Base",
     starStats: "Stars",
     enrichments: "Enrichments",
-    gemstones: "Gemstones"
-}
+};
 
 export const itemStatSourceColors: {
-    [key in itemStatSource]: colorCode
+    [key in string]: colorCode
 } = {
     hpbs: "6",
     baseStats: "f",
     starStats: "6",
     enrichments: "b",
-    gemstones: "d"
-}
+};
 
 export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false): Promise<statsCategory> {
     var stats: statsCategory = {};
@@ -941,17 +943,9 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
     // console.log(JSON.stringify(item));
     // console.log(JSON.stringify(baseItem));
 
-    /*
-    sources
-        base stats (Y)
-        gems (Y)
-        reforge (Y)
-        hpbs (Y)
-        enchants (Y)
-        art of peace (N)
-        attributes (N)
-    */
-
+    var foramattedNames: {
+        [key in string]: string
+    } = {};
 
     var rarity = await getItemRarity(item, baseItem);
 
@@ -961,27 +955,52 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
     }
 
     //hpbs
-    if (new Set(["HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"]).has(baseItem.category)) { //its an armor piece
-        var hpbBuff = calcTemp[calcId].other.hpbsDoubled ? 2 : 1;
+    var hpbBuff = calcTemp[calcId].other.hpbsDoubled ? 2 : 1; //leg blaze pet hpb buff
 
+    if (new Set(["HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS"]).has(baseItem.category)) { //its an armor piece
         stats.hpbs = {
             health: 4 * (item.tag.ExtraAttributes.hot_potato_count || 0) * hpbBuff,
             defense: 2 * (item.tag.ExtraAttributes.hot_potato_count || 0) * hpbBuff,
         }
-    } else if (baseItem.category != "ACCESSORY") { //its probably some type of damager
+    } else { //its probably some type of damager
         stats.hpbs = {
-            strength: 2 * (item.tag.ExtraAttributes.hot_potato_count || 0),
+            strength: 2 * (item.tag.ExtraAttributes.hot_potato_count || 0) * hpbBuff,
         }
     }
 
     //reforge
-    var reforge: string | undefined = item.tag.ExtraAttributes.modifier;
+    var reforge: reforgeName | undefined = item.tag.ExtraAttributes.modifier;
 
     if (reforge !== undefined && reforge !== "none" && baseItem.category !== "ACCESSORY") {
-        var formattedReforge = compact ? "reforge" : `${colorChar}5${reforge.capitalize()}`;
+        foramattedNames.reforge = `${colorChar}${"5"}${reforge.capitalize()}`;
 
         if (reforgeStats[reforge] !== undefined) {
-            stats[formattedReforge] = reforgeStats[reforge](Math.min(rarity, 5), {cata: Math.floor(calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0)});
+            stats.reforge = reforgeStats[reforge](
+                Math.min(rarity, 5), //dont want any undefineds
+            );
+
+            foramattedNames.reforgeBonus =`${reforge.capitalize()} Bonus`;
+
+            //reforges that give bonuses
+            if(reforge == "ancient") {
+                stats.reforgeBonus = {critical_damage: Math.floor(calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0)};
+            } else
+            
+            if(reforge == "withered") {
+                stats.reforgeBonus = {strength: Math.floor(calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0)};
+            } else
+
+            if(reforge == "renowned") {
+                stats.reforgeBonus = allStatsBoost(0.01);
+            } else
+
+            if(reforge == "perfect") {
+                stats.reforgeBonus = {m_defense: 0.02};
+            } else
+
+            if(reforge == "suspicious") {
+                stats.reforgeBonus = {damage: 15};
+            }
         } else {
             console.warn(`${reforge} reforge on ${item.tag.display.Name} is not in reforgeStats`);
         }
@@ -990,22 +1009,20 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
     //enchants
     var enchantsList = item.tag.ExtraAttributes.enchantments || {};
 
-
     for (let i in keys(enchantsList)) {
-        var enchantName: keyof typeof enchantStats = keys(enchantsList)[i] as string;
-        if (!enchantName) continue;
+        let enchantName: enchantName = keys(enchantsList)[i];
 
-        var enchantLevel = enchantsList[enchantName];
+        let enchantLevel: number = enchantsList[enchantName] || 0;
 
+        if (enchants.includes(enchantName)) {
+            let recievedEnchantStats = (enchantStats[enchantName] || UNDEFINEDFUNC)(enchantLevel) || {}; //variable naming :)
 
-        if (enchantStats[enchantName] !== undefined) {
-            var recievedEnchantStats = enchantStats[enchantName](enchantLevel); //variable naming :)
+            foramattedNames[enchantName] =
+                `${colorChar}${statColors[keys(recievedEnchantStats)[0]] || "f"}${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`;
 
-            var sourceName: string = compact ? "enchants" : `${colorChar}${statColors[keys(recievedEnchantStats)[0]] || "f"}${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`
-
-            stats[sourceName] = mergeStatsLists(stats[sourceName] || {}, recievedEnchantStats);
+            stats[enchantName] = recievedEnchantStats;
         } else {
-            // console.warn(`couldnt find enchant ${enchantName}`)
+            console.warn(`couldnt find enchant ${enchantName}`)
         }
     }
 
@@ -1013,28 +1030,34 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
     var attributesList = item.tag.ExtraAttributes.attributes || {};
 
     for (let i in keys(attributesList)) {
-        var attributeName: keyof typeof attributeStats = keys(attributesList)[i] as string;
-        var attributeLevel: number = attributesList[attributeName];
+        let attributeName: attributeName = keys(attributesList)[i];
 
-        if (attributeStats[attributeName]) {
-            var recievedAttributeStats = attributeStats[attributeName](attributeLevel);
+        let attributeLevel: number = attributesList[attributeName] || 0;
 
-            var sourceName: string = compact ? "attributes" : `${colorChar}${statColors[keys(recievedAttributeStats)[0]] || "f"}${attributeName.replaceAll("_", " ").capitalize()} ${attributeLevel}`
+        if (attributes.includes(attributeName)) {
+            let recievedAttributeStats = (attributeStats[attributeName] || UNDEFINEDFUNC)(attributeLevel) || {};
 
-            stats[sourceName] = mergeStatsLists(stats[sourceName] || {}, recievedAttributeStats);
+            foramattedNames[attributeName] = 
+                `${colorChar}${statColors[keys(recievedAttributeStats)[0]] || "f"}${attributeName.replaceAll("_", " ").capitalize()} ${attributeLevel}`;
+
+            stats[attributeName] = recievedAttributeStats;
         } else {
-            // console.warn(`couldnt find attribute ${attributeName}`);
+            console.warn(`couldnt find attribute ${attributeName}`);
         }
     }
 
 
+    
+    //format gemstones into something like [{gemstone: "RUBY", tier: "FINE"}, {gemstone: "AMETHYST", tier: "PERFECT"}];
     var gemstones: gemstoneSlots = {};
     var itemGems = item.tag.ExtraAttributes.gems;
 
+
+    //im so sorry
     if (itemGems !== undefined) {
         for (let i in keys(itemGems)) { //for example: { COMBAT_0: 'FINE', COMBAT_0_gem: 'AMETHYST', SAPPHIRE_0: 'FINE' }
-            var key: string = keys(itemGems)[i] as string;
-            var value: itemGemstoneSlotType | { uuid: string, quality: string } = itemGems[key];
+            let key: string = keys(itemGems)[i] as string;
+            let value: itemGemstoneSlotType | { uuid: string, quality: string } = itemGems[key];
 
             if (typeof value === "object") value = value["quality"]; //no idea why i have to use brackets but https://bobbyhadz.com/blog/typescript-property-does-not-exist-on-type-never said so
 
@@ -1042,8 +1065,8 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
             for (let j in specialGemstoneSlots) {
                 if (key.includes(specialGemstoneSlots[j])) { //theres a pair of { COMBAT_0: 'FINE', COMBAT_0_gem: 'AMETHYST' }
-                    var entryType: "gemstone" | "tier" = key.includes("_gem") ? "gemstone" : "tier";
-                    var gemstoneSlotName: itemGemstoneSlotType = (entryType == "gemstone" ? key.slice(0, -"_gem".length) : key) as itemGemstoneSlotType || "UNIVERSAL";
+                    let entryType: "gemstone" | "tier" = key.includes("_gem") ? "gemstone" : "tier";
+                    let gemstoneSlotName: itemGemstoneSlotType = (entryType == "gemstone" ? key.slice(0, -"_gem".length) : key) as itemGemstoneSlotType || "UNIVERSAL";
 
 
                     if (entryType == "gemstone") { //its the gemstone in the slot
@@ -1066,8 +1089,9 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         }
     }
 
+    //take the formatted gemstones and get the stats of them
     for (let i in Object.values(gemstones)) {
-        var gemInfo: { gemstone?: gemstone, tier?: gemstoneTier } = Object.values(gemstones)[i];
+        let gemInfo: { gemstone?: gemstone, tier?: gemstoneTier } = Object.values(gemstones)[i];
 
         if (gemInfo.gemstone === undefined) {
             console.warn("gemstone.gemstone was undefined");
@@ -1079,13 +1103,20 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
             continue;
         }
 
-        var recievedStats = gemstoneStats[gemInfo.gemstone][gemInfo.tier](rarity); // :))))))))) variable naming
+        let recievedStats = gemstoneStats[gemInfo.gemstone][gemInfo.tier](rarity); // :))))))))) variable naming
 
+        //power artifact only gives half gemstone power
         if (baseItem.id == "POWER_ARTIFACT") recievedStats = multiplyStatsList(recievedStats, 0.5);
 
-        var sourceName = compact ? "gemstones" : `${colorChar + rarityColors[gemstoneRarities[gemInfo.tier]]}${(gemInfo.tier as string).capitalize()} ${(gemInfo.gemstone as string).capitalize()} Gemstone`;
+        //compacting makes gemstones merged into one
+        if(compact) {
+            stats.gemstones = mergeStatsLists(stats.gemstones || {}, recievedStats);
+        } else {
+            foramattedNames[`gem${i}`] =
+                `${colorChar + rarityColors[gemstoneRarities[gemInfo.tier]]}${(gemInfo.tier as string).capitalize()} ${(gemInfo.gemstone as string).capitalize()} Gemstone`;
 
-        stats[sourceName] = mergeStatsLists(stats[sourceName] || {}, recievedStats);
+            stats[`gem${i}`] = recievedStats;
+        }
     }
 
     //star stats
@@ -1097,9 +1128,10 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     // hope i got it right :D
     var starCount = Math.min(item.tag.ExtraAttributes.dungeon_item_level || 0, 5) //because master stars dont do it;
-    stats.starStats = {};
 
     if (stats.baseStats) {
+        stats.starStats = {};
+
         for (let i in keys(stats.baseStats)) {
             var statName = keys(stats.baseStats)[i];
             var statValue = stats.baseStats[statName] || 0;
@@ -1114,16 +1146,29 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
     if (itemEnrichment !== undefined) {
         stats.enrichments = {};
 
-        stats.enrichments[itemEnrichment] = enrichmentStats[itemEnrichment as keyof typeof enrichmentStats];
+        stats.enrichments[itemEnrichment] = enrichmentStats[itemEnrichment];
     }
 
     //exceptions here
 
     if(item.tag.ExtraAttributes.id == "NEW_YEAR_CAKE_BAG") {
-        var contents = ((await parseContents({
-            type: 0,
-            data: Buffer.from(item.tag.ExtraAttributes.new_year_cake_bag_data).toString("base64")
-        }) as any).i || []) as (nbtItem | {})[]; //i hate it too
+        let cakeData: any = item.tag.ExtraAttributes.new_year_cake_bag_data;
+
+        //the cake data is just an inventory/storage in base64
+        let cakeDataB64 = Buffer.from(cakeData).toString("base64");
+
+
+        //the structure of the cake data is {i: (nbtItem | {})[]} with {}s being empty
+
+        //im sorry
+        let contents = (
+            (
+                await parseContents({
+                    type: 0,
+                    data: cakeDataB64
+                }) as any //parseContents returns nbt.NBT so we need to cast it to an any
+            ).i || [] //adding the fallback just in case
+        ) as (nbtItem | {})[] //gotta cast it
         
         contents = contents.filter(val => isNbtItem(val)) as nbtItem[]; //filter out {}
         
@@ -1135,17 +1180,20 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         if(!stats.baseStats) stats.baseStats = {};
 
         stats.baseStats.magic_find = (stats.baseStats.magic_find || 0) +
-            0.25*( //get extra pulse ring rarity
-                rarity-
-                tierStringToNumber(baseItem.tier || "COMMON")-
+            0.25*( //get extra pulse ring rarity by subtracting all rarity that isnt from thunder
+                rarity -
+                tierStringToNumber(baseItem.tier || "COMMON") -
                 (item.tag.ExtraAttributes.rarity_upgrades || 0)
             )+0.25 //it starts at 0.25
+
+            //guys its mx+b
+            //ALGEBRA REFERENCE??!?!???
     } else
 
     if(item.tag.ExtraAttributes.id == "BLOOD_GOD_CREST") {
         if(!stats.baseStats) stats.baseStats = {};
         
-        stats.baseStats.strength = (stats.baseStats.strength || 0) + Math.floor(Math.log10(item.tag.ExtraAttributes.blood_god_kills || 0)+1);
+        stats.baseStats.strength = (stats.baseStats.strength || 0) + Math.floor(Math.log10(item.tag.ExtraAttributes.blood_god_kills || 0)+1); //digits
     } else
 
     if(item.tag.ExtraAttributes.id.startsWith("SYNTHESIZER_V")) {
@@ -1158,15 +1206,41 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     if(item.tag.ExtraAttributes.id.startsWith("RAMPART")) {
         if(calcTemp[calcId].status == "crimson_isle") {
-            stats[`${colorChar}${"c"}Crimson Isle Buff`] = {
+            foramattedNames.crimsonIsleBuff = `${colorChar}${"c"}Crimson Isle Buff`;
+
+            stats.crimsonIsleBuff = {
                 health: 50,
                 strength: 20,
                 critical_damage: 15,
             };
         }
+    } else
+
+    if(["END_HELMET", "END_CHESTPLATE", "END_LEGGINGS", "END_BOOTS", "ENDER_NECKLACE", "ENDER_CLOAK", "ENDER_BELT", "ENDER_GLOVES"].includes(item.tag.ExtraAttributes.id)) {
+        if(calcTemp[calcId].status == "combat_3") {
+            //all end pieces get 2x stats on the end island (combat_3)
+
+            //multiply all stat sources by 2
+            for(let i in keys(stats)) {
+                let statSourceName: string = keys(stats)[i];
+
+                stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, 2);
+            }
+        }
     }
 
     // console.log(stats);
+
+    //if we arent compacting, format all the names according to formattedNames
+    if(!compact) {
+        stats = mapObjectKeys(stats, key => 
+            keys(itemStatSourceNames).includes(key) ? //if its part of the constant stat source replacements
+                colorChar+itemStatSourceColors[key]+itemStatSourceNames[key] :
+            keys(foramattedNames).includes(key) ?
+                foramattedNames[key] :
+            key
+        )
+    }
 
     return stats;
 }
@@ -1561,6 +1635,30 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     var foundSetPieces = new Set<fullSetPiece>();
     var foundSetNames = new Set<fullSetName>();
 
+
+    // armorContents = [
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epic boots",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "END_BOOTS",
+    //                 modifier: "ancient",
+    //                 hot_potato_count: 2,
+    //                 enchantments: {
+    //                     protection: 5
+    //                 },
+    //                 rarity_upgrades: 1,
+    //             }
+    //         },
+    //         Damage: 3,
+    //     }
+    // ]
+
+
     for (let i in armorContents) {
         var piece: nbtItem | {} = armorContents[i];
 
@@ -1583,12 +1681,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId);
 
-        calcTemp[calcId].stats[piece.tag.display.Name] = mapObjectKeys(
-            stats[piece.tag.display.Name],
-            value => itemStatSourceNames[value as itemStatSource] ? 
-                colorChar+itemStatSourceColors[value as itemStatSource]+itemStatSourceNames[value as itemStatSource]
-                : value
-        );
+        calcTemp[calcId].stats[piece.tag.display.Name] = stats[piece.tag.display.Name];
     }
 
     // console.log({foundSetNames, foundSetPieces});
@@ -1890,7 +1983,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
             mining: Math.floor(calcTemp[calcId].skills.mining?.levelInfo.level || 0),
         },
         hotm: hotmExpToLevel(data.profileData.profiles[selectedProfile].members[playerUUID].mining_core.experience || 0),
-        location: data.statusData?.session.online && data.statusData.session.gameType == "SKYBLOCK" ? data.statusData.session.mode : undefined
+        location: calcTemp[calcId].status
     };
 
     await calculatePetStats(data, selectedProfile, playerUUID, specialPetData, calcId);

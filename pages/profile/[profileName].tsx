@@ -135,7 +135,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     calcTemp[calcId] = {
         stats: {},
         skills: {},
-		status: undefined,
+		status: apiData.statusData?.session.online && apiData.statusData?.session.gameType == "SKYBLOCK" ? apiData.statusData.session.mode : undefined,
         other: {
 
         },
