@@ -239,7 +239,8 @@ export interface nbtItem {
 
 //some item ids arent in the items api (for example, PARTY_HAT_CRAB_ANIMATED doesnt exist, the right one would be PARTY_HAT_CRAB)
 export const itemIdReplacements = new Map<string, string>([
-    ["PARTY_HAT_CRAB_ANIMATED", "PARTY_HAT_CRAB"]
+    ["PARTY_HAT_CRAB_ANIMATED", "PARTY_HAT_CRAB"],
+    ["TRAPPER_CHEST", "TRAPPER_CREST"],
 ]);
 
 
