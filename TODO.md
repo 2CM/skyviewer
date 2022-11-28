@@ -24,7 +24,6 @@
     - old dragon armor
     - magma lord
     - skeletor armor
-    - lantern helmet
     - zombie heart family
     - racing helmet
     - make stereo pants nullify ALL stats

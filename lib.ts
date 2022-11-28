@@ -940,6 +940,7 @@ export const itemStatSourceColors: {
 export type calculateItemStatsOther = {
     invObsidian?: number, //for obby chestplate
     gifts?: number, //for krampus helm
+    farmingSkill?: number, //for lantern helmet
 }
 
 export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, other?: calculateItemStatsOther): Promise<statsCategory> {
@@ -1253,6 +1254,10 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         let krampusHealth = Math.min(Math.floor((other?.gifts || 0)/50), 500);
 
         stats[`${colorChar}${"c"}Krampus Helmet Gifts (${other?.gifts || 0})`] = {health: krampusHealth};
+    } else 
+
+    if(item.tag.ExtraAttributes.id == "ENCHANTED_JACK_O_LANTERN") {
+        stats[`${colorChar}${"a"}Lantern Helmet Bonus`] = {health: Math.floor(other?.farmingSkill || 0)*4, defense: Math.floor(other?.farmingSkill || 0)*2};
     }
 
     // console.log(stats);
@@ -1662,21 +1667,21 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     var foundSetNames = new Set<fullSetName>();
 
 
-    armorContents = [
-        {
-            id: 300,
-            Count: 1,
-            tag: {
-                display: {
-                    Name: "epic",
-                },
-                ExtraAttributes: {
-                    id: "KRAMPUS_HELMET",
-                }
-            },
-            Damage: 3,
-        }
-    ]
+    // armorContents = [
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epic",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "ENCHANTED_JACK_O_LANTERN",
+    //             }
+    //         },
+    //         Damage: 3,
+    //     }
+    // ]
 
 
     for (let i in armorContents) {
@@ -1731,6 +1736,8 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
             }
         } else if(piece.tag.ExtraAttributes.id == "KRAMPUS_HELMET") {
             other.gifts = data.profileData.profiles[selectedProfile].members[playerUUID].stats.gifts_given || 0;
+        } else if(piece.tag.ExtraAttributes.id == "ENCHANTED_JACK_O_LANTERN") {
+            other.farmingSkill = calcTemp[calcId].skills.farming?.levelInfo.level || 0
         }
 
         stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId, false, other);
