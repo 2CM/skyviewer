@@ -1227,6 +1227,18 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
                 stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, 2);
             }
         }
+    } else
+
+    if(item.tag.ExtraAttributes.id == "DRAGONFADE_CLOAK") {
+        if(calcTemp[calcId].status == "combat_3") {
+            //same stuff with end armor but 3x
+
+            for(let i in keys(stats)) {
+                let statSourceName: string = keys(stats)[i];
+
+                stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, 3);
+            }
+        }
     }
 
     // console.log(stats);

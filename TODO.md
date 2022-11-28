@@ -20,7 +20,6 @@
     - armor of the pack?
     - armor of magma
     - tux
-    - ender armor
     - berserker armor
     - old dragon armor
     - magma lord
@@ -33,7 +32,6 @@
     - make stereo pants nullify ALL stats
     - farmer/ranchers boots
 
-    - ender equipment/dragonfade cloak
     - lava shell necklace
 
     - bat pet night stat buff
