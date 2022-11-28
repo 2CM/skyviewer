@@ -938,7 +938,8 @@ export const itemStatSourceColors: {
 };
 
 export type calculateItemStatsOther = {
-    invObsidian?: number
+    invObsidian?: number, //for obby chestplate
+    gifts?: number, //for krampus helm
 }
 
 export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, other?: calculateItemStatsOther): Promise<statsCategory> {
@@ -1246,6 +1247,12 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     if(item.tag.ExtraAttributes.id == "OBSIDIAN_CHESTPLATE") {
         stats[`${colorChar}${"5"}Obsidian Chestplate Bonus`] = {walk_speed: Math.floor((other?.invObsidian || 0)/20)};
+    } else
+
+    if(item.tag.ExtraAttributes.id == "KRAMPUS_HELMET") {
+        let krampusHealth = Math.min(Math.floor((other?.gifts || 0)/50), 500);
+
+        stats[`${colorChar}${"c"}Krampus Helmet Gifts (${other?.gifts || 0})`] = {health: krampusHealth};
     }
 
     // console.log(stats);
@@ -1664,7 +1671,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
                     Name: "epic",
                 },
                 ExtraAttributes: {
-                    id: "OBSIDIAN_CHESTPLATE",
+                    id: "KRAMPUS_HELMET",
                 }
             },
             Damage: 3,
@@ -1722,6 +1729,8 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
                 other.invObsidian = obsidianCount;
             }
+        } else if(piece.tag.ExtraAttributes.id == "KRAMPUS_HELMET") {
+            other.gifts = data.profileData.profiles[selectedProfile].members[playerUUID].stats.gifts_given || 0;
         }
 
         stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId, false, other);

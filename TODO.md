@@ -26,7 +26,6 @@
     - skeletor armor
     - lantern helmet
     - zombie heart family
-    - krampus helmet
     - racing helmet
     - make stereo pants nullify ALL stats
     - farmer/ranchers boots

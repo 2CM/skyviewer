@@ -1336,7 +1336,9 @@ export type dungeonChest = {
 export interface profileMember { //all objects can be expanded upon; all any[] | any need more info
     //misc important
     last_save: number,
-    stats: object,
+    stats: {
+        gifts_given?: number,
+    },
 
     //misc stats
     first_join: number,
