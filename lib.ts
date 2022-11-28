@@ -1258,6 +1258,10 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     if(item.tag.ExtraAttributes.id == "ENCHANTED_JACK_O_LANTERN") {
         stats[`${colorChar}${"a"}Lantern Helmet Bonus`] = {health: Math.floor(other?.farmingSkill || 0)*4, defense: Math.floor(other?.farmingSkill || 0)*2};
+    } else
+    
+    if(["ZOMBIE_HEART", "CRYSTALLIZED_HEART", "REVIVED_HEART", "REAPER_MASK"].includes(item.tag.ExtraAttributes.id)) {
+        stats[`${colorChar}${"4"}${baseItem.name} Bonus`] = {m_mending: 1, m_vitality: 1};
     }
 
     // console.log(stats);
@@ -1676,7 +1680,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     //                 Name: "epic",
     //             },
     //             ExtraAttributes: {
-    //                 id: "ENCHANTED_JACK_O_LANTERN",
+    //                 id: "REAPER_MASK",
     //             }
     //         },
     //         Damage: 3,
