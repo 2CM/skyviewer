@@ -937,7 +937,11 @@ export const itemStatSourceColors: {
     enrichments: "b",
 };
 
-export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false): Promise<statsCategory> {
+export type calculateItemStatsOther = {
+    invObsidian?: number
+}
+
+export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, other?: calculateItemStatsOther): Promise<statsCategory> {
     var stats: statsCategory = {};
 
     // console.log(JSON.stringify(item));
@@ -1173,13 +1177,13 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         contents = contents.filter(val => isNbtItem(val)) as nbtItem[]; //filter out {}
         
         if(!stats.baseStats) stats.baseStats = {};
-        stats.baseStats.health = (stats.baseStats.health || 0) + contents.length
+        stats[`${colorChar}${"c"}New Year Cake Bag Bonus`] = {health: contents.length}
     } else
 
     if(item.tag.ExtraAttributes.id == "PULSE_RING") {
         if(!stats.baseStats) stats.baseStats = {};
 
-        stats.baseStats.magic_find = (stats.baseStats.magic_find || 0) +
+        stats[`${colorChar}${"b"}Pulse Ring Bonus`] = {magic_find: 
             0.25*( //get extra pulse ring rarity by subtracting all rarity that isnt from thunder
                 rarity -
                 tierStringToNumber(baseItem.tier || "COMMON") -
@@ -1188,12 +1192,13 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
             //guys its mx+b
             //ALGEBRA REFERENCE??!?!???
+        }
     } else
 
     if(item.tag.ExtraAttributes.id == "BLOOD_GOD_CREST") {
         if(!stats.baseStats) stats.baseStats = {};
         
-        stats.baseStats.strength = (stats.baseStats.strength || 0) + Math.floor(Math.log10(item.tag.ExtraAttributes.blood_god_kills || 0)+1); //digits
+        stats[`${colorChar}${"c"}Blood God Crest Bonus`] = {strength: Math.floor(Math.log10(item.tag.ExtraAttributes.blood_god_kills || 0)+1)}; //digits
     } else
 
     if(item.tag.ExtraAttributes.id.startsWith("SYNTHESIZER_V")) {
@@ -1206,9 +1211,7 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     if(item.tag.ExtraAttributes.id.startsWith("RAMPART")) {
         if(calcTemp[calcId].status == "crimson_isle") {
-            foramattedNames.crimsonIsleBuff = `${colorChar}${"c"}Crimson Isle Buff`;
-
-            stats.crimsonIsleBuff = {
+            stats[`${colorChar}${"c"}Crimson Isle Buff`] = {
                 health: 50,
                 strength: 20,
                 critical_damage: 15,
@@ -1239,6 +1242,10 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
                 stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, 3);
             }
         }
+    } else
+
+    if(item.tag.ExtraAttributes.id == "OBSIDIAN_CHESTPLATE") {
+        stats[`${colorChar}${"5"}Obsidian Chestplate Bonus`] = {walk_speed: Math.floor((other?.invObsidian || 0)/20)};
     }
 
     // console.log(stats);
@@ -1648,27 +1655,21 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     var foundSetNames = new Set<fullSetName>();
 
 
-    // armorContents = [
-    //     {
-    //         id: 300,
-    //         Count: 1,
-    //         tag: {
-    //             display: {
-    //                 Name: "epic boots",
-    //             },
-    //             ExtraAttributes: {
-    //                 id: "END_BOOTS",
-    //                 modifier: "ancient",
-    //                 hot_potato_count: 2,
-    //                 enchantments: {
-    //                     protection: 5
-    //                 },
-    //                 rarity_upgrades: 1,
-    //             }
-    //         },
-    //         Damage: 3,
-    //     }
-    // ]
+    armorContents = [
+        {
+            id: 300,
+            Count: 1,
+            tag: {
+                display: {
+                    Name: "epic",
+                },
+                ExtraAttributes: {
+                    id: "OBSIDIAN_CHESTPLATE",
+                }
+            },
+            Damage: 3,
+        }
+    ]
 
 
     for (let i in armorContents) {
@@ -1691,7 +1692,39 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
             foundSetPieces.add(baseItem.id as fullSetPiece);
         }
 
-        stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId);
+
+        //other stuff that shouldnt be calculated in calculateItemStats()
+        let other: calculateItemStatsOther = {};
+
+        if(piece.tag.ExtraAttributes.id == "OBSIDIAN_CHESTPLATE") {
+            let inv_contents = await parseContents(data.profileData.profiles[selectedProfile].members[playerUUID].inv_contents) as any;
+
+            // inv_contents = {
+            //     i: [
+            //         {id: 49, Count: 20},
+            //         {id: 49, Count: 20},
+            //         {id: 49, Count: 39},
+            //     ]
+            // }
+
+            if(inv_contents.i !== undefined) {
+                let obsidianCount = 0;
+
+                // console.log(inv_contents)
+
+                for(let j in inv_contents.i) {
+                    let inv_slot: nbtItem = inv_contents.i[j];
+                    
+                    if(inv_slot.id == 49) { //obsidian
+                        obsidianCount += inv_slot.Count;
+                    }
+                }
+
+                other.invObsidian = obsidianCount;
+            }
+        }
+
+        stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId, false, other);
 
         calcTemp[calcId].stats[piece.tag.display.Name] = stats[piece.tag.display.Name];
     }

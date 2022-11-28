@@ -28,7 +28,6 @@
     - zombie heart family
     - krampus helmet
     - racing helmet
-    - obsidian chestplate
     - make stereo pants nullify ALL stats
     - farmer/ranchers boots
 
