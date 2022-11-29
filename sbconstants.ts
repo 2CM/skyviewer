@@ -165,10 +165,11 @@ export type ExtraAttributes = {
     mined_crops?: number, //for math hoes
     magma_cube_absorber?: number, //magma necklace
     ghast_blaster?: number, //ghast cloak
+    blaze_consumer?: number, //blaze belt
     glowing?: number, //glowstone gauntlet
-    EXE?: number,            
-    WAI?: number,            
-    ZEE?: number,            
+    EXE?: number,
+    WAI?: number,
+    ZEE?: number,
 
 
     party_hat_year?: number,

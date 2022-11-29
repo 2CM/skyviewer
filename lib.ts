@@ -1262,6 +1262,22 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
     
     if(["ZOMBIE_HEART", "CRYSTALLIZED_HEART", "REVIVED_HEART", "REAPER_MASK"].includes(item.tag.ExtraAttributes.id)) {
         stats[`${colorChar}${"4"}${baseItem.name} Bonus`] = {m_mending: 1, m_vitality: 1};
+    } else
+    
+    if(item.tag.ExtraAttributes.id == "VANQUISHED_MAGMA_NECKLACE") {
+        stats[`${colorChar}${"c"}Magma Cube Absorber`] = {health: Math.min(Math.floor((item.tag.ExtraAttributes.magma_cube_absorber || 0)/1000), 10)}
+    } else
+
+    if(item.tag.ExtraAttributes.id == "VANQUISHED_GHAST_CLOAK") {
+        stats[`${colorChar}${"c"}Ghast Blaster`] = {health: Math.min(Math.floor((item.tag.ExtraAttributes.ghast_blaster || 0)/1000), 10)}
+    } else
+
+    if(item.tag.ExtraAttributes.id == "VANQUISHED_BLAZE_BELT") {
+        stats[`${colorChar}${"c"}Blaze Consumer`] = {strength: Math.min(Math.floor((item.tag.ExtraAttributes.blaze_consumer || 0)/1000), 10)}
+    } else
+
+    if(item.tag.ExtraAttributes.id == "VANQUISHED_GLOWSTONE_GAUNTLET") {
+        stats[`${colorChar}${"c"}Glowing`] = {health: Math.min(Math.floor((item.tag.ExtraAttributes.glowing || 0)/1000), 10)}
     }
 
     // console.log(stats);
