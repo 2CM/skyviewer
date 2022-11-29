@@ -170,6 +170,7 @@ export type ExtraAttributes = {
     EXE?: number,
     WAI?: number,
     ZEE?: number,
+    skeletorKills?: number, //skeletor chestplate
 
 
     party_hat_year?: number,
@@ -4804,7 +4805,7 @@ export const fullSets = {
         "VANQUISHED_GHAST_CLOAK",
         "VANQUISHED_BLAZE_BELT",
         "VANQUISHED_GLOWSTONE_GAUNTLET",
-    ]
+    ],
     // "DEBUG": [
     //     "WITHER_GOGGLES",
     //     "WISE_WITHER_CHESTPLATE",
@@ -4817,6 +4818,14 @@ export const fullSets = {
     //     "IMPLOSION_BELT",
     //     "VANQUISHED_GLOWSTONE_GAUNTLET",
     // ],
+    
+    //special ones
+    "SKELETOR": [
+        "SKELETOR_HELMET",
+        "SKELETOR_CHESTPLATE",
+        "SKELETOR_LEGGINGS",
+        "SKELETOR_BOOTS"
+    ]
 } as const;
 
 export type fullSetName = keyof typeof fullSets;
@@ -4839,5 +4848,8 @@ export const fullSetNames: {
     "HOLY_DRAGON": "Holy Blood",
     "HEAVY": "Vindicate",
     "SUPER_HEAVY": "Vindicate",
-    "VANQUISHED": "Vanquisher Set" //c r e a t i v e
+    "VANQUISHED": "Vanquisher Set", //c r e a t i v e
+
+    //special ones
+    "SKELETOR": "SKELETOR"
 }

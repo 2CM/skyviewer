@@ -943,7 +943,7 @@ export type calculateItemStatsOther = {
     farmingSkill?: number, //for lantern helmet
 }
 
-export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, other?: calculateItemStatsOther): Promise<statsCategory> {
+export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, other?: calculateItemStatsOther, isFullSet?: boolean): Promise<statsCategory> {
     var stats: statsCategory = {};
 
     // console.log(JSON.stringify(item));
@@ -1278,6 +1278,15 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     if(item.tag.ExtraAttributes.id == "VANQUISHED_GLOWSTONE_GAUNTLET") {
         stats[`${colorChar}${"c"}Glowing`] = {health: Math.min(Math.floor((item.tag.ExtraAttributes.glowing || 0)/1000), 10)}
+    } else
+
+    if(item.tag.ExtraAttributes.id == "SKELETOR_CHESTPLATE" && isFullSet == true) {
+        let skeletorKills = item.tag.ExtraAttributes.skeletorKills || 0;
+
+        stats[`${colorChar}${"7"}Skeletor`] = {
+            strength: Math.min(Math.floor(skeletorKills/10),50),
+            critical_damage: Math.min(Math.floor(skeletorKills/10),50),
+        }
     }
 
     // console.log(stats);
@@ -1680,12 +1689,11 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
     var equipment = await parseContents(equippment_contents_raw) as any;
     if (equipment.i === undefined) return;
-
+    
     var armorContents: (nbtItem | {})[] = [...armor.i, ...equipment.i];
-
+    
     var foundSetPieces = new Set<fullSetPiece>();
     var foundSetNames = new Set<fullSetName>();
-
 
     // armorContents = [
     //     {
@@ -1696,13 +1704,86 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     //                 Name: "epic",
     //             },
     //             ExtraAttributes: {
-    //                 id: "REAPER_MASK",
+    //                 id: "SKELETOR_HELMET",
     //             }
     //         },
     //         Damage: 3,
-    //     }
+    //     },
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epicf",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "SKELETOR_CHESTPLATE",
+    //                 skeletorKills: 10000
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epicff",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "SKELETOR_LEGGINGS",
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epicfff",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "SKELETOR_BOOTS",
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
     // ]
 
+
+    //find full sets so calculateItemStats can use it
+    for(let i in armorContents) {
+        var piece: nbtItem | {} = armorContents[i];
+
+        if(!isNbtItem(piece)) continue;
+
+        var pieceFullSetName = fullSetsIndex.get(piece.tag.ExtraAttributes.id as fullSetPiece);
+
+        if(pieceFullSetName !== undefined) {
+            foundSetNames.add(pieceFullSetName);
+            foundSetPieces.add(piece.tag.ExtraAttributes.id as fullSetPiece);
+        }
+    }
+
+    // console.log({foundSetNames, foundSetPieces});
+
+    var verifiedFullSets = new Set(foundSetNames);
+
+    //check which full sets we actually have
+    for(let i in [...foundSetNames]) {
+        let foundSetName = [...foundSetNames][i];
+
+        for(let j in fullSets[foundSetName]) {
+            let setPieceName = fullSets[foundSetName][j];
+
+            if(!foundSetPieces.has(setPieceName)) {
+                verifiedFullSets.delete(foundSetName);
+            }
+        }
+    }
+
+    console.log(verifiedFullSets);
 
     for (let i in armorContents) {
         var piece: nbtItem | {} = armorContents[i];
@@ -1716,14 +1797,6 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
         }
 
         var category = baseItem.category;
-
-        var pieceFullSetName = fullSetsIndex.get(baseItem.id as fullSetPiece);
-
-        if(pieceFullSetName !== undefined) {
-            foundSetNames.add(pieceFullSetName);
-            foundSetPieces.add(baseItem.id as fullSetPiece);
-        }
-
 
         //other stuff that shouldnt be calculated in calculateItemStats()
         let other: calculateItemStatsOther = {};
@@ -1754,36 +1827,32 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
                 other.invObsidian = obsidianCount;
             }
-        } else if(piece.tag.ExtraAttributes.id == "KRAMPUS_HELMET") {
+        } else
+        
+        if(piece.tag.ExtraAttributes.id == "KRAMPUS_HELMET") {
             other.gifts = data.profileData.profiles[selectedProfile].members[playerUUID].stats.gifts_given || 0;
-        } else if(piece.tag.ExtraAttributes.id == "ENCHANTED_JACK_O_LANTERN") {
+        } else
+        
+        if(piece.tag.ExtraAttributes.id == "ENCHANTED_JACK_O_LANTERN") {
             other.farmingSkill = calcTemp[calcId].skills.farming?.levelInfo.level || 0
         }
 
-        stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId, false, other);
+        //find what full set this piece contributes to, if any
+        let fullSetContribution: fullSetName | undefined;
+        let pieceFullSetName = fullSetsIndex.get(piece.tag.ExtraAttributes.id as fullSetPiece);
+
+        if(pieceFullSetName !== undefined && verifiedFullSets.has(pieceFullSetName)) {
+            fullSetContribution = pieceFullSetName;
+        }
+
+        stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId, false, other, fullSetContribution !== undefined);
 
         calcTemp[calcId].stats[piece.tag.display.Name] = stats[piece.tag.display.Name];
     }
 
-    // console.log({foundSetNames, foundSetPieces});
-
-    var verifiedFullSets = new Set(foundSetNames);
-
-    //check which full sets we actually have
-    for(let i in [...foundSetNames]) {
-        let foundSetName = [...foundSetNames][i];
-
-        for(let j in fullSets[foundSetName]) {
-            let setPieceName = fullSets[foundSetName][j];
-
-            if(!foundSetPieces.has(setPieceName)) {
-                verifiedFullSets.delete(foundSetName);
-            }
-        }
-    }
-
     // console.log(verifiedFullSets);
 
+    //full set bonuses
     for(let i in [...verifiedFullSets]) {
         let fullSetName = [...verifiedFullSets][i];
 

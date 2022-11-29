@@ -23,7 +23,6 @@
     - berserker armor
     - old dragon armor
     - magma lord
-    - skeletor armor
     - racing helmet
     - make stereo pants nullify ALL stats
     - farmer/ranchers boots
