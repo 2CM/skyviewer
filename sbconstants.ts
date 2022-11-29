@@ -171,6 +171,7 @@ export type ExtraAttributes = {
     WAI?: number,
     ZEE?: number,
     skeletorKills?: number, //skeletor chestplate
+    yogsKilled?: number, //yog chestplate
 
 
     party_hat_year?: number,
@@ -4825,6 +4826,12 @@ export const fullSets = {
         "SKELETOR_CHESTPLATE",
         "SKELETOR_LEGGINGS",
         "SKELETOR_BOOTS"
+    ],
+    "YOG": [
+        "ARMOR_OF_YOG_HELMET",
+        "ARMOR_OF_YOG_CHESTPLATE",
+        "ARMOR_OF_YOG_LEGGINGS",
+        "ARMOR_OF_YOG_BOOTS",
     ]
 } as const;
 
@@ -4851,5 +4858,6 @@ export const fullSetNames: {
     "VANQUISHED": "Vanquisher Set", //c r e a t i v e
 
     //special ones
-    "SKELETOR": "SKELETOR"
+    "SKELETOR": "SKELETOR",
+    "YOG": "YOG"
 }

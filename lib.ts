@@ -1284,8 +1284,16 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         let skeletorKills = item.tag.ExtraAttributes.skeletorKills || 0;
 
         stats[`${colorChar}${"7"}Skeletor`] = {
-            strength: Math.min(Math.floor(skeletorKills/10),50),
-            critical_damage: Math.min(Math.floor(skeletorKills/10),50),
+            strength: Math.floor(Math.min(skeletorKills,500)/10),
+            critical_damage: Math.floor(Math.min(skeletorKills,500)/10),
+        }
+    } else
+
+    if(item.tag.ExtraAttributes.id == "ARMOR_OF_YOG_CHESTPLATE" && isFullSet == true) {
+        let yogsKilled = item.tag.ExtraAttributes.yogsKilled || 0;
+
+        stats[`${colorChar}${"6"}Absorb`] = {
+            mining_speed: Math.min(Math.floor(yogsKilled/10),500),
         }
     }
 
@@ -1704,7 +1712,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     //                 Name: "epic",
     //             },
     //             ExtraAttributes: {
-    //                 id: "SKELETOR_HELMET",
+    //                 id: "ARMOR_OF_YOG_HELMET",
     //             }
     //         },
     //         Damage: 3,
@@ -1717,8 +1725,8 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     //                 Name: "epicf",
     //             },
     //             ExtraAttributes: {
-    //                 id: "SKELETOR_CHESTPLATE",
-    //                 skeletorKills: 10000
+    //                 id: "ARMOR_OF_YOG_CHESTPLATE",
+    //                 yogsKilled: 5000
     //             }
     //         },
     //         Damage: 3,
@@ -1731,7 +1739,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     //                 Name: "epicff",
     //             },
     //             ExtraAttributes: {
-    //                 id: "SKELETOR_LEGGINGS",
+    //                 id: "ARMOR_OF_YOG_LEGGINGS",
     //             }
     //         },
     //         Damage: 3,
@@ -1744,7 +1752,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     //                 Name: "epicfff",
     //             },
     //             ExtraAttributes: {
-    //                 id: "SKELETOR_BOOTS",
+    //                 id: "ARMOR_OF_YOG_BOOTS",
     //             }
     //         },
     //         Damage: 3,
@@ -1766,7 +1774,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
         }
     }
 
-    // console.log({foundSetNames, foundSetPieces});
+    console.log({foundSetNames, foundSetPieces});
 
     var verifiedFullSets = new Set(foundSetNames);
 
