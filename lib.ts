@@ -1310,6 +1310,10 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         stats[`${colorChar}${"6"}Absorb`] = {
             mining_speed: Math.min(Math.floor(yogsKilled/10),500),
         }
+    } else
+
+    if(["FARMER_BOOTS", "RANCHERS_BOOTS"].includes(item.tag.ExtraAttributes.id)) {
+        stats[`${colorChar}${"a"}${baseItem.name.split(" ")[0]} Boots Bonus`] = {defense: Math.floor(other?.farmingSkill || 0)*2, walk_speed: Math.floor(other?.farmingSkill || 0)*4};
     }
 
     // console.log(stats);
@@ -1718,79 +1722,79 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     var foundSetPieces = new Set<fullSetPiece>();
     var foundSetNames = new Set<fullSetName>();
 
-    // armorContents = [
-    //     {
-    //         id: 300,
-    //         Count: 1,
-    //         tag: {
-    //             display: {
-    //                 Name: "epic",
-    //             },
-    //             ExtraAttributes: {
-    //                 enchantments: {
-    //                     growth: 5,
-    //                     protection: 3,
-    //                 },
-    //                 id: "OLD_DRAGON_HELMET",
-    //             }
-    //         },
-    //         Damage: 3,
-    //     },
-    //     {
-    //         id: 300,
-    //         Count: 1,
-    //         tag: {
-    //             display: {
-    //                 Name: "epicf",
-    //             },
-    //             ExtraAttributes: {
-    //                 enchantments: {
-    //                     growth: 5,
-    //                     protection: 3,
-    //                     true_protection: 1,
-    //                 },
-    //                 id: "OLD_DRAGON_CHESTPLATE",
-    //                 yogsKilled: 5000
-    //             }
-    //         },
-    //         Damage: 3,
-    //     },
-    //     {
-    //         id: 300,
-    //         Count: 1,
-    //         tag: {
-    //             display: {
-    //                 Name: "epicff",
-    //             },
-    //             ExtraAttributes: {
-    //                 enchantments: {
-    //                     growth: 5,
-    //                     protection: 3,
-    //                 },
-    //                 id: "OLD_DRAGON_LEGGINGS",
-    //             }
-    //         },
-    //         Damage: 3,
-    //     },
-    //     {
-    //         id: 300,
-    //         Count: 1,
-    //         tag: {
-    //             display: {
-    //                 Name: "epicfff",
-    //             },
-    //             ExtraAttributes: {
-    //                 enchantments: {
-    //                     growth: 5,
-    //                     protection: 3,
-    //                     sugar_rush: 0,
-    //                 },
-    //                 id: "OLD_DRAGON_BOOTS",
-    //             }
-    //         },
-    //         Damage: 3,
-    //     },
-    // ]
+    armorContents = [
+        // {
+        //     id: 300,
+        //     Count: 1,
+        //     tag: {
+        //         display: {
+        //             Name: "epic",
+        //         },
+        //         ExtraAttributes: {
+        //             enchantments: {
+        //                 growth: 5,
+        //                 protection: 3,
+        //             },
+        //             id: "OLD_DRAGON_HELMET",
+        //         }
+        //     },
+        //     Damage: 3,
+        // },
+        // {
+        //     id: 300,
+        //     Count: 1,
+        //     tag: {
+        //         display: {
+        //             Name: "epicf",
+        //         },
+        //         ExtraAttributes: {
+        //             enchantments: {
+        //                 growth: 5,
+        //                 protection: 3,
+        //                 true_protection: 1,
+        //             },
+        //             id: "OLD_DRAGON_CHESTPLATE",
+        //             yogsKilled: 5000
+        //         }
+        //     },
+        //     Damage: 3,
+        // },
+        // {
+        //     id: 300,
+        //     Count: 1,
+        //     tag: {
+        //         display: {
+        //             Name: "epicff",
+        //         },
+        //         ExtraAttributes: {
+        //             enchantments: {
+        //                 growth: 5,
+        //                 protection: 3,
+        //             },
+        //             id: "OLD_DRAGON_LEGGINGS",
+        //         }
+        //     },
+        //     Damage: 3,
+        // },
+        {
+            id: 300,
+            Count: 1,
+            tag: {
+                display: {
+                    Name: "epicfff",
+                },
+                ExtraAttributes: {
+                    enchantments: {
+                        // growth: 5,
+                        // protection: 3,
+                        // sugar_rush: 0,
+                    },
+                    id: "RANCHERS_BOOTS",
+                }
+            },
+            Damage: 3,
+        },
+    ]
 
 
     //find full sets so calculateItemStats can use it
@@ -1842,6 +1846,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
         //other stuff that shouldnt be calculated in calculateItemStats()
         let other: calculateItemStatsOther = {};
 
+        //put in if statement to avoid unnecessary computation
         if(piece.tag.ExtraAttributes.id == "OBSIDIAN_CHESTPLATE") {
             let inv_contents = await parseContents(data.profileData.profiles[selectedProfile].members[playerUUID].inv_contents) as any;
 
@@ -1868,15 +1873,10 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
                 other.invObsidian = obsidianCount;
             }
-        } else
-        
-        if(piece.tag.ExtraAttributes.id == "KRAMPUS_HELMET") {
-            other.gifts = data.profileData.profiles[selectedProfile].members[playerUUID].stats.gifts_given || 0;
-        } else
-        
-        if(piece.tag.ExtraAttributes.id == "ENCHANTED_JACK_O_LANTERN") {
-            other.farmingSkill = calcTemp[calcId].skills.farming?.levelInfo.level || 0
         }
+
+        other.gifts = data.profileData.profiles[selectedProfile].members[playerUUID].stats.gifts_given || 0;
+        other.farmingSkill = calcTemp[calcId].skills.farming?.levelInfo.level || 0
 
         //find what full set this piece contributes to, if any
         let fullSetContribution: fullSetName | undefined;

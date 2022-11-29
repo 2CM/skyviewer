@@ -24,7 +24,7 @@
     - magma lord
     - racing helmet
     - make stereo pants nullify ALL stats
-    - farmer/ranchers boots
+    - ranchers boots speed cap
 
     - lava shell necklace
 
