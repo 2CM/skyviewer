@@ -1872,7 +1872,10 @@ export type statName =
     "d_zombies" | //zombie pet
 
     //caps (addition)
-    "c_walk_speed" //black cat
+    "c_walk_speed" | //black cat
+
+    //limits (like caps but its just set)
+    "l_intelligence" //goblin armor
 
 export const defaultStatCaps: {
     [key in statName]?: number
@@ -4838,6 +4841,12 @@ export const fullSets = {
         "OLD_DRAGON_CHESTPLATE",
         "OLD_DRAGON_LEGGINGS",
         "OLD_DRAGON_BOOTS",
+    ],
+    "GOBLIN": [
+        "GOBLIN_HELMET",
+        "GOBLIN_CHESTPLATE",
+        "GOBLIN_LEGGINGS",
+        "GOBLIN_BOOTS",
     ]
 } as const;
 
@@ -4862,6 +4871,7 @@ export const fullSetNames: {
     "HEAVY": "Vindicate",
     "SUPER_HEAVY": "Vindicate",
     "VANQUISHED": "Vanquisher Set", //c r e a t i v e
+    "GOBLIN": "Smart Miner",
 
     //special ones
     "SKELETOR": "SKELETOR",

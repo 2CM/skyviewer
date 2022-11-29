@@ -810,16 +810,16 @@ export function sumStatsSources(sources: statSources): {capped: statsList, summe
     var summed = multiplyStatsList(stats, m_stats);
     var capped: statsList = {};
 
-    for(let i in keys(defaultStatCaps)) {
-        let statName = keys(defaultStatCaps)[i];
+    for(let i in keys(summed)) {
+        let statName = keys(summed)[i];
 
-        if(summed[statName]) {
-            var extraCap = 
-                statName == "walk_speed" ? summed.c_walk_speed :
-                0;
+        let statCap: number | undefined = defaultStatCaps[statName]
 
-            capped[statName] = Math.min(summed[statName] || 0, defaultStatCaps[statName] || 0)+(extraCap || 0);
-        }
+        if(statName == "walk_speed" && summed.c_walk_speed !== undefined) statCap = (statCap || 0) + summed.c_walk_speed;
+        if(statName == "intelligence" && summed.l_intelligence !== undefined) statCap = summed.l_intelligence;
+
+
+        capped[statName] = Math.min(summed[statName] || 0, statCap === undefined ? Infinity : statCap);
     }
 
     return {capped, summed};
@@ -841,8 +841,8 @@ export function getStatSources(categories: statsCategories): statSources {
                 let statName: statName = keys(list)[k];
                 let stat: number = list[statName] || 0;
 
-                if (stat == 0 || stat === undefined) continue;
-
+                if (stat === undefined) continue;
+                if (stat == 0 && !statName.startsWith("l_")) continue; //l_ stats can be 0
 
                 if (!sources[statName]) sources[statName] = {};
 
@@ -1722,79 +1722,60 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     var foundSetPieces = new Set<fullSetPiece>();
     var foundSetNames = new Set<fullSetName>();
 
-    armorContents = [
-        // {
-        //     id: 300,
-        //     Count: 1,
-        //     tag: {
-        //         display: {
-        //             Name: "epic",
-        //         },
-        //         ExtraAttributes: {
-        //             enchantments: {
-        //                 growth: 5,
-        //                 protection: 3,
-        //             },
-        //             id: "OLD_DRAGON_HELMET",
-        //         }
-        //     },
-        //     Damage: 3,
-        // },
-        // {
-        //     id: 300,
-        //     Count: 1,
-        //     tag: {
-        //         display: {
-        //             Name: "epicf",
-        //         },
-        //         ExtraAttributes: {
-        //             enchantments: {
-        //                 growth: 5,
-        //                 protection: 3,
-        //                 true_protection: 1,
-        //             },
-        //             id: "OLD_DRAGON_CHESTPLATE",
-        //             yogsKilled: 5000
-        //         }
-        //     },
-        //     Damage: 3,
-        // },
-        // {
-        //     id: 300,
-        //     Count: 1,
-        //     tag: {
-        //         display: {
-        //             Name: "epicff",
-        //         },
-        //         ExtraAttributes: {
-        //             enchantments: {
-        //                 growth: 5,
-        //                 protection: 3,
-        //             },
-        //             id: "OLD_DRAGON_LEGGINGS",
-        //         }
-        //     },
-        //     Damage: 3,
-        // },
-        {
-            id: 300,
-            Count: 1,
-            tag: {
-                display: {
-                    Name: "epicfff",
-                },
-                ExtraAttributes: {
-                    enchantments: {
-                        // growth: 5,
-                        // protection: 3,
-                        // sugar_rush: 0,
-                    },
-                    id: "RANCHERS_BOOTS",
-                }
-            },
-            Damage: 3,
-        },
-    ]
+    // armorContents = [
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epic",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "GOBLIN_HELMET",
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epicf",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "GOBLIN_CHESTPLATE",
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epicff",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "GOBLIN_LEGGINGS",
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epicfff",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "GOBLIN_BOOTS",
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    // ]
 
 
     //find full sets so calculateItemStats can use it
@@ -1968,9 +1949,11 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         if(fullSetName == "VANQUISHED") {
             calcTemp[calcId].stats[formattedName] = {SAME: {s_damage_reduction: -0.1}};
-        }
+        } else
 
-        
+        if(fullSetName == "GOBLIN") {
+            calcTemp[calcId].stats[formattedName] = {SAME: {l_intelligence: 0}};
+        }
     }
 }
 
@@ -2018,16 +2001,16 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     var backgroundPetStats: statsCategories = {}; //for all pets (background pets)
     var stats: statsCategory = {}; //for only the equipped pet
 
-    equippedPet = { //for testing
-        exp: 5038804, //from deathstreeks
-        tier: "LEGENDARY",
-        type: "MITHRIL_GOLEM",
-        active: true,
-        heldItem: "MINOS_RELIC",
-        candyUsed: 0,
-        uuid: "",
-        skin: "",
-    }
+    // equippedPet = { //for testing
+    //     exp: 5038804, //from deathstreeks
+    //     tier: "LEGENDARY",
+    //     type: "MITHRIL_GOLEM",
+    //     active: true,
+    //     heldItem: "MINOS_RELIC",
+    //     candyUsed: 0,
+    //     uuid: "",
+    //     skin: "",
+    // }
 
     var petInfo: petStatInfo | undefined = petStats[equippedPet.type]; //info about the pet
 

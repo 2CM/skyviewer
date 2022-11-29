@@ -30,7 +30,6 @@
 
     - bat pet night stat buff
     - s_(ARMOR) stats
-    - l stats
     - griffin potion effects
     - bit shop enchants
 

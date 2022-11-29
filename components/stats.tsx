@@ -16,7 +16,7 @@ export default function Stats({summedList, cappedList, sources}: props) {
     var [selectedStat, setSelectedStat] = useState<undefined | statName>(undefined);
 
     var statsArr: JSX.Element[] = keys(statIdToStatName).map(key => {
-        return <Stat onClick={setSelectedStat} sources={sources || {}} statName={key as statName} value={cappedList[key] || (summedList[key] || 0)}/>
+        return <Stat onClick={setSelectedStat} sources={sources || {}} statName={key as statName} value={cappedList[key] === undefined ? (summedList[key] || 0) : (cappedList[key] || 0)}/>
     });
 
     return (
