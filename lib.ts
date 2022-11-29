@@ -1020,8 +1020,23 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
         let enchantLevel: number = enchantsList[enchantName] || 0;
 
+        if(enchantLevel == 0) {
+            console.warn("enchant level 0!", {enchantName, id: item.tag.ExtraAttributes.id, enchs: item.tag.ExtraAttributes.enchantments});
+            continue;
+        }
+
         if (enchants.includes(enchantName)) {
             let recievedEnchantStats = (enchantStats[enchantName] || UNDEFINEDFUNC)(enchantLevel) || {}; //variable naming :)
+            
+            //old dragon enchantment buff
+            if(item.tag.ExtraAttributes.id.startsWith("OLD_DRAGON") && isFullSet == true) {
+                recievedEnchantStats = mergeStatsLists(recievedEnchantStats, {
+                    [enchantName == "growth" ? "health" : ""]: 10*enchantLevel,
+                    [enchantName == "protection" ? "defense" : ""]: 2*enchantLevel,
+                    [enchantName == "sugar_rush" ? "walk_speed" : ""]: 1*enchantLevel,
+                    [enchantName == "true_protection" ? "true_defense" : ""]: 3*enchantLevel,
+                })
+            }
 
             foramattedNames[enchantName] =
                 `${colorChar}${statColors[keys(recievedEnchantStats)[0]] || "f"}${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`;
@@ -1712,7 +1727,11 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     //                 Name: "epic",
     //             },
     //             ExtraAttributes: {
-    //                 id: "ARMOR_OF_YOG_HELMET",
+    //                 enchantments: {
+    //                     growth: 5,
+    //                     protection: 3,
+    //                 },
+    //                 id: "OLD_DRAGON_HELMET",
     //             }
     //         },
     //         Damage: 3,
@@ -1725,7 +1744,12 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     //                 Name: "epicf",
     //             },
     //             ExtraAttributes: {
-    //                 id: "ARMOR_OF_YOG_CHESTPLATE",
+    //                 enchantments: {
+    //                     growth: 5,
+    //                     protection: 3,
+    //                     true_protection: 1,
+    //                 },
+    //                 id: "OLD_DRAGON_CHESTPLATE",
     //                 yogsKilled: 5000
     //             }
     //         },
@@ -1739,7 +1763,11 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     //                 Name: "epicff",
     //             },
     //             ExtraAttributes: {
-    //                 id: "ARMOR_OF_YOG_LEGGINGS",
+    //                 enchantments: {
+    //                     growth: 5,
+    //                     protection: 3,
+    //                 },
+    //                 id: "OLD_DRAGON_LEGGINGS",
     //             }
     //         },
     //         Damage: 3,
@@ -1752,7 +1780,12 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     //                 Name: "epicfff",
     //             },
     //             ExtraAttributes: {
-    //                 id: "ARMOR_OF_YOG_BOOTS",
+    //                 enchantments: {
+    //                     growth: 5,
+    //                     protection: 3,
+    //                     sugar_rush: 0,
+    //                 },
+    //                 id: "OLD_DRAGON_BOOTS",
     //             }
     //         },
     //         Damage: 3,

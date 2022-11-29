@@ -4832,6 +4832,12 @@ export const fullSets = {
         "ARMOR_OF_YOG_CHESTPLATE",
         "ARMOR_OF_YOG_LEGGINGS",
         "ARMOR_OF_YOG_BOOTS",
+    ],
+    "OLD_DRAGON": [
+        "OLD_DRAGON_HELMET",
+        "OLD_DRAGON_CHESTPLATE",
+        "OLD_DRAGON_LEGGINGS",
+        "OLD_DRAGON_BOOTS",
     ]
 } as const;
 
@@ -4859,5 +4865,6 @@ export const fullSetNames: {
 
     //special ones
     "SKELETOR": "SKELETOR",
-    "YOG": "YOG"
+    "YOG": "YOG",
+    "OLD_DRAGON": "OLD_DRAGON"
 }

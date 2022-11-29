@@ -21,7 +21,6 @@
     - armor of magma
     - tux
     - berserker armor
-    - old dragon armor
     - magma lord
     - racing helmet
     - make stereo pants nullify ALL stats
