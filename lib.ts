@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames, ExtraAttributes, enchantName, reforgeName, attributeName, enchants, attributes } from "./sbconstants"; //so many ;-;
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames, ExtraAttributes, enchantName, reforgeName, attributeName, enchants, attributes, skyblockStartDate, irlMinutesPerYear, monthsPerYear, daysPerMonth, hoursPerDay, minutesPerHour, seasons, seasonVariants } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -248,6 +248,11 @@ export var multiplierFormatter = new Intl.NumberFormat("en-US", {
 export var percentFormatter = new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 2,
     signDisplay: "always",
+});
+
+//number formatter for minutes
+export var minuteFormatter = new Intl.NumberFormat("en-US", {
+    minimumIntegerDigits: 2
 });
 
 
@@ -508,6 +513,45 @@ export function calculateBestiaryLevel(name: bestiaryMobFamily, kills: number): 
     return familyLevel;
 }
 
+export function determineDaySuffix(day: number) {
+    let toString = Math.floor(day).toString();
+    let lastDigit = toString.at(-1);
+
+
+    if(["11", "12", "13"].includes(toString)) return "th"; //exceptions
+
+    if(lastDigit == "1") return "st";
+    if(lastDigit == "2") return "nd";
+    if(lastDigit == "3") return "rd";
+
+    return "th"
+}
+
+var e = new Intl.NumberFormat("en-US", {minimumIntegerDigits: 2})
+
+export function getSkyblockTime() {
+    let sbTimestamp = ((new Date().getTime())-skyblockStartDate) || 0; //time in millis since skyblock started
+
+    let year = sbTimestamp/(irlMinutesPerYear*60*1000); //timestamp is in millis, so convert it to minutes
+    let month = (year % 1)*monthsPerYear; //for each of these, take the remainder of the previous calculation and multiply it by [current]Per[previous]
+    let day = (month % 1)*daysPerMonth;
+    let hour = (day % 1)*hoursPerDay;
+    let minute = (hour % 1)*minutesPerHour;
+
+    return {
+        raw: { sbTimestamp, year, month, day, hour, minute },
+        other: { isNight: (hour < 6 && hour > 19) },
+        formatted: `[HOUR]:[MINUTE][AMPM], [VARIANT] [SEASON] [DAY][SUFFIX], Year [YEAR]` //doing it this way because `${}` takes way too much space
+            .replace("[HOUR]", ((Math.floor(hour) % 12) || 12) + "")
+            .replace("[MINUTE]", (minuteFormatter.format(Math.floor(minute))) + "")
+            .replace("[AMPM]", (hour > 12 ? "pm" : "am") + "")
+            .replace("[VARIANT]", (seasonVariants[Math.floor(month) % 3]) + "") // "Early" | "Mid" | "Late"
+            .replace("[SEASON]", (seasons[Math.floor(month / 3)]) + "") // "Spring" | "Summer" | "Autumn" | "Winter"
+            .replace("[DAY]", (Math.floor(day) + 1) + "")
+            .replace("[SUFFIX]", (determineDaySuffix(Math.floor(day) + 1)) + "") // "st" | "nd" | "rd" | "th"
+            .replace("[YEAR]", (Math.floor(year) + 1) + "")
+    }
+}
 
 // *** PROFILES ***
 
@@ -652,7 +696,8 @@ export var calcTemp: {
     [key in string]: {
         stats: statsCategories,
         skills: allSkillExpInfo,
-        status: skyblockLocation | undefined;
+        status: skyblockLocation | undefined,
+        time: ReturnType<typeof getSkyblockTime>,
         other: {
             hpbsDoubled?: boolean,
             abiphoneContacts?: number,

@@ -4884,3 +4884,15 @@ export const fullSetNames: {
     "YOG": "YOG",
     "OLD_DRAGON": "OLD_DRAGON"
 }
+
+//time stuff
+export const skyblockStartDate = 1560275700000;
+export const seasons = ["Spring", "Summer", "Autumn", "Winter"];
+export const seasonVariants = ["Early", "Mid", "Late"];
+
+export const irlMinutesPerYear = 7440; //irl minutes per skyblock year
+
+export const monthsPerYear = 12;
+export const daysPerMonth = 31;
+export const hoursPerDay = 24;
+export const minutesPerHour = 60;

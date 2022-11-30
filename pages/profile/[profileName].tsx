@@ -2,7 +2,7 @@ import { useRouter } from "next/router"
 import Head from "next/head";
 import { Context, createContext, useEffect, useState} from 'react'
 import { readFileSync } from "fs";
-import { allSkillExpInfo, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, sumStatsSources, getStatSources, statsCategories, keys, calcTemp, initFullSets } from "../../lib";
+import { allSkillExpInfo, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, sumStatsSources, getStatSources, statsCategories, keys, calcTemp, initFullSets, getSkyblockTime } from "../../lib";
 import Skills from "../../components/skills";
 import Stats from "../../components/stats";
 import { GetServerSideProps } from "next";
@@ -136,10 +136,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         stats: {},
         skills: {},
 		status: apiData.statusData?.session.online && apiData.statusData?.session.gameType == "SKYBLOCK" ? apiData.statusData.session.mode : undefined,
+		time: getSkyblockTime(),
         other: {
 
         },
     };
+
+	console.log(calcTemp[calcId].time.formatted)
 
 	calculateAllSkillExp(apiData, selectedProfile, playerUUID, calcId);
 	await calculateStats(apiData, selectedProfile, playerUUID, calcId);
