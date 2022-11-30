@@ -23,7 +23,6 @@
     - magma lord
     - racing helmet
     - make stereo pants nullify ALL stats
-    - ranchers boots speed cap
 
     - bat pet night stat buff
     - s_(ARMOR) stats

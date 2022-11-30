@@ -816,6 +816,7 @@ export function sumStatsSources(sources: statSources): {capped: statsList, summe
         let statCap: number | undefined = defaultStatCaps[statName]
 
         if(statName == "walk_speed" && summed.c_walk_speed !== undefined) statCap = (statCap || 0) + summed.c_walk_speed;
+        if(statName == "walk_speed" && summed.l_walk_speed !== undefined) statCap = summed.l_walk_speed; //l_ overrides c_
         if(statName == "intelligence" && summed.l_intelligence !== undefined) statCap = summed.l_intelligence;
         if(statName == "vitality" && summed.l_vitality !== undefined) statCap = summed.l_vitality;
         if(statName == "mending" && summed.l_mending !== undefined) statCap = summed.l_mending;
@@ -858,7 +859,7 @@ export function getStatSources(categories: statsCategories): statSources {
     //for calculating pers
     var summedRaw = sumStatsSources(sources);
 
-    var summed: statsList = {...summedRaw.summed, ...summedRaw.capped};
+    var summed: statsList = {...summedRaw.capped, ...summedRaw.summed};
 
     // console.log(summed)
 
@@ -1316,6 +1317,10 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     if(["FARMER_BOOTS", "RANCHERS_BOOTS"].includes(item.tag.ExtraAttributes.id)) {
         stats[`${colorChar}${"a"}${baseItem.name.split(" ")[0]} Boots Bonus`] = {defense: Math.floor(other?.farmingSkill || 0)*2, walk_speed: Math.floor(other?.farmingSkill || 0)*4};
+    
+        if(item.tag.ExtraAttributes.id == "RANCHERS_BOOTS") {
+            stats[`${colorChar}${"f"}Farmer's Speed`] = {l_walk_speed: (item.tag.ExtraAttributes.ranchers_speed || 400)}
+        }
     } else
 
     if(item.tag.ExtraAttributes.id == "LAVA_SHELL_NECKLACE") {
@@ -1728,60 +1733,61 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     var foundSetPieces = new Set<fullSetPiece>();
     var foundSetNames = new Set<fullSetName>();
 
-    // armorContents = [
-    //     {
-    //         id: 300,
-    //         Count: 1,
-    //         tag: {
-    //             display: {
-    //                 Name: "epic",
-    //             },
-    //             ExtraAttributes: {
-    //                 id: "LAVA_SHELL_NECKLACE",
-    //             }
-    //         },
-    //         Damage: 3,
-    //     },
-    //     {
-    //         id: 300,
-    //         Count: 1,
-    //         tag: {
-    //             display: {
-    //                 Name: "epicf",
-    //             },
-    //             ExtraAttributes: {
-    //                 id: "GOBLIN_CHESTPLATE",
-    //             }
-    //         },
-    //         Damage: 3,
-    //     },
-    //     {
-    //         id: 300,
-    //         Count: 1,
-    //         tag: {
-    //             display: {
-    //                 Name: "epicff",
-    //             },
-    //             ExtraAttributes: {
-    //                 id: "GOBLIN_LEGGINGS",
-    //             }
-    //         },
-    //         Damage: 3,
-    //     },
-    //     {
-    //         id: 300,
-    //         Count: 1,
-    //         tag: {
-    //             display: {
-    //                 Name: "epicfff",
-    //             },
-    //             ExtraAttributes: {
-    //                 id: "GOBLIN_BOOTS",
-    //             }
-    //         },
-    //         Damage: 3,
-    //     },
-    // ]
+    armorContents = [
+        {
+            id: 300,
+            Count: 1,
+            tag: {
+                display: {
+                    Name: "epic",
+                },
+                ExtraAttributes: {
+                    id: "GOBLIN_HELMET",
+                }
+            },
+            Damage: 3,
+        },
+        {
+            id: 300,
+            Count: 1,
+            tag: {
+                display: {
+                    Name: "epicf",
+                },
+                ExtraAttributes: {
+                    id: "GOBLIN_CHESTPLATE",
+                }
+            },
+            Damage: 3,
+        },
+        {
+            id: 300,
+            Count: 1,
+            tag: {
+                display: {
+                    Name: "epicff",
+                },
+                ExtraAttributes: {
+                    id: "GOBLIN_LEGGINGS",
+                }
+            },
+            Damage: 3,
+        },
+        {
+            id: 300,
+            Count: 1,
+            tag: {
+                display: {
+                    Name: "epicfff",
+                },
+                ExtraAttributes: {
+                    id: "RANCHERS_BOOTS",
+                    ranchers_speed: 100
+                }
+            },
+            Damage: 3,
+        },
+    ]
 
 
     //find full sets so calculateItemStats can use it
@@ -1958,7 +1964,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
         } else
 
         if(fullSetName == "GOBLIN") {
-            calcTemp[calcId].stats[formattedName] = {SAME: {l_intelligence: 0}};
+            calcTemp[calcId].stats[formattedName] = {SAME: {l_intelligence: 0, p_X_mining_speed_per_15_intelligence: 1}};
         }
     }
 }

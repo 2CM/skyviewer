@@ -172,6 +172,7 @@ export type ExtraAttributes = {
     ZEE?: number,
     skeletorKills?: number, //skeletor chestplate
     yogsKilled?: number, //yog chestplate
+    ranchers_speed?: number, //hmm i wonder where that ones from
 
 
     party_hat_year?: number,
@@ -1864,6 +1865,8 @@ export type statName =
 
     "p_X_walk_speed_per_50_defense" | //heavy armor
 
+    "p_X_mining_speed_per_15_intelligence" | //goblin
+
     //mob damage buffs
     "d_end_mobs" | //edrag pet
     "d_slimes" | // magma cube
@@ -1877,7 +1880,8 @@ export type statName =
     //limits (like caps but its just set)
     "l_intelligence" | //goblin armor
     "l_vitality" | //lava shell necklace
-    "l_mending" //lava shell necklace
+    "l_mending" | //lava shell necklace
+    "l_walk_speed" //rancher's boots
 
 export const defaultStatCaps: {
     [key in statName]?: number
