@@ -817,6 +817,8 @@ export function sumStatsSources(sources: statSources): {capped: statsList, summe
 
         if(statName == "walk_speed" && summed.c_walk_speed !== undefined) statCap = (statCap || 0) + summed.c_walk_speed;
         if(statName == "intelligence" && summed.l_intelligence !== undefined) statCap = summed.l_intelligence;
+        if(statName == "vitality" && summed.l_vitality !== undefined) statCap = summed.l_vitality;
+        if(statName == "mending" && summed.l_mending !== undefined) statCap = summed.l_mending;
 
 
         capped[statName] = Math.min(summed[statName] || 0, statCap === undefined ? Infinity : statCap);
@@ -1314,6 +1316,10 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     if(["FARMER_BOOTS", "RANCHERS_BOOTS"].includes(item.tag.ExtraAttributes.id)) {
         stats[`${colorChar}${"a"}${baseItem.name.split(" ")[0]} Boots Bonus`] = {defense: Math.floor(other?.farmingSkill || 0)*2, walk_speed: Math.floor(other?.farmingSkill || 0)*4};
+    } else
+
+    if(item.tag.ExtraAttributes.id == "LAVA_SHELL_NECKLACE") {
+        stats["lava shell necklace"] = {l_mending: 0, l_vitality: 0}
     }
 
     // console.log(stats);
@@ -1731,7 +1737,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     //                 Name: "epic",
     //             },
     //             ExtraAttributes: {
-    //                 id: "GOBLIN_HELMET",
+    //                 id: "LAVA_SHELL_NECKLACE",
     //             }
     //         },
     //         Damage: 3,

@@ -1875,7 +1875,9 @@ export type statName =
     "c_walk_speed" | //black cat
 
     //limits (like caps but its just set)
-    "l_intelligence" //goblin armor
+    "l_intelligence" | //goblin armor
+    "l_vitality" | //lava shell necklace
+    "l_mending" //lava shell necklace
 
 export const defaultStatCaps: {
     [key in statName]?: number
