@@ -1315,7 +1315,7 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
     } else
 
     if(item.tag.ExtraAttributes.id == "OBSIDIAN_CHESTPLATE") {
-        stats[`${colorChar}${"5"}Obsidian Chestplate Bonus`] = {walk_speed: Math.floor((other?.invObsidian || 0)/20)};
+        stats[`${colorChar}${"5"}Obsidian Chestplate Bonus`] = {walk_speed: Math.round((other?.invObsidian || 0)/20)};
     } else
 
     if(item.tag.ExtraAttributes.id == "KRAMPUS_HELMET") {
