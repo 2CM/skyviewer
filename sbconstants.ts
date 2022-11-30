@@ -3438,7 +3438,8 @@ export interface specialPetData {
         [key in skillName]?: number
     },
     hotm: number,
-    location: skyblockLocation | undefined
+    location: skyblockLocation | undefined,
+    isNight: boolean,
 }
 
 //info about stats of a pet
@@ -3463,7 +3464,13 @@ export const petStats: {
             [tier == "MYTHIC" ? "sea_creature_chance" : ""]: tier == "MYTHIC" ? 0.05 : 0
         }),
         perks: {
-
+            "Nightmare": {
+                tier: "RARE",
+                stats: (level, tier, special) => ({
+                    intelligence: special.isNight ? (tier == "RARE" ? 0.2 : 0.3)*level : 0,
+                    walk_speed: special.isNight ? (tier == "RARE" ? 0.4 : 0.5)*level : 0,
+                }),
+            }
         }
     },
     "ENDERMAN": {

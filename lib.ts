@@ -2074,16 +2074,16 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     var backgroundPetStats: statsCategories = {}; //for all pets (background pets)
     var stats: statsCategory = {}; //for only the equipped pet
 
-    // equippedPet = { //for testing
-    //     exp: 5038804, //from deathstreeks
-    //     tier: "LEGENDARY",
-    //     type: "MITHRIL_GOLEM",
-    //     active: true,
-    //     heldItem: "MINOS_RELIC",
-    //     candyUsed: 0,
-    //     uuid: "",
-    //     skin: "",
-    // }
+    equippedPet = { //for testing
+        exp: 5038804, //from deathstreeks
+        tier: "LEGENDARY",
+        type: "BAT",
+        active: true,
+        heldItem: null,
+        candyUsed: 0,
+        uuid: "",
+        skin: "",
+    }
 
     var petInfo: petStatInfo | undefined = petStats[equippedPet.type]; //info about the pet
 
@@ -2230,7 +2230,8 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
             mining: Math.floor(calcTemp[calcId].skills.mining?.levelInfo.level || 0),
         },
         hotm: hotmExpToLevel(data.profileData.profiles[selectedProfile].members[playerUUID].mining_core.experience || 0),
-        location: calcTemp[calcId].status
+        location: calcTemp[calcId].status,
+        isNight: calcTemp[calcId].time.other.isNight
     };
 
     await calculatePetStats(data, selectedProfile, playerUUID, specialPetData, calcId);

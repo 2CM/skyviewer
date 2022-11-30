@@ -23,7 +23,6 @@
     - racing helmet
     - make stereo pants nullify ALL stats
 
-    - bat pet night stat buff
     - s_(ARMOR) stats
     - griffin potion effects
     - bit shop enchants
