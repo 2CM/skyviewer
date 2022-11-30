@@ -540,7 +540,7 @@ export function getSkyblockTime() {
 
     return {
         raw: { sbTimestamp, year, month, day, hour, minute },
-        other: { isNight: (hour < 6 && hour > 19) },
+        other: { isNight: (hour < 6 || hour > 19) },
         formatted: `[HOUR]:[MINUTE][AMPM], [VARIANT] [SEASON] [DAY][SUFFIX], Year [YEAR]` //doing it this way because `${}` takes way too much space
             .replace("[HOUR]", ((Math.floor(hour) % 12) || 12) + "")
             .replace("[MINUTE]", (minuteFormatter.format(Math.floor(minute))) + "")
@@ -1343,20 +1343,24 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         stats[`${colorChar}${"c"}Glowing`] = {health: Math.min(Math.floor((item.tag.ExtraAttributes.glowing || 0)/1000), 10)}
     } else
 
-    if(item.tag.ExtraAttributes.id == "SKELETOR_CHESTPLATE" && isFullSet == true) {
-        let skeletorKills = item.tag.ExtraAttributes.skeletorKills || 0;
+    if(item.tag.ExtraAttributes.id == "SKELETOR_CHESTPLATE") {
+        if(isFullSet == true) {
+            let skeletorKills = item.tag.ExtraAttributes.skeletorKills || 0;
 
-        stats[`${colorChar}${"7"}Skeletor`] = {
-            strength: Math.floor(Math.min(skeletorKills,500)/10),
-            critical_damage: Math.floor(Math.min(skeletorKills,500)/10),
+            stats[`${colorChar}${"7"}Skeletor`] = {
+                strength: Math.floor(Math.min(skeletorKills,500)/10),
+                critical_damage: Math.floor(Math.min(skeletorKills,500)/10),
+            }
         }
     } else
 
-    if(item.tag.ExtraAttributes.id == "ARMOR_OF_YOG_CHESTPLATE" && isFullSet == true) {
-        let yogsKilled = item.tag.ExtraAttributes.yogsKilled || 0;
+    if(item.tag.ExtraAttributes.id == "ARMOR_OF_YOG_CHESTPLATE") {
+        if(isFullSet == true) {
+            let yogsKilled = item.tag.ExtraAttributes.yogsKilled || 0;
 
-        stats[`${colorChar}${"6"}Absorb`] = {
-            mining_speed: Math.min(Math.floor(yogsKilled/10),500),
+            stats[`${colorChar}${"6"}Absorb`] = {
+                mining_speed: Math.min(Math.floor(yogsKilled/10),500),
+            }
         }
     } else
 
@@ -1370,6 +1374,18 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     if(item.tag.ExtraAttributes.id == "LAVA_SHELL_NECKLACE") {
         stats["lava shell necklace"] = {l_mending: 0, l_vitality: 0}
+    } else
+
+    if(item.tag.ExtraAttributes.id == "NIGHT_CRYSTAL") {
+        if(calcTemp[calcId].time.other.isNight == true) {
+            stats.baseStats = {defense: 5, strength: 5}
+        }
+    } else
+    
+    if(item.tag.ExtraAttributes.id == "DAY_CRYSTAL") {
+        if(calcTemp[calcId].time.other.isNight == false) {
+            stats.baseStats = {defense: 5, strength: 5}
+        }
     }
 
     // console.log(stats);

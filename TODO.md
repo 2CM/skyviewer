@@ -10,7 +10,6 @@
 - no duplicate talis
 - calculateItemStats() exceptions
     - beastmaster
-    - day/night crystal
 
     - tara helm
     - warden helm
