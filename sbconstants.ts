@@ -2436,6 +2436,11 @@ export const enchants = [
     "true_protection",
     "smarty_pants",
     "sugar_rush",
+    "compact",
+    "expertise",
+    "cultivating",
+    "champion",
+    "hecatomb",
 ] as const;
 
 export type enchantName = typeof enchants[number];
@@ -2464,6 +2469,20 @@ export const enchantStats: {
         }),
         sugar_rush: level => ({
             walk_speed: 2*level,
+        }),
+        compact: level => ({
+            mining_wisdom: 1*level,
+        }),
+        expertise: level => ({
+            fishing_wisdom: 2*level,
+            sea_creature_chance: 0.6*level,
+        }),
+        cultivating: level => ({
+            farming_wisdom: 1*level,
+            farming_fortune: 1*level,
+        }),
+        champion: level => ({
+            mining_wisdom: 1*level,
         }),
     },
 }

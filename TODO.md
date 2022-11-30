@@ -24,7 +24,6 @@
 
     - s_(ARMOR) stats
     - griffin potion effects
-    - bit shop enchants
 
     - hotm specifics
 - every other thing in skyblock

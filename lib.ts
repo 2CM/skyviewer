@@ -1089,7 +1089,11 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
         if (enchants.includes(enchantName)) {
             let recievedEnchantStats = (enchantStats[enchantName] || UNDEFINEDFUNC)(enchantLevel) || {}; //variable naming :)
-            
+
+            if(enchantName == "hecatomb") {
+                recievedEnchantStats.health = Math.floor((calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0) / 10)*2.6
+            }
+
             //old dragon enchantment buff
             if(item.tag.ExtraAttributes.id.startsWith("OLD_DRAGON") && isFullSet == true) {
                 recievedEnchantStats = mergeStatsLists(recievedEnchantStats, {
@@ -1826,64 +1830,64 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     var foundSetPieces = new Set<fullSetPiece>();
     var foundSetNames = new Set<fullSetName>();
 
-    armorContents = [
-        {
-            id: 300,
-            Count: 1,
-            tag: {
-                display: {
-                    Name: "epic",
-                },
-                ExtraAttributes: {
-                    id: "BAT_PERSON_HELMET",
-                    enchantments: {
-                        growth: 4
-                    }
-                }
-            },
-            Damage: 3,
-        },
-        {
-            id: 300,
-            Count: 1,
-            tag: {
-                display: {
-                    Name: "epicf",
-                },
-                ExtraAttributes: {
-                    id: "BAT_PERSON_CHESTPLATE",
-                }
-            },
-            Damage: 3,
-        },
-        {
-            id: 300,
-            Count: 1,
-            tag: {
-                display: {
-                    Name: "epicff",
-                },
-                ExtraAttributes: {
-                    id: "BAT_PERSON_LEGGINGS",
-                }
-            },
-            Damage: 3,
-        },
-        {
-            id: 300,
-            Count: 1,
-            tag: {
-                display: {
-                    Name: "epicfff",
-                },
-                ExtraAttributes: {
-                    id: "BAT_PERSON_BOOTS",
-                    ranchers_speed: 100
-                }
-            },
-            Damage: 3,
-        },
-    ]
+    // armorContents = [
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epic",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "BAT_PERSON_HELMET",
+    //                 enchantments: {
+    //                     growth: 4
+    //                 }
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epicf",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "BAT_PERSON_CHESTPLATE",
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epicff",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "BAT_PERSON_LEGGINGS",
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epicfff",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "BAT_PERSON_BOOTS",
+    //                 ranchers_speed: 100
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    // ]
 
 
     //find full sets so calculateItemStats can use it
