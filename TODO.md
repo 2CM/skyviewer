@@ -13,7 +13,7 @@
 
     - tara helm
     - warden helm
-    - mushroom/batperson armor
+    - batperson armor
     - miners outfit
     - armor of the pack?
     - armor of magma

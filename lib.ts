@@ -1386,6 +1386,16 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         if(calcTemp[calcId].time.other.isNight == false) {
             stats.baseStats = {defense: 5, strength: 5}
         }
+    } else
+
+    if(["MUSHROOM_HELMET", "MUSHROOM_CHESTPLATE", "MUSHROOM_LEGGINGS", "MUSHROOM_BOOTS"].includes(item.tag.ExtraAttributes.id)) {
+        if(isFullSet == true && calcTemp[calcId].time.other.isNight == true) {
+            for(let i in keys(stats)) { //multiply stats by 2
+                let statSourceName: string = keys(stats)[i];
+
+                stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, 2);
+            }
+        }
     }
 
     // console.log(stats);
@@ -1803,7 +1813,10 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
                     Name: "epic",
                 },
                 ExtraAttributes: {
-                    id: "GOBLIN_HELMET",
+                    id: "MUSHROOM_HELMET",
+                    enchantments: {
+                        growth: 4
+                    }
                 }
             },
             Damage: 3,
@@ -1816,7 +1829,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
                     Name: "epicf",
                 },
                 ExtraAttributes: {
-                    id: "GOBLIN_CHESTPLATE",
+                    id: "MUSHROOM_CHESTPLATE",
                 }
             },
             Damage: 3,
@@ -1829,7 +1842,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
                     Name: "epicff",
                 },
                 ExtraAttributes: {
-                    id: "GOBLIN_LEGGINGS",
+                    id: "MUSHROOM_LEGGINGS",
                 }
             },
             Damage: 3,
@@ -1842,7 +1855,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
                     Name: "epicfff",
                 },
                 ExtraAttributes: {
-                    id: "RANCHERS_BOOTS",
+                    id: "MUSHROOM_BOOTS",
                     ranchers_speed: 100
                 }
             },

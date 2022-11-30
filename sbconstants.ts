@@ -4860,6 +4860,12 @@ export const fullSets = {
         "GOBLIN_CHESTPLATE",
         "GOBLIN_LEGGINGS",
         "GOBLIN_BOOTS",
+    ],
+    "MUSHROOM": [
+        "MUSHROOM_HELMET",
+        "MUSHROOM_CHESTPLATE",
+        "MUSHROOM_LEGGINGS",
+        "MUSHROOM_BOOTS",
     ]
 } as const;
 
@@ -4889,7 +4895,8 @@ export const fullSetNames: {
     //special ones
     "SKELETOR": "SKELETOR",
     "YOG": "YOG",
-    "OLD_DRAGON": "OLD_DRAGON"
+    "OLD_DRAGON": "OLD_DRAGON",
+    "MUSHROOM": "MUSHROOM",
 }
 
 //time stuff
