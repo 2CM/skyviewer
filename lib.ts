@@ -999,6 +999,15 @@ export type calculateItemStatsOther = {
 export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, other?: calculateItemStatsOther, isFullSet?: boolean): Promise<statsCategory> {
     var stats: statsCategory = {};
 
+    //theres a lot of multiplier exceptions
+    function multiplyGivenStats(amount: number) {
+        for(let i in keys(stats)) {
+            let statSourceName: string = keys(stats)[i];
+
+            stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, amount);
+        }
+    }
+
     // console.log(JSON.stringify(item));
     // console.log(JSON.stringify(baseItem));
 
@@ -1294,11 +1303,7 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
             //all end pieces get 2x stats on the end island (combat_3)
 
             //multiply all stat sources by 2
-            for(let i in keys(stats)) {
-                let statSourceName: string = keys(stats)[i];
-
-                stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, 2);
-            }
+            multiplyGivenStats(2);
         }
     } else
 
@@ -1306,11 +1311,7 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         if(calcTemp[calcId].status == "combat_3") {
             //same stuff with end armor but 3x
 
-            for(let i in keys(stats)) {
-                let statSourceName: string = keys(stats)[i];
-
-                stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, 3);
-            }
+            multiplyGivenStats(3);
         }
     } else
 
@@ -1395,29 +1396,29 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     if(["MUSHROOM_HELMET", "MUSHROOM_CHESTPLATE", "MUSHROOM_LEGGINGS", "MUSHROOM_BOOTS"].includes(item.tag.ExtraAttributes.id)) {
         if(isFullSet == true && calcTemp[calcId].time.other.isNight == true) {
-            for(let i in keys(stats)) { //multiply stats by 2
-                let statSourceName: string = keys(stats)[i];
-
-                stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, 2);
-            }
+            multiplyGivenStats(2);
         }
     } else
 
     if(["BAT_PERSON_HELMET", "BAT_PERSON_CHESTPLATE", "BAT_PERSON_LEGGINGS", "BAT_PERSON_BOOTS"].includes(item.tag.ExtraAttributes.id)) {
         if(calcTemp[calcId].time.events.spookyFest.isActive == true) { //if spooky fest is happening
-            for(let i in keys(stats)) { //multiply stats by 3
-                let statSourceName: string = keys(stats)[i];
+            //bat person gives 3x stats during spooky fest
 
-                stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, 3);
-            }
+            multiplyGivenStats(3);
         } else if(calcTemp[calcId].time.other.isNight == true) { //if its night (else if because we dont want 6x stats during spooky fest)
-            for(let i in keys(stats)) { //multiply stats by 2
-                let statSourceName: string = keys(stats)[i];
-
-                stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, 2);
-            }
+            //it also gives 2x stats during night
+            
+            multiplyGivenStats(2);
         }
     } else
+
+    if(item.tag.ExtraAttributes.id.startsWith("SNOW_SUIT")) {
+        if(calcTemp[calcId].status == "winter") {
+            //snow suit gives 2x stats on the jerry island
+
+            multiplyGivenStats(2);
+        }
+    }
 
     // console.log(stats);
 
