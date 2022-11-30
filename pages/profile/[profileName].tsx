@@ -142,7 +142,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
     };
 
-	console.log(calcTemp[calcId].time.formatted)
+	console.log(calcTemp[calcId].time)
 
 	calculateAllSkillExp(apiData, selectedProfile, playerUUID, calcId);
 	await calculateStats(apiData, selectedProfile, playerUUID, calcId);

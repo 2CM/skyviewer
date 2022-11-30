@@ -541,6 +541,11 @@ export function getSkyblockTime() {
     return {
         raw: { sbTimestamp, year, month, day, hour, minute },
         other: { isNight: (hour < 6 || hour > 19) },
+        events: {
+            spookyFest: {
+                isActive: Math.floor(month) == 7 && day > 28
+            }
+        },
         formatted: `[HOUR]:[MINUTE][AMPM], [VARIANT] [SEASON] [DAY][SUFFIX], Year [YEAR]` //doing it this way because `${}` takes way too much space
             .replace("[HOUR]", ((Math.floor(hour) % 12) || 12) + "")
             .replace("[MINUTE]", (minuteFormatter.format(Math.floor(minute))) + "")
@@ -1396,7 +1401,23 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
                 stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, 2);
             }
         }
-    }
+    } else
+
+    if(["BAT_PERSON_HELMET", "BAT_PERSON_CHESTPLATE", "BAT_PERSON_LEGGINGS", "BAT_PERSON_BOOTS"].includes(item.tag.ExtraAttributes.id)) {
+        if(calcTemp[calcId].time.events.spookyFest.isActive == true) { //if spooky fest is happening
+            for(let i in keys(stats)) { //multiply stats by 3
+                let statSourceName: string = keys(stats)[i];
+
+                stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, 3);
+            }
+        } else if(calcTemp[calcId].time.other.isNight == true) { //if its night (else if because we dont want 6x stats during spooky fest)
+            for(let i in keys(stats)) { //multiply stats by 2
+                let statSourceName: string = keys(stats)[i];
+
+                stats[statSourceName] = multiplyStatsList(stats[statSourceName] || {}, 2);
+            }
+        }
+    } else
 
     // console.log(stats);
 
@@ -1813,7 +1834,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
                     Name: "epic",
                 },
                 ExtraAttributes: {
-                    id: "MUSHROOM_HELMET",
+                    id: "BAT_PERSON_HELMET",
                     enchantments: {
                         growth: 4
                     }
@@ -1829,7 +1850,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
                     Name: "epicf",
                 },
                 ExtraAttributes: {
-                    id: "MUSHROOM_CHESTPLATE",
+                    id: "BAT_PERSON_CHESTPLATE",
                 }
             },
             Damage: 3,
@@ -1842,7 +1863,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
                     Name: "epicff",
                 },
                 ExtraAttributes: {
-                    id: "MUSHROOM_LEGGINGS",
+                    id: "BAT_PERSON_LEGGINGS",
                 }
             },
             Damage: 3,
@@ -1855,7 +1876,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
                     Name: "epicfff",
                 },
                 ExtraAttributes: {
-                    id: "MUSHROOM_BOOTS",
+                    id: "BAT_PERSON_BOOTS",
                     ranchers_speed: 100
                 }
             },
