@@ -706,6 +706,9 @@ export var calcTemp: {
         other: {
             hpbsDoubled?: boolean,
             abiphoneContacts?: number,
+            fullSets?: fullSetName[],
+            griffinStrengthLevel?: number,
+            griffinRegenLevel?: number,
         }
     }        
 } = {};
@@ -1708,8 +1711,43 @@ export async function calculatePotionStats(data: apiData, selectedProfile: numbe
 
     var stats: statsCategory = {};
 
-    for (let i in active_effects) {
-        var effect = active_effects[i];
+    var effects = [...active_effects];
+
+    function replaceEffect(effect: effectName, level: number) {
+        let preExistingIndex = effects.findIndex(effectInfo => effectInfo.effect == effect);
+        let effectLevel: number;
+
+        if(preExistingIndex == -1) {
+            preExistingIndex = effects.length; //so it can be pushed to the end
+
+            effectLevel = 0;
+        } else {
+            effectLevel = effects[preExistingIndex].level || 0;
+        }
+
+        if(effectLevel < level+1) {
+            effects[preExistingIndex] = {effect, level, modifiers: [], ticks_remaining: 200, infinite: false}
+        }
+    }
+
+    if(calcTemp[calcId].other.fullSets?.includes("MINER_OUTFIT")) {
+        replaceEffect("haste", 2);
+    }
+
+    if(calcTemp[calcId].other.griffinRegenLevel !== undefined) {
+        replaceEffect("regeneration", calcTemp[calcId].other.griffinRegenLevel || 0);
+    }
+
+    if(calcTemp[calcId].other.griffinStrengthLevel !== undefined) {
+        replaceEffect("strength", calcTemp[calcId].other.griffinStrengthLevel || 0);
+    }
+
+    console.log(effects)
+
+    for (let i in effects) {
+        var effect = effects[i];
+
+        // console.log(effect);
 
         if (typeof effectStats[effect.effect] !== "function") {
             console.warn(`${effect.effect} is not a function`);
@@ -1740,7 +1778,7 @@ export async function calculatePotionStats(data: apiData, selectedProfile: numbe
             continue;
         }
 
-        var effectStatsList = effectStats[effect.effect](effect.level); //variable naming ;-;
+        var effectStatsList = mapObjectValues(effectStats[effect.effect](effect.level), value => value || 0); //variable naming ;-;
 
         for (let j in effect.modifiers) {
             var modifier = effect.modifiers[j];
@@ -1830,64 +1868,64 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     var foundSetPieces = new Set<fullSetPiece>();
     var foundSetNames = new Set<fullSetName>();
 
-    // armorContents = [
-    //     {
-    //         id: 300,
-    //         Count: 1,
-    //         tag: {
-    //             display: {
-    //                 Name: "epic",
-    //             },
-    //             ExtraAttributes: {
-    //                 id: "BAT_PERSON_HELMET",
-    //                 enchantments: {
-    //                     growth: 4
-    //                 }
-    //             }
-    //         },
-    //         Damage: 3,
-    //     },
-    //     {
-    //         id: 300,
-    //         Count: 1,
-    //         tag: {
-    //             display: {
-    //                 Name: "epicf",
-    //             },
-    //             ExtraAttributes: {
-    //                 id: "BAT_PERSON_CHESTPLATE",
-    //             }
-    //         },
-    //         Damage: 3,
-    //     },
-    //     {
-    //         id: 300,
-    //         Count: 1,
-    //         tag: {
-    //             display: {
-    //                 Name: "epicff",
-    //             },
-    //             ExtraAttributes: {
-    //                 id: "BAT_PERSON_LEGGINGS",
-    //             }
-    //         },
-    //         Damage: 3,
-    //     },
-    //     {
-    //         id: 300,
-    //         Count: 1,
-    //         tag: {
-    //             display: {
-    //                 Name: "epicfff",
-    //             },
-    //             ExtraAttributes: {
-    //                 id: "BAT_PERSON_BOOTS",
-    //                 ranchers_speed: 100
-    //             }
-    //         },
-    //         Damage: 3,
-    //     },
-    // ]
+    armorContents = [
+        {
+            id: 300,
+            Count: 1,
+            tag: {
+                display: {
+                    Name: "epic",
+                },
+                ExtraAttributes: {
+                    id: "MINER_OUTFIT_HELMET",
+                    enchantments: {
+                        growth: 4
+                    }
+                }
+            },
+            Damage: 3,
+        },
+        {
+            id: 300,
+            Count: 1,
+            tag: {
+                display: {
+                    Name: "epicf",
+                },
+                ExtraAttributes: {
+                    id: "MINER_OUTFIT_CHESTPLATE",
+                }
+            },
+            Damage: 3,
+        },
+        {
+            id: 300,
+            Count: 1,
+            tag: {
+                display: {
+                    Name: "epicff",
+                },
+                ExtraAttributes: {
+                    id: "MINER_OUTFIT_LEGGINGS",
+                }
+            },
+            Damage: 3,
+        },
+        {
+            id: 300,
+            Count: 1,
+            tag: {
+                display: {
+                    Name: "epicfff",
+                },
+                ExtraAttributes: {
+                    id: "MINER_OUTFIT_BOOTS",
+                    ranchers_speed: 100
+                }
+            },
+            Damage: 3,
+        },
+    ]
 
 
     //find full sets so calculateItemStats can use it
@@ -1920,6 +1958,8 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
             }
         }
     }
+
+    calcTemp[calcId].other.fullSets = [...verifiedFullSets]
 
     console.log(verifiedFullSets);
 
@@ -2116,7 +2156,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     equippedPet = { //for testing
         exp: 5038804, //from deathstreeks
         tier: "LEGENDARY",
-        type: "BAT",
+        type: "GRIFFIN",
         active: true,
         heldItem: null,
         candyUsed: 0,
@@ -2134,9 +2174,28 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
     var petLevel: number = petToLevel(equippedPet); //level of the pet
 
-    //hpb double exception
-    if(equippedPet.type == "BLAZE" && equippedPet.tier == "LEGENDARY") {
+    
+    if(equippedPet.type == "BLAZE" && equippedPet.tier == "LEGENDARY") { //hpb double exception
         calcTemp[calcId].other.hpbsDoubled = true;
+    } else if(equippedPet.type == "GRIFFIN") { //griffin gives potion effects
+        switch(equippedPet.tier) {
+            case "UNCOMMON":
+                calcTemp[calcId].other.griffinRegenLevel = 5;
+                calcTemp[calcId].other.griffinStrengthLevel = 7;
+            break;
+            case "RARE":
+                calcTemp[calcId].other.griffinRegenLevel = 6;
+                calcTemp[calcId].other.griffinStrengthLevel = 7;
+            break;
+            case "EPIC":
+                calcTemp[calcId].other.griffinRegenLevel = 6;
+                calcTemp[calcId].other.griffinStrengthLevel = 8;
+            break;
+            case "LEGENDARY":
+                calcTemp[calcId].other.griffinRegenLevel = 7;
+                calcTemp[calcId].other.griffinStrengthLevel = 8;
+            break;
+        }
     }
 
     var baseStats = petInfo.base(petLevel, equippedPet.tier); //base stats of the pet
@@ -2282,9 +2341,9 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     await calculateHarpStats(data, selectedProfile, playerUUID, calcId);
     await calculateSlayerStats(data, selectedProfile, playerUUID, calcId);
     await calculateAccStats(data, selectedProfile, playerUUID, calcId);
+    await calculateArmorStats(data, selectedProfile, playerUUID, calcId);
     await calculatePotionStats(data, selectedProfile, playerUUID, calcId);
     await calculateCakeStats(data, selectedProfile, playerUUID, calcId);
-    await calculateArmorStats(data, selectedProfile, playerUUID, calcId);
     await calculatePetScoreStats(data, selectedProfile, playerUUID, calcId);
     await calculateBestiaryStats(data, selectedProfile, playerUUID, calcId);
 

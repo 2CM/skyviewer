@@ -13,7 +13,6 @@
 
     - tara helm
     - warden helm
-    - miners outfit
     - armor of the pack?
     - armor of magma
     - tux
@@ -23,7 +22,6 @@
     - make stereo pants nullify ALL stats
 
     - s_(ARMOR) stats
-    - griffin potion effects
 
     - hotm specifics
 - every other thing in skyblock
