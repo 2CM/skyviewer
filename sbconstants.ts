@@ -1732,8 +1732,7 @@ export const skillCaps: {
     social: 25
 }
 
-
-export type statName =
+export type baseStatName = 
     "health" |
     "defense" |
     "true_defense" |
@@ -1768,45 +1767,23 @@ export type statName =
     "health_regeneration" |
     "vitality" |
     "mending" |
-    "damage" | //apparently damage is a stat
+    "damage";
 
-    //multiplicative
-    "m_health" |
-    "m_defense" |
-    "m_true_defense" |
-    "m_strength" |
-    "m_walk_speed" |
-    "m_critical_chance" |
-    "m_critical_damage" |
-    "m_intelligence" |
-    "m_mining_speed" |
-    "m_sea_creature_chance" |
-    "m_magic_find" |
-    "m_pet_luck" |
-    "m_attack_speed" |
-    "m_ability_damage" |
-    "m_ferocity" |
-    "m_mining_fortune" |
-    "m_farming_fortune" |
-    "m_foraging_fortune" |
-    "m_breaking_power" |
-    "m_pristine" |
-    "m_combat_wisdom" |
-    "m_mining_wisdom" |
-    "m_farming_wisdom" |
-    "m_foraging_wisdom" |
-    "m_fishing_wisdom" |
-    "m_enchanting_wisdom" |
-    "m_alchemy_wisdom" |
-    "m_carpentry_wisdom" |
-    "m_runecrafting_wisdom" |
-    "m_social_wisdom" |
-    "m_fishing_speed" |
-    "m_health_regeneration" |
-    "m_vitality" |
-    "m_mending" |
 
-    //special
+//additive stats (add then multiply)
+export type additiveStatName = `a_${baseStatName}`;
+
+//multiplicative stats (chain multiply)
+export type multiplicativeStatName = `m_${baseStatName}`;
+
+//cap stats (add then cap)
+export type capStatName = `c_${baseStatName}`;
+
+//limit stats (hard limit)
+export type limitStatName = `l_${baseStatName}`;
+
+//special stats
+export type specialStatName = 
     "s_golden_damage" | //gdrag
 
     "s_yeti_sword_intelligence" | //baby yeti
@@ -1831,19 +1808,16 @@ export type statName =
 
     "s_undead_armor_defense" | //zombie pet
 
-
     "s_pet_stat_buff" | //bingo pet
-
-    "s_no_speed" | //snail pet
 
     "s_critical_hit_multiplier" | //mastiff
 
     "s_aotd_ability_bonus" | //sup armor
 
-    "s_damage_reduction" |
+    "s_damage_reduction"
 
-    //y per x
-    //per stats get applied after multiplication
+//y per x
+export type perStatName = 
     "p_X_strength_per_5_magic_find" | //gdrag
     
     "p_1_walk_speed_per_X_defense" | //amadillo
@@ -1865,23 +1839,26 @@ export type statName =
 
     "p_X_walk_speed_per_50_defense" | //heavy armor
 
-    "p_X_mining_speed_per_15_intelligence" | //goblin
+    "p_X_mining_speed_per_15_intelligence" //goblin
 
-    //mob damage buffs
+
+//damage buff stats (specific mob damage buffs)
+export type damageBuffStatName = 
     "d_end_mobs" | //edrag pet
     "d_slimes" | // magma cube
     "d_lvl_100" | //pigman pet
     "d_wither_mobs" | //wither skeleton
-    "d_zombies" | //zombie pet
+    "d_zombies"; //zombie pet
 
-    //caps (addition)
-    "c_walk_speed" | //black cat
-
-    //limits (like caps but its just set)
-    "l_intelligence" | //goblin armor
-    "l_vitality" | //lava shell necklace
-    "l_mending" | //lava shell necklace
-    "l_walk_speed" //rancher's boots
+export type statName = 
+    baseStatName |
+    additiveStatName |
+    multiplicativeStatName |
+    capStatName |
+    limitStatName |
+    specialStatName |
+    perStatName |
+    damageBuffStatName
 
 export const defaultStatCaps: {
     [key in statName]?: number
@@ -1892,9 +1869,7 @@ export const defaultStatCaps: {
     fishing_speed: 300, //apparently this exists
 }
 
-export type statsList = {
-    [key in statName]?: number;
-};
+export type statsList = { [key in statName]?: number };
 
 export type statIdMap<Type> = {
     [key in statName]?: Type
@@ -3705,7 +3680,7 @@ export const petStats: {
             "Archimedes": {
                 tier: "LEGENDARY",
                 stats: (level, tier, special) => ({
-                    m_health: 0.002*level
+                    a_health: 0.002*level
                 })
             },
         }
@@ -3838,7 +3813,7 @@ export const petStats: {
             "King of Kings": {
                 tier: "LEGENDARY",
                 stats: (level, tier, special) => ({ //it only works when above 85% health but i think its fine
-                    m_strength: 1+0.14*level
+                    a_strength: 1+0.14*level
                 })
             }
         }
@@ -4195,7 +4170,7 @@ export const petStats: {
             "Slow Moving": {
                 tier: "RARE",
                 stats: (level, tier, special) => ({
-                    s_no_speed: 1,
+                    l_walk_speed: 100
                 })
             },
         }
@@ -4284,7 +4259,7 @@ export const petStats: {
             "Turtle Tactics": {
                 tier: "EPIC",
                 stats: (level, tier, special) => ({
-                    m_defense: 0.3+0.0027*level
+                    a_defense: 0.3+0.0027*level
                 })
             },
         }

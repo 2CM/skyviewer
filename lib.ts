@@ -369,115 +369,116 @@ export function coloredStringToElement(string: string, element: keyof React.Reac
     return React.createElement(parentElement, {}, children)
 }
 
+//WORK
 
 //converts stat sources to an element for stat sources popups
-export function sourcesToElement(sources: any, statName: statName) {
-    //elements from the sources of one specific stat
-    function elementsFromSource(currentSources: any, numberFormatter: (num: number) => string, title?: string, titleNumberFormatter?: (num: number) => string): React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] {
-        if (keys(currentSources).length == 0) {
-            return []
-        }
+// export function sourcesToElement(sources: any, statName: statName) {
+//     //elements from the sources of one specific stat
+//     function elementsFromSource(currentSources: any, numberFormatter: (num: number) => string, title?: string, titleNumberFormatter?: (num: number) => string): React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] {
+//         if (keys(currentSources).length == 0) {
+//             return []
+//         }
 
-        var elements: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
+//         var elements: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
 
-        var sum = 0;
+//         var sum = 0;
 
-        for (let i in keys(currentSources)) {
-            var categoryName: string = keys(currentSources)[i] as string;
-            var category = currentSources[categoryName];
+//         for (let i in keys(currentSources)) {
+//             var categoryName: string = keys(currentSources)[i] as string;
+//             var category = currentSources[categoryName];
 
-            var categoryChildren: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
+//             var categoryChildren: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
 
-            var categorySum = 0;
+//             var categorySum = 0;
 
-            var lastSourceName: string = "inital value :)";
-            var lastSource: number = -1;
+//             var lastSourceName: string = "inital value :)";
+//             var lastSource: number = -1;
 
-            for (let j in keys(category)) {
-                var sourceName = keys(category)[j] as string;
-                var source: number = category[sourceName];
+//             for (let j in keys(category)) {
+//                 var sourceName = keys(category)[j] as string;
+//                 var source: number = category[sourceName];
 
-                var formattedName = sourceName + "";
+//                 var formattedName = sourceName + "";
 
-                // var color: string = "unset";
-                var hasRecomb: boolean = false;
+//                 // var color: string = "unset";
+//                 var hasRecomb: boolean = false;
 
-                if (formattedName.startsWith("RECOMB")) {
-                    hasRecomb = true;
-                    formattedName = formattedName.slice("RECOMB".length);
-                }
+//                 if (formattedName.startsWith("RECOMB")) {
+//                     hasRecomb = true;
+//                     formattedName = formattedName.slice("RECOMB".length);
+//                 }
 
-                // if(formattedName.startsWith(colorChar)) {
-                //     color = colorCodeToHex[formattedName[1]];
-                //     formattedName = formattedName.slice(2);
-                // }
+//                 // if(formattedName.startsWith(colorChar)) {
+//                 //     color = colorCodeToHex[formattedName[1]];
+//                 //     formattedName = formattedName.slice(2);
+//                 // }
 
-                lastSourceName = formattedName;
-                lastSource = source;
+//                 lastSourceName = formattedName;
+//                 lastSource = source;
 
-                categorySum += source;
+//                 categorySum += source;
 
-                categoryChildren.push(
-                    React.createElement(
-                        "li",
-                        {
-                            className: statStyles.statValue,
-                            // style: {
-                            //     color: color
-                            // },
-                        },
-                        [
-                            hasRecomb ? React.createElement("img", { src: recombEmoji, style: { height: "1em", width: "auto" } }, null) : null,
-                            coloredStringToElement(` ${formattedName}`),
-                            React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(source)}`)
-                        ]
-                    )
-                );
-            }
+//                 categoryChildren.push(
+//                     React.createElement(
+//                         "li",
+//                         {
+//                             className: statStyles.statValue,
+//                             // style: {
+//                             //     color: color
+//                             // },
+//                         },
+//                         [
+//                             hasRecomb ? React.createElement("img", { src: recombEmoji, style: { height: "1em", width: "auto" } }, null) : null,
+//                             coloredStringToElement(` ${formattedName}`),
+//                             React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(source)}`)
+//                         ]
+//                     )
+//                 );
+//             }
 
-            if (keys(category).length == 1 && lastSourceName == "SAME") {
-                elements.push(
-                    React.createElement("li", { className: statStyles.statsCategory }, [ //style: {color: colorCodeToHex[statCategoryColors[categoryName]]}
-                        coloredStringToElement(categoryName),
-                        React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(categorySum)}`)
-                    ]),
-                    React.createElement("br")
-                )
-            } else {
-                elements.push(
-                    React.createElement("li", { className: statStyles.statsCategory }, [
-                        coloredStringToElement(categoryName),
-                        React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(categorySum)}`)
-                    ]),
-                    React.createElement("ul", { className: statStyles.statValue }, categoryChildren),
-                    React.createElement("br")
-                )
-            }
+//             if (keys(category).length == 1 && lastSourceName == "SAME") {
+//                 elements.push(
+//                     React.createElement("li", { className: statStyles.statsCategory }, [ //style: {color: colorCodeToHex[statCategoryColors[categoryName]]}
+//                         coloredStringToElement(categoryName),
+//                         React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(categorySum)}`)
+//                     ]),
+//                     React.createElement("br")
+//                 )
+//             } else {
+//                 elements.push(
+//                     React.createElement("li", { className: statStyles.statsCategory }, [
+//                         coloredStringToElement(categoryName),
+//                         React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(categorySum)}`)
+//                     ]),
+//                     React.createElement("ul", { className: statStyles.statValue }, categoryChildren),
+//                     React.createElement("br")
+//                 )
+//             }
 
-            sum += categorySum;
-        }
+//             sum += categorySum;
+//         }
 
-        if (title) return [React.createElement("span", {}, title + (titleNumberFormatter !== undefined ? titleNumberFormatter(sum) : numberFormatter(sum))), React.createElement("ul", {}, elements)];
+//         if (title) return [React.createElement("span", {}, title + (titleNumberFormatter !== undefined ? titleNumberFormatter(sum) : numberFormatter(sum))), React.createElement("ul", {}, elements)];
 
-        return elements;
-    }
+//         return elements;
+//     }
 
-    var children: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
+//     var children: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
 
-    var hasAdditiveBuff = !(sources[statName] === undefined || keys(sources[statName]).length === 0);
-    var hasMultiplicativeBuff = sources["m_" + statName] !== undefined;
+//     var hasAdditiveBuff = !(sources[statName] === undefined || keys(sources[statName]).length === 0);
+//     var hasMultiplicativeBuff = sources["m_" + statName] !== undefined;
 
-    if (hasAdditiveBuff)
-        children.push(...elementsFromSource(sources[statName] || {}, num => statFormatter.format(num), hasMultiplicativeBuff ? "Additive: " : undefined));
+//     if (hasAdditiveBuff)
+//         children.push(...elementsFromSource(sources[statName] || {}, num => statFormatter.format(num), hasMultiplicativeBuff ? "Additive: " : undefined));
 
-    if (hasMultiplicativeBuff)
-        children.push(...elementsFromSource(sources["m_" + statName] || {}, num => percentFormatter.format(num * 100) + "%", hasAdditiveBuff ? "Multiplicative: " : undefined, num => multiplierFormatter.format(num + 1) + "x"))
+//     if (hasMultiplicativeBuff)
+//         children.push(...elementsFromSource(sources["m_" + statName] || {}, num => percentFormatter.format(num * 100) + "%", hasAdditiveBuff ? "Multiplicative: " : undefined, num => multiplierFormatter.format(num + 1) + "x"))
 
-    if (!hasAdditiveBuff && !hasMultiplicativeBuff)
-        children.push(React.createElement("h2", { style: { textAlign: "center", fontSize: "20px" } }, `This player has no ${statIdToStatName[statName] || "error"} :(`))
+//     if (!hasAdditiveBuff && !hasMultiplicativeBuff)
+//         children.push(React.createElement("h2", { style: { textAlign: "center", fontSize: "20px" } }, `This player has no ${statIdToStatName[statName] || "error"} :(`))
 
-    return React.createElement("ul", {}, children);
-}
+//     return React.createElement("ul", {}, children);
+// }
 
 export function hotmExpToLevel(exp: number): number {
     var level = 0;
@@ -699,7 +700,7 @@ export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, 
 //map of calculation id to stat info
 export var calcTemp: {
     [key in string]: {
-        stats: statsCategories,
+        stats: any,
         skills: allSkillExpInfo,
         status: skyblockLocation | undefined,
         time: ReturnType<typeof getSkyblockTime>,
@@ -716,31 +717,31 @@ export var calcTemp: {
 //util to replace typing out multiplicative of every stat for sources like (edrag superior perk, superior set bonus, renowned reforge, etc)
 export function allStatsBoost(amount: number): statsList {
     return multiplyStatsList({
-        m_health: 1,
-        m_defense: 1,
-        m_strength: 1,
-        m_intelligence: 1,
-        m_critical_chance: 1,
-        m_critical_damage: 1,
-        m_attack_speed: 1,
-        m_ability_damage: 1,
-        m_true_defense: 1,
-        m_ferocity: 1,
-        m_walk_speed: 1,
-        m_magic_find: 1,
-        m_pet_luck: 1,
-        m_sea_creature_chance: 1,
+        a_health: 1,
+        a_defense: 1,
+        a_strength: 1,
+        a_intelligence: 1,
+        a_critical_chance: 1,
+        a_critical_damage: 1,
+        a_attack_speed: 1,
+        a_ability_damage: 1,
+        a_true_defense: 1,
+        a_ferocity: 1,
+        a_walk_speed: 1,
+        a_magic_find: 1,
+        a_pet_luck: 1,
+        a_sea_creature_chance: 1,
     }, amount);
 }
 
 //same as allStatsBoost except for only combat stats
 export function combatStatsBoost(amount: number): statsList {
     return multiplyStatsList({
-        m_health: 1,
-        m_defense: 1,
-        m_strength: 1,
-        m_critical_chance: 1,
-        m_critical_damage: 1,
+        a_health: 1,
+        a_defense: 1,
+        a_strength: 1,
+        a_critical_chance: 1,
+        a_critical_damage: 1,
     }, amount);
 }
 
@@ -814,163 +815,155 @@ export type statsCategory = {
     [key in string]: statsList
 }
 
-//multiple statsCategory
-export type statsCategories = {
-    [key in string]: statsCategory
-}
+//WORK
 
-//sources of stats
-export type statSources = {
-    [key in statName]?: { [key: string]: { [key: string]: number } }
-};
-
-//sums up a statSources into a statsList
-export function sumStatsSources(sources: statSources): {capped: statsList, summed: statsList} {
-    var stats: statsList = {};
-    var m_stats: statsList = {};
+// //sums up a statSources into a statsList
+// export function sumStatsSources(sources: statSources): {capped: statsList, summed: statsList} {
+//     var stats: statsList = {};
+//     var m_stats: statsList = {};
 
 
-    //adds them up
-    for (let i in keys(sources)) {
-        let statName: statName = keys(sources)[i];
-        let statValue = sources[statName] || {};
+//     //adds them up
+//     for (let i in keys(sources)) {
+//         let statName: statName = keys(sources)[i];
+//         let statValue = sources[statName] || {};
 
-        for (let j in keys(statValue)) {
-            let categoryName = keys(statValue)[j];
-            let categoryValue = statValue[categoryName];
+//         for (let j in keys(statValue)) {
+//             let categoryName = keys(statValue)[j];
+//             let categoryValue = statValue[categoryName];
 
-            for (let k in keys(categoryValue)) {
-                let sourceName = keys(categoryValue)[k];
-                let sourceValue = categoryValue[sourceName];
+//             for (let k in keys(categoryValue)) {
+//                 let sourceName = keys(categoryValue)[k];
+//                 let sourceValue = categoryValue[sourceName];
 
-                stats[statName] = (stats[statName] || 0) + sourceValue;
-            }
-        }
-    }
+//                 stats[statName] = (stats[statName] || 0) + sourceValue;
+//             }
+//         }
+//     }
 
-    //multiplies them
-    for (let i in keys(stats)) {
-        let statName: statName = keys(stats)[i];
-        let statValue: number = stats[statName] || 0;
+//     //multiplies them
+//     for (let i in keys(stats)) {
+//         let statName: statName = keys(stats)[i];
+//         let statValue: number = stats[statName] || 0;
 
-        if (statName.startsWith("m_")) {
-            var originalStatName: statName = statName.slice(2) as statName;
+//         if (statName.startsWith("m_")) {
+//             var originalStatName: statName = statName.slice(2) as statName;
 
-            m_stats[originalStatName] = statValue + 1;
-        }
-    }
+//             m_stats[originalStatName] = statValue + 1;
+//         }
+//     }
 
-    var summed = multiplyStatsList(stats, m_stats);
-    var capped: statsList = {};
+//     var summed = multiplyStatsList(stats, m_stats);
+//     var capped: statsList = {};
 
-    for(let i in keys(summed)) {
-        let statName = keys(summed)[i];
+//     for(let i in keys(summed)) {
+//         let statName = keys(summed)[i];
 
-        let statCap: number | undefined = defaultStatCaps[statName]
+//         let statCap: number | undefined = defaultStatCaps[statName]
 
-        if(statName == "walk_speed" && summed.c_walk_speed !== undefined) statCap = (statCap || 0) + summed.c_walk_speed;
-        if(statName == "walk_speed" && summed.l_walk_speed !== undefined) statCap = summed.l_walk_speed; //l_ overrides c_
-        if(statName == "intelligence" && summed.l_intelligence !== undefined) statCap = summed.l_intelligence;
-        if(statName == "vitality" && summed.l_vitality !== undefined) statCap = summed.l_vitality;
-        if(statName == "mending" && summed.l_mending !== undefined) statCap = summed.l_mending;
-
-
-        capped[statName] = Math.min(summed[statName] || 0, statCap === undefined ? Infinity : statCap);
-    }
-
-    return {capped, summed};
-}
+//         if(statName == "walk_speed" && summed.c_walk_speed !== undefined) statCap = (statCap || 0) + summed.c_walk_speed;
+//         if(statName == "walk_speed" && summed.l_walk_speed !== undefined) statCap = summed.l_walk_speed; //l_ overrides c_
+//         if(statName == "intelligence" && summed.l_intelligence !== undefined) statCap = summed.l_intelligence;
+//         if(statName == "vitality" && summed.l_vitality !== undefined) statCap = summed.l_vitality;
+//         if(statName == "mending" && summed.l_mending !== undefined) statCap = summed.l_mending;
 
 
-export function getStatSources(categories: statsCategories): statSources {
-    var sources: any = {};
+//         capped[statName] = Math.min(summed[statName] || 0, statCap === undefined ? Infinity : statCap);
+//     }
 
-    for (let i in keys(categories)) {
-        let categoryName: string = keys(categories)[i];
-        let category: statsCategory = categories[categoryName];
+//     return {capped, summed};
+// }
 
-        for (let j in keys(category)) {
-            let listName: string = keys(category)[j];
-            let list: statsList = category[listName];
 
-            for (let k in keys(list)) {
-                let statName: statName = keys(list)[k];
-                let stat: number = list[statName] || 0;
+// export function getStatSources(categories: statsCategories): statSources {
+//     var sources: any = {};
 
-                if (stat === undefined) continue;
-                if (stat == 0 && !statName.startsWith("l_")) continue; //l_ stats can be 0
+//     for (let i in keys(categories)) {
+//         let categoryName: string = keys(categories)[i];
+//         let category: statsCategory = categories[categoryName];
 
-                if (!sources[statName]) sources[statName] = {};
+//         for (let j in keys(category)) {
+//             let listName: string = keys(category)[j];
+//             let list: statsList = category[listName];
 
-                if (!sources[statName][categoryName]) sources[statName][categoryName] = {};
+//             for (let k in keys(list)) {
+//                 let statName: statName = keys(list)[k];
+//                 let stat: number = list[statName] || 0;
 
-                sources[statName][categoryName][listName] = stat;
-            }
-        }
-    }
+//                 if (stat === undefined) continue;
+//                 if (stat == 0 && !statName.startsWith("l_")) continue; //l_ stats can be 0
 
-    //for calculating pers
-    var summedRaw = sumStatsSources(sources);
+//                 if (!sources[statName]) sources[statName] = {};
 
-    var summed: statsList = {...summedRaw.capped, ...summedRaw.summed};
+//                 if (!sources[statName][categoryName]) sources[statName][categoryName] = {};
 
-    // console.log(summed)
+//                 sources[statName][categoryName][listName] = stat;
+//             }
+//         }
+//     }
 
-    //calculate pers
-    for(let i in keys(sources)) { //for each stat in sources
-        let stat: statName = keys(sources)[i] as statName;
-        if(!stat.startsWith("p_")) continue; //if its not a per stat, continue
+//     //for calculating pers
+//     var summedRaw = sumStatsSources(sources);
 
-        // console.log(stat)
+//     var summed: statsList = {...summedRaw.capped, ...summedRaw.summed};
 
-        let name = stat.slice("p_".length);
+//     // console.log(summed)
 
-        var perGiving: string | number = name.split("_per_")[1].split("_")[0];
-        var perRecieving: string | number = name.split("_")[0];
+//     //calculate pers
+//     for(let i in keys(sources)) { //for each stat in sources
+//         let stat: statName = keys(sources)[i] as statName;
+//         if(!stat.startsWith("p_")) continue; //if its not a per stat, continue
 
-        if(perGiving == "X") perGiving = summed[stat] || 0;
-        if(perRecieving == "X") perRecieving = summed[stat] || 0;
+//         // console.log(stat)
 
-        perGiving = Number(perGiving);
-        perRecieving = Number(perRecieving);
+//         let name = stat.slice("p_".length);
 
-        var [recievingStat, givingStat] = name.replace(/.+?_/, "").split(/_per_.+?_/) as statName[];
+//         var perGiving: string | number = name.split("_per_")[1].split("_")[0];
+//         var perRecieving: string | number = name.split("_")[0];
 
-        // console.log({perGiving, perRecieving, recievingStat, givingStat})
+//         if(perGiving == "X") perGiving = summed[stat] || 0;
+//         if(perRecieving == "X") perRecieving = summed[stat] || 0;
 
-        //because there arent any ways to get multiple of a type of per stat, ill just treat it as only one
-        //depth into sources (yes im good at variable naming)
-        var depth1Name = keys(sources[stat])[0];
-        var depth2Name = keys(sources[stat][depth1Name])[0];
+//         perGiving = Number(perGiving);
+//         perRecieving = Number(perRecieving);
 
-        var gained = perRecieving*((summed[givingStat] || 0)/perGiving);
+//         var [recievingStat, givingStat] = name.replace(/.+?_/, "").split(/_per_.+?_/) as statName[];
 
-        if(!sources[recievingStat])
-            sources[recievingStat] = {};
+//         // console.log({perGiving, perRecieving, recievingStat, givingStat})
 
-        if(!sources[recievingStat][depth1Name])
-            sources[recievingStat][depth1Name] = {};
+//         //because there arent any ways to get multiple of a type of per stat, ill just treat it as only one
+//         //depth into sources (yes im good at variable naming)
+//         var depth1Name = keys(sources[stat])[0];
+//         var depth2Name = keys(sources[stat][depth1Name])[0];
 
-        if(!sources[recievingStat][depth1Name][depth2Name])
-            sources[recievingStat][depth1Name][depth2Name] = gained;
+//         var gained = perRecieving*((summed[givingStat] || 0)/perGiving);
 
-        //for cases where we have 
-        // * p_X_STAT1_per_1_STAT2
-        // * p_X_STAT3_per_1_STAT1
-        summed[recievingStat] = (summed[recievingStat] || 0)+gained;
-    }
+//         if(!sources[recievingStat])
+//             sources[recievingStat] = {};
 
-    //fill in (excludes special stats (m_, s_, p_, a_, l_, d_))
-    for (let i in keys(statIdToStatName)) {
-        var statName = keys(statIdToStatName)[i];
+//         if(!sources[recievingStat][depth1Name])
+//             sources[recievingStat][depth1Name] = {};
 
-        if (sources[statName] === undefined) sources[statName] = {};
-    }
+//         if(!sources[recievingStat][depth1Name][depth2Name])
+//             sources[recievingStat][depth1Name][depth2Name] = gained;
 
-    // console.log(sources);
+//         //for cases where we have 
+//         // * p_X_STAT1_per_1_STAT2
+//         // * p_X_STAT3_per_1_STAT1
+//         summed[recievingStat] = (summed[recievingStat] || 0)+gained;
+//     }
 
-    return sources;
-}
+//     //fill in (excludes special stats (m_, s_, p_, a_, l_, d_))
+//     for (let i in keys(statIdToStatName)) {
+//         var statName = keys(statIdToStatName)[i];
+
+//         if (sources[statName] === undefined) sources[statName] = {};
+//     }
+
+//     // console.log(sources);
+
+//     return sources;
+// }
 
 
 // export type itemStatSource = "hpbs" | "baseStats" | "starStats" | "enrichments" | "gemstones";
@@ -1066,7 +1059,7 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
             } else
 
             if(reforge == "perfect") {
-                stats.reforgeBonus = {m_defense: 0.02};
+                stats.reforgeBonus = {a_defense: 0.02};
             } else
 
             if(reforge == "suspicious") {
@@ -1337,7 +1330,7 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
     } else
     
     if(["ZOMBIE_HEART", "CRYSTALLIZED_HEART", "REVIVED_HEART", "REAPER_MASK"].includes(item.tag.ExtraAttributes.id)) {
-        stats[`${colorChar}${"4"}${baseItem.name} Bonus`] = {m_mending: 1, m_vitality: 1};
+        stats[`${colorChar}${"4"}${baseItem.name} Bonus`] = {a_mending: 1, a_vitality: 1};
     } else
     
     if(item.tag.ExtraAttributes.id == "VANQUISHED_MAGMA_NECKLACE") {
@@ -1855,7 +1848,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     var inv_armor_raw = data.profileData.profiles[selectedProfile].members[playerUUID].inv_armor;
     var equippment_contents_raw = data.profileData.profiles[selectedProfile].members[playerUUID].equippment_contents;
 
-    var stats: statsCategories = {};
+    var stats: any = {};
 
     var armor = await parseContents(inv_armor_raw) as any;
     if (armor.i === undefined) return;
@@ -2141,6 +2134,8 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
     calcTemp[calcId].stats[colorChar + "b"+"Pet Score (" + petScore + ")"] = {SAME: {magic_find: mf}};
 }
 
+//WORK
+
 //calculates stats given from current pet
 export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string, specialData: specialPetData, calcId: string) {
     var pets = data.profileData.profiles[selectedProfile].members[playerUUID].pets;
@@ -2150,7 +2145,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     if(equippedPet === undefined) return;
 
     //seperating them because each background pet is only mentioned once but the equipped pet is mentioned a lot
-    var backgroundPetStats: statsCategories = {}; //for all pets (background pets)
+    var backgroundPetStats: any = {}; //for all pets (background pets)
     var stats: statsCategory = {}; //for only the equipped pet
 
     equippedPet = { //for testing
@@ -2259,25 +2254,26 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
         } else { //its a normal pet item
             var heldItemStats = petItemStats[equippedPet.heldItem] || {};
 
+            //WORK
 
-            //loop so we can treat m_ stats correctly
-            for(let i in keys(heldItemStats)) {
-                let name: statName = keys(heldItemStats)[i];
+            // //loop so we can treat m_ stats correctly
+            // for(let i in keys(heldItemStats)) {
+            //     let name: statName = keys(heldItemStats)[i];
 
-                if(name.startsWith("m_")) {
-                    var realName: statName = name.slice("m_".length) as statName;
+            //     if(name.startsWith("m_")) {
+            //         var realName: statName = name.slice("m_".length) as statName;
 
-                    stats[petItemName][realName] = (baseStats[realName] || 0) * (heldItemStats[name] || 0);
-                } else {
-                    stats[petItemName][name] = (heldItemStats[name] || 0)
-                }
-            }
+            //         stats[petItemName][realName] = (baseStats[realName] || 0) * (heldItemStats[name] || 0);
+            //     } else {
+            //         stats[petItemName][name] = (heldItemStats[name] || 0)
+            //     }
+            // }
         }
     }
 
     stats.Base = baseStats;
 
-    var mergedStats: statsCategories = {...backgroundPetStats, [formatPet(equippedPet.type, equippedPet.tier, petLevel)]: stats};
+    var mergedStats: any = {...backgroundPetStats, [formatPet(equippedPet.type, equippedPet.tier, petLevel)]: stats};
 
     calcTemp[calcId].stats = {...calcTemp[calcId].stats, ...mergedStats}; //because mergedStats is a statCategories
 }
@@ -2317,7 +2313,7 @@ export async function calculateAbiphoneStats(data: apiData, selectedProfile: num
 }
 
 
-export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string): Promise<statsCategories> {
+export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
     calcTemp[calcId].stats["Base Stats"] = {SAME: baseStats};
 
     var specialPetData: specialPetData = {
@@ -2351,9 +2347,6 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     calcTemp[calcId].stats[`${colorChar}${"c"}Dungeoneering Level`] = {SAME: 
         skillLevelStats.dungeoneering(Math.floor(calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0))
     }
-
-    return calcTemp[calcId].stats
-
 
     /*
 
