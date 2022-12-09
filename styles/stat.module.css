@@ -1,5 +1,6 @@
 .tippyBox {
     width: fit-content;
+    max-width: 360px;
     padding: 5px;
     height: fit-content;
     border-radius: 5px;

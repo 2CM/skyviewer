@@ -2,11 +2,11 @@ import { useRouter } from "next/router"
 import Head from "next/head";
 import { Context, createContext, useEffect, useState} from 'react'
 import { readFileSync } from "fs";
-import { allSkillExpInfo, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, sumStatsSources, getStatSources, statsCategories, keys, calcTemp, initFullSets, getSkyblockTime } from "../../lib";
+import { allSkillExpInfo, calculateAllSkillExp, calculateStats, getMostRecentProfile, initItems, keys, calcTemp, initFullSets, getSkyblockTime, statType, evaluatedStats, categorizedCompressedStats, categorizedFlippedStats, mapObjectValues, statTags, processStats } from "../../lib";
 import Skills from "../../components/skills";
 import Stats from "../../components/stats";
 import { GetServerSideProps } from "next";
-import { baseProfile, item, skyblockLocation } from "../../sbconstants";
+import { baseProfile, baseStatName, item, skyblockLocation, statName, statsList } from "../../sbconstants";
 import { randomBytes } from "crypto";
 
 
@@ -58,7 +58,14 @@ interface serverSideProps {
 
 export interface serverData {
 	computedData: {
-		stats: statsCategories,
+		stats: {
+			stats: any,
+			tags: statTags,
+			categorizedCompressedStats: categorizedCompressedStats,
+			categorizedFlippedStats: categorizedFlippedStats,
+			evaluatedStats: evaluatedStats,
+		},
+
 		skills: allSkillExpInfo
 	},
 }
@@ -70,11 +77,23 @@ export default function profileViewer(props: serverData) {
     var { profileName } = router.query;
 
 	var [data, setData] = useState<dataContext>({});
-	
-	var sources = getStatSources(props.computedData.stats);
-	var summed = sumStatsSources(sources);
 
 	// console.log(props.computedData.stats, summed, sources)
+
+	let evaluatedList: statsList = {};
+
+	for(let i in keys(props.computedData.stats.evaluatedStats)) {
+		let key = keys(props.computedData.stats.evaluatedStats)[i];
+		let value = props.computedData.stats.evaluatedStats[key] || {};
+
+		let lastTransform = keys(value).at(-1);
+
+		if(lastTransform === undefined) continue;
+
+		evaluatedList[key] = value[lastTransform] || 0
+	}
+
+	console.log({evaluatedList, cfs: props.computedData.stats.categorizedFlippedStats, ccs: props.computedData.stats.categorizedCompressedStats})
 
     return (
 		<dataContext.Provider value={data}>
@@ -84,10 +103,10 @@ export default function profileViewer(props: serverData) {
 			<main>
 				<main>
 					{/* <Skills skills={props.computedData.skills}/> */}
-					<Stats statValues={props.computedData.stats}
-						summedList={summed.summed}
-						cappedList={summed.capped}
-						sources={sources}
+					<Stats
+						evaluatedList={evaluatedList}
+						categorizedCompressedStats={props.computedData.stats.categorizedCompressedStats}
+						categorizedFlippedStats={props.computedData.stats.categorizedFlippedStats}
 					/>
 				</main>
 			</main>
@@ -133,7 +152,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     var calcId = randomBytes(64).toString("base64"); //generate a random uuid for the calculation
 
     calcTemp[calcId] = {
-        stats: {},
+        stats: {
+			stats: {},
+
+			tags: [],
+			flippedStats: {},
+			compressedStats: {},
+			categorizedFlippedStats: {},
+			categorizedCompressedStats: {},
+
+			evaluatedStats: {},
+		},
         skills: {},
 		status: apiData.statusData?.session.online && apiData.statusData?.session.gameType == "SKYBLOCK" ? apiData.statusData.session.mode : undefined,
 		time: getSkyblockTime(),
@@ -147,17 +176,22 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 	calculateAllSkillExp(apiData, selectedProfile, playerUUID, calcId);
 	await calculateStats(apiData, selectedProfile, playerUUID, calcId);
 
+	processStats(calcId);
+
 	var returnValue: serverSideProps = {
 		props: {
 			computedData: {
-				stats: {},
-				skills: {},
+				stats: {
+					stats:                      calcTemp[calcId].stats.stats,
+					tags:                       calcTemp[calcId].stats.tags,
+					evaluatedStats:             calcTemp[calcId].stats.evaluatedStats,
+					categorizedFlippedStats:    calcTemp[calcId].stats.categorizedFlippedStats,
+					categorizedCompressedStats: calcTemp[calcId].stats.categorizedCompressedStats,
+				},
+				skills: calcTemp[calcId].skills,
 			},
 		}
 	}
-
-	returnValue.props.computedData.skills = calcTemp[calcId].skills;
-	returnValue.props.computedData.stats = calcTemp[calcId].stats;
 
 	delete calcTemp[calcId] //we dont need it anymore
 

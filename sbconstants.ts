@@ -1,6 +1,6 @@
 //file containing a bunch of raw data not found in api about skyblock
 
-import { allStatsBoost, combatStatsBoost, mapObjectKeys } from "./lib";
+import { allStatsBoost, combatStatsBoost, mapObjectKeys, statType } from "./lib";
 
 //tier of an item
 export type itemTier = "COMMON" | "UNCOMMON" | "RARE" | "EPIC" | "LEGENDARY" | "MYTHIC" | "DIVINE" | "SPECIAL" | "VERY_SPECIAL";
@@ -1860,13 +1860,14 @@ export type statName =
     perStatName |
     damageBuffStatName
 
+
 export const defaultStatCaps: {
     [key in statName]?: number
 } = {
-    walk_speed: 400,
-    critical_chance: 100,
-    attack_speed: 100,
-    fishing_speed: 300, //apparently this exists
+    c_walk_speed: 400,
+    c_critical_chance: 100,
+    c_attack_speed: 100,
+    c_fishing_speed: 300, //apparently this exists
 }
 
 export type statsList = { [key in statName]?: number };

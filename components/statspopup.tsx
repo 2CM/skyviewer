@@ -8,11 +8,10 @@ interface props {
     visible: boolean,
     statData: any,
     statName: statName,
-    summed: number,
-    capped: number
+    evaluated: number,
 }
 
-export default function StatsPopUp({onClose, visible, statData, statName, summed, capped}: props) {
+export default function StatsPopUp({onClose, visible, statData, statName, evaluated}: props) {
     var close = () => onClose();
 
     var keyupFunction = (e: KeyboardEvent) => {if(e.key == "Escape") close()};
@@ -42,7 +41,7 @@ export default function StatsPopUp({onClose, visible, statData, statName, summed
                         <div className={styles.popupBoxContainer}>
                             <main className={styles.popupContainer} style={{outlineColor: colorCodeToHex[statColors[statName] || "f"]}}>
                                 <div className={styles.popupNameContainer}>
-                                    <h2 className={styles.popupName} style={{color: colorCodeToHex[statColors[statName] || "f"]}}>{statChars[statName]} {statIdToStatName[statName]} <span style={{color: "white"}}>{statFormatter.format(capped === undefined ? summed : capped)}{capped !== undefined && capped != summed ? ` (${statFormatter.format(summed).slice(1 /* to remove the sign*/)})` : ""}</span></h2>
+                                    <h2 className={styles.popupName} style={{color: colorCodeToHex[statColors[statName] || "f"]}}>{statChars[statName]} {statIdToStatName[statName]} <span style={{color: "white"}}>{statFormatter.format(evaluated)}</span></h2>
                                 </div>
                                 <main className={styles.popupContent}>
                                     {sourcesToElement(statData, statName)}

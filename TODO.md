@@ -27,3 +27,7 @@
 - every other thing in skyblock
     - skycrypt stuff
     - dummy damage tester
+- refactoring
+    - popup
+    - add depth
+        - Base [STAT] cap

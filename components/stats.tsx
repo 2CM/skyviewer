@@ -1,32 +1,36 @@
 import { useState } from "react";
-import { statsCategories, keys} from "../lib";
+import { categorizedCompressedStats, categorizedFlippedStats, keys } from "../lib";
 import StatsPopUp from "./statspopup";
 import Stat from "./stat";
 import styles from "../styles/stat.module.css";
-import { statsList, statName, statIdToStatName } from "../sbconstants";
+import { statsList, statName, statIdToStatName, baseStatName } from "../sbconstants";
 
 interface props {
-    statValues: statsCategories,
-    summedList: statsList,
-    cappedList: statsList
-    sources: any,
+    evaluatedList: statsList,
+    categorizedCompressedStats: categorizedCompressedStats
+	categorizedFlippedStats: categorizedFlippedStats
 }
 
-export default function Stats({summedList, cappedList, sources}: props) {
+export default function Stats({evaluatedList, categorizedCompressedStats, categorizedFlippedStats}: props) {
     var [selectedStat, setSelectedStat] = useState<undefined | statName>(undefined);
 
     var statsArr: JSX.Element[] = keys(statIdToStatName).map(key => {
-        return <Stat onClick={setSelectedStat} sources={sources || {}} statName={key as statName} value={cappedList[key] === undefined ? (summedList[key] || 0) : (cappedList[key] || 0)}/>
+        return <Stat
+            onClick={setSelectedStat}
+            
+            categorizedCompressedStats={categorizedCompressedStats}
+            statName={key as baseStatName}
+            value={evaluatedList[key] || 0}
+        />
     });
 
     return (
         <>
             <StatsPopUp
                 statName={selectedStat || "health"}
-                statData={sources}
+                statData={categorizedFlippedStats}
                 visible={selectedStat !== undefined}
-                summed={summedList[selectedStat || "health"] || 0}
-                capped={cappedList[selectedStat || "health"] || 0}
+                evaluated={evaluatedList[selectedStat || "health"] || 0}
                 onClose={() => {
                     console.log("closing")
 
@@ -38,6 +42,4 @@ export default function Stats({summedList, cappedList, sources}: props) {
             </div>
         </>
     )
-
-    return <></>
 }

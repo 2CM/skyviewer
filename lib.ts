@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames, ExtraAttributes, enchantName, reforgeName, attributeName, enchants, attributes, skyblockStartDate, irlMinutesPerYear, monthsPerYear, daysPerMonth, hoursPerDay, minutesPerHour, seasons, seasonVariants } from "./sbconstants"; //so many ;-;
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames, ExtraAttributes, enchantName, reforgeName, attributeName, enchants, attributes, skyblockStartDate, irlMinutesPerYear, monthsPerYear, daysPerMonth, hoursPerDay, minutesPerHour, seasons, seasonVariants, baseStatName } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -22,6 +22,10 @@ const UNDEFINEDFUNC = () => {return undefined};
 //function that returns all the keys of an object BUT respects object key type
 export function keys<Type extends object>(obj: Type): (keyof Type)[] {
     return Object.keys(obj) as (keyof Type)[];
+}
+
+export function values<Type extends object>(obj: Type): Type[keyof Type][] {
+    return Object.values(obj) as Type[keyof Type][];
 }
 
 // *** CUSTOM PROTOTYPES ***
@@ -371,6 +375,44 @@ export function coloredStringToElement(string: string, element: keyof React.Reac
 
 //WORK
 
+export function sourcesToElement(sources: any, statName: statName) {
+    let testObj = {
+        thing: {
+            epical: 2,
+            epicalal: {
+                yes: 4,
+                no: -1,
+            }
+        },
+        fe: 1,
+        eef: {
+            a: 100
+        },
+        g: {
+
+        }
+    }
+
+    let testHtml = [
+        React.createElement("li", null, "thing"),
+        React.createElement("ul", null, [
+            React.createElement("li", null, "epical: 2"),
+            React.createElement("li", null, "epicalal"),
+            React.createElement("ul", null, [
+                React.createElement("li", null, "yes: 4"),
+                React.createElement("li", null, "no: -1"),
+            ])
+        ]),
+        React.createElement("li", null, "fe: 1"),
+        React.createElement("li", null, "eef"),
+        React.createElement("ul", null, [
+            React.createElement("li", null, "a: 100"),
+        ])
+    ]
+
+    return React.createElement("ul", null, testHtml)
+}
+
 //converts stat sources to an element for stat sources popups
 // export function sourcesToElement(sources: any, statName: statName) {
 //     //elements from the sources of one specific stat
@@ -697,10 +739,166 @@ export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, 
 
 // *** STATS ***
 
+export const statTypes = [
+    "flat",
+    "additive",
+    "multiplicative",
+    "cap",
+    "limit"
+] as const;
+
+export type statType = typeof statTypes[number];
+
+export function getStatType(statName: statName): statType {
+    return (
+        statName.startsWith("a_") ? "additive" :
+        statName.startsWith("m_") ? "multiplicative" :
+        statName.startsWith("c_") ? "cap" :
+        statName.startsWith("l_") ? "limit" :
+        "flat"
+    )
+}
+
+export function formatStat(num: number, type: statType) {
+    return (
+        type == "additive" ?
+            percentFormatter.format(num*100) + "%" :
+
+        type == "multiplicative" ?
+            multiplierFormatter.format(num) + "x" :
+
+        statFormatter.format(num)
+    )
+}
+
+
+export const statEvals: {
+    [key in statType]: (
+        mostRecent: number,
+        sources: Record<string, number>,
+        statName: baseStatName,
+        calcId: string,
+    ) => void
+} = {
+    flat: (mostRecent, sources, statName, calcId) => {
+        for(let i in values(sources)) {
+            let value = values(sources)[i];
+
+            mostRecent += value;
+        }
+
+        calcTemp[calcId].stats.evaluatedStats[statName] ||= {};
+        (calcTemp[calcId].stats.evaluatedStats[statName] || {}).flat = mostRecent;
+    },
+    additive: (mostRecent, sources, statName, calcId) => {
+        let summedMultiplier = 1;
+
+        for(let i in values(sources)) {
+            let value = values(sources)[i];
+
+            summedMultiplier += value;
+        }
+
+        calcTemp[calcId].stats.evaluatedStats[statName] ||= {};
+        (calcTemp[calcId].stats.evaluatedStats[statName] || {}).additive = mostRecent * summedMultiplier;
+    },
+    multiplicative: (mostRecent, sources, statName, calcId) => {
+        for(let i in values(sources)) {
+            let value = values(sources)[i];
+
+            mostRecent *= value + 1;
+        }
+
+        calcTemp[calcId].stats.evaluatedStats[statName] ||= {};
+        (calcTemp[calcId].stats.evaluatedStats[statName] || {}).multiplicative = mostRecent;
+    },
+    cap: (mostRecent, sources, statName, calcId) => {
+        let summmedCap: number | undefined = undefined;
+
+        for(let i in values(sources)) {
+            let value = values(sources)[i];
+
+            summmedCap = (summmedCap || 0) + value;
+        }
+
+        calcTemp[calcId].stats.evaluatedStats[statName] ||= {};
+        (calcTemp[calcId].stats.evaluatedStats[statName] || {}).cap = summmedCap === undefined ?
+            mostRecent :
+            Math.min(mostRecent, summmedCap);
+    },
+    limit: (mostRecent, sources, statName, calcId) => {
+        //set it to the first one because i dont think there are supposed to be multiple limit
+        let limit: number | undefined = sources[keys(sources)[0]];
+
+        if(keys(sources).length > 1) {
+            console.warn("MORE THAN 1 LIMIT!!!");
+        }
+
+        calcTemp[calcId].stats.evaluatedStats[statName] ||= {};
+        (calcTemp[calcId].stats.evaluatedStats[statName] || {}).limit = limit === undefined ?
+            mostRecent :
+            Math.min(mostRecent, limit);
+    }
+}
+
+//chain of evaluated stats
+export type evaluatedStats = {
+    [key in baseStatName]?: {
+        flat?: number,
+        additive?: number,
+        multiplicative?: number,
+        cap?: number,
+        limit?: number,
+    }
+}
+
+//used for: stat source viewer (popup)
+export type categorizedFlippedStats = {
+    [key1 in statType]?: {
+        [key2 in baseStatName]?: any
+    }
+}
+
+//used for: compacted stat source viewer (hover effect)
+export type categorizedCompressedStats = {
+    [key1 in statType]?: {
+        [key2 in baseStatName]?: {
+            [key3 in string]: number
+        }
+    }
+}
+
+export type statTags = {
+    path: string[],
+    value: any
+}[]
+
 //map of calculation id to stat info
 export var calcTemp: {
     [key in string]: {
-        stats: any,
+        stats: {
+            stats: any
+            
+            //used for: marking ender armor stats as 2x while on the end island
+            tags: statTags,
+
+            //used for: calculations
+            flippedStats: {
+                [key in statName]?: any
+            },
+
+            //used for: calculations
+            compressedStats: {
+                [key1 in statName]?: {
+                    [key2 in string]: number
+                }
+            },
+
+            categorizedFlippedStats: categorizedFlippedStats,
+            categorizedCompressedStats: categorizedCompressedStats
+
+            evaluatedStats: evaluatedStats
+        },
         skills: allSkillExpInfo,
         status: skyblockLocation | undefined,
         time: ReturnType<typeof getSkyblockTime>,
@@ -813,6 +1011,114 @@ export function multiplyStatsList(list: statsList, mult: number | statsList): st
 //a category of statsLists
 export type statsCategory = {
     [key in string]: statsList
+}
+
+export function evaluateStats(calcId: string) {
+    for(let j in statTypes) {
+        let statType = statTypes[j];
+
+        for(let k in keys(calcTemp[calcId].stats.categorizedCompressedStats[statType] || {})) {
+            let statName = keys(calcTemp[calcId].stats.categorizedCompressedStats[statType] || {})[k];
+            let sources = (calcTemp[calcId].stats.categorizedCompressedStats[statType] || {})[statName] || {};
+
+
+            //output of last transformation (0 if first one)
+            let mostRecent = values(calcTemp[calcId].stats.evaluatedStats[statName] || {}).at(-1) || 0;
+
+            // console.log({statType, statName, sources, mostRecent})
+
+            statEvals[statType](mostRecent, sources, statName, calcId);
+        }
+    }
+}
+
+export function flipStatsRecur(obj: any, path: string[], calcId: string) {
+    for(let i in keys(obj)) {
+        let key: string = keys(obj)[i] as string;
+        let value = obj[key];
+
+        // console.log({path, key, value, tags: calcTemp[calcId].stats.tags});
+        
+        if(key == "TAG") {
+            calcTemp[calcId].stats.tags.push({path, value});
+
+            console.log("found tag")
+
+            return;
+        }
+
+        let newPath: string[] = [...path, key];
+        
+        if(typeof value === "number") { //weve reached a value
+            let statName: statName = key as statName;
+            let statType: statType = getStatType(statName);
+
+            //remove all the 0 stats (except limits because zero limits actually do stuff)
+            if(statType !== "limit" && value == 0) continue;
+
+            let sourceChain = path.slice(0, -1);
+
+            //recur through the path
+            calcTemp[calcId].stats.flippedStats[statName] = calcTemp[calcId].stats.flippedStats[statName] || {};
+
+            let cur = calcTemp[calcId].stats.flippedStats[statName];
+
+            // console.log("looping through ", sourceChain);
+
+            for(let j in sourceChain) {
+                cur[sourceChain[j]] = cur[sourceChain[j]] || {};
+
+                // console.log(cur)
+
+                cur = cur[sourceChain[j]];
+            }
+
+            cur[path.at(-1) || 0] = value;
+
+            //no object path recursion needed for the compressed one
+            calcTemp[calcId].stats.compressedStats[statName] = calcTemp[calcId].stats.compressedStats[statName] || {};
+
+            let preexistingVal: number | undefined = (calcTemp[calcId].stats.compressedStats[statName] || {})[path[0]];
+
+            (calcTemp[calcId].stats.compressedStats[statName] || {})[path[0]] =
+                statType == "multiplicative" ? //multiplicatives scale differently
+                    (preexistingVal || 1) * (value + 1) :
+                statType == "limit" ? //limits dont scale at all
+                    value :
+                (preexistingVal || 0) + value //everything else scales normally
+        };
+        
+        flipStatsRecur(value, newPath, calcId)
+    }
+}
+
+export function seperateStatTypes(calcId: string) {
+    for(let i in keys(calcTemp[calcId].stats.flippedStats)) {
+        let key: statName = keys(calcTemp[calcId].stats.flippedStats)[i];
+
+        let statType: statType = getStatType(key);
+
+        let baseStatName: baseStatName = (statType == "flat" ? key : key.slice(2)) as baseStatName;
+
+        //set the categorized flipped one
+        calcTemp[calcId].stats.categorizedFlippedStats[statType] = calcTemp[calcId].stats.categorizedFlippedStats[statType] || {};
+        (calcTemp[calcId].stats.categorizedFlippedStats[statType] || {})[baseStatName] = calcTemp[calcId].stats.flippedStats[key];
+
+        //set the categorized compressed one
+        calcTemp[calcId].stats.categorizedCompressedStats[statType] = calcTemp[calcId].stats.categorizedCompressedStats[statType] || {};
+        (calcTemp[calcId].stats.categorizedCompressedStats[statType] || {})[baseStatName] = calcTemp[calcId].stats.compressedStats[key];
+    }
+}
+
+export function processStats(calcId: string) {
+    //flips the stats inside out. {potions: {speed: {walk_speed: 100}, spirit: {walk_speed: 50}}} -> {walk_speed: {potions: {speed: 100, spirit: 50}}}
+    flipStatsRecur(calcTemp[calcId].stats.stats, [], calcId);
+
+    //seperates all the stat types from the output of the last function. {a_health: ..., defense: ..., c_walk_speed} -> {flat: ..., additive: ..., cap: ...}
+    seperateStatTypes(calcId);
+
+    //evaluates them by chaining all the types. flat -> additive -> multiplicative -> cap -> limit
+    evaluateStats(calcId);
 }
 
 //WORK
@@ -1454,7 +1760,7 @@ export async function calculateSkillStats(data: apiData, selectedProfile: number
         stats[colorChar + skillColors[name] + name.capitalize() + " " + Math.floor(levelInfo.level)] = skillLevelStats[name](Math.floor(levelInfo.level))
     }
 
-    calcTemp[calcId].stats[`${colorChar}${"6"}Skills`] = stats;
+    calcTemp[calcId].stats.stats[`${colorChar}${"6"}Skills`] = stats;
 }
 
 export const fairySoulStats = {
@@ -1495,14 +1801,14 @@ export async function calculateHotmStats(data: apiData, selectedProfile: number,
 
     if (mining_core.nodes.mining_experience) stats["Seasoned Mineman"] = { mining_wisdom: 5 + 0.1 * mining_core.nodes.mining_experience || 0 }
 
-    calcTemp[calcId].stats[`${colorChar}${"5"}HoTM`] = stats;
+    calcTemp[calcId].stats.stats[`${colorChar}${"5"}HoTM`] = stats;
 }
 
 //calculates stats given from the wither essence shop
 export async function calculateEssenceStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
     var perks = data.profileData.profiles[selectedProfile].members[playerUUID].perks;
 
-    calcTemp[calcId].stats[`${colorChar}${"7"}Essence Shop`] = {
+    calcTemp[calcId].stats.stats[`${colorChar}${"7"}Essence Shop`] = {
         [`${colorChar}${"c"}Forbidden Health`]: { health: (perks.permanent_health || 0) * 2 },
         [`${colorChar}${"a"}Forbidden Defense`]: { defense: (perks.permanent_defense || 0) * 1 },
         [`${colorChar}${"f"}Forbidden Speed`]: { walk_speed: (perks.permanent_speed || 0) * 1 },
@@ -1517,7 +1823,7 @@ export async function calculatePepperStats(data: apiData, selectedProfile: numbe
 
     if (peppers == undefined) return;
 
-    calcTemp[calcId].stats[`${colorChar}${"c"}Peppers`] = {SAME: {health: peppers}};
+    calcTemp[calcId].stats.stats[`${colorChar}${"c"}Peppers`] = {SAME: {health: peppers}};
 }
 
 
@@ -1540,7 +1846,7 @@ export async function calculateHarpStats(data: apiData, selectedProfile: number,
         stats[colorChar+harpColors[name]+name.replaceAll("_", " ").capitalize()] = { intelligence: (perfectCompletions >= 1 ? 1 : 0) * harpStats[name] };
     }
 
-    calcTemp[calcId].stats[`${colorChar}${"d"}Harp`] = stats;
+    calcTemp[calcId].stats.stats[`${colorChar}${"d"}Harp`] = stats;
 }
 
 
@@ -1581,7 +1887,7 @@ export async function calculateSlayerStats(data: apiData, selectedProfile: numbe
 
     stats[colorChar + "3" + "Global Combat Wisdom Buff"] = { combat_wisdom: combatWisdomBuff };
 
-    calcTemp[calcId].stats[`${colorChar}${"2"}Slayer`] = stats;
+    calcTemp[calcId].stats.stats[`${colorChar}${"2"}Slayer`] = stats;
 }
 
 export interface accStatsInterface {
@@ -1682,17 +1988,17 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
             stats.magicPower.magicPower = mergeStatsLists(stats.magicPower.magicPower, selectedPowerStats.extra || {});
         }
 
-        calcTemp[calcId].stats[`${colorChar}${"b"}Magic Power (${mp})`] = {SAME: stats.magicPower.magicPower};
+        calcTemp[calcId].stats.stats[`${colorChar}${"b"}Magic Power (${mp})`] = {SAME: stats.magicPower.magicPower};
     }
 
     stats.tuning.tuning = multiplyStatsList((accessory_bag_storage.tuning.slot_0 ? accessory_bag_storage.tuning.slot_0 : {}) as statsList, tuningValues)
 
     console.log({ mp, statsMultiplier });
 
-    calcTemp[calcId].stats[`${colorChar}${"9"}Accessory Stats`] = stats.taliStats;
-    calcTemp[calcId].stats[`${colorChar}${"b"}Accessory Enrichments`] = stats.enrichments;
-    calcTemp[calcId].stats[`${colorChar}${"e"}Accessory Tuning`] = {SAME: stats.tuning.tuning};
-    calcTemp[calcId].stats[`${colorChar}${"d"}Accessory Gems`] = stats.gems;
+    calcTemp[calcId].stats.stats[`${colorChar}${"9"}Accessory Stats`] = stats.taliStats;
+    calcTemp[calcId].stats.stats[`${colorChar}${"b"}Accessory Enrichments`] = stats.enrichments;
+    calcTemp[calcId].stats.stats[`${colorChar}${"e"}Accessory Tuning`] = {SAME: stats.tuning.tuning};
+    calcTemp[calcId].stats.stats[`${colorChar}${"d"}Accessory Gems`] = stats.gems;
 }
 
 
@@ -1735,7 +2041,7 @@ export async function calculatePotionStats(data: apiData, selectedProfile: numbe
         replaceEffect("strength", calcTemp[calcId].other.griffinStrengthLevel || 0);
     }
 
-    console.log(effects)
+    // console.log(effects)
 
     for (let i in effects) {
         var effect = effects[i];
@@ -1815,7 +2121,7 @@ export async function calculatePotionStats(data: apiData, selectedProfile: numbe
         stats[`${colorChar+effectColors[effect.effect]+effect.effect.replaceAll("_", " ").capitalize()} ${effect.level}`] = effectStatsList;
     }
 
-    calcTemp[calcId].stats[`${colorChar}${"5"}Potions`] = stats;
+    calcTemp[calcId].stats.stats[`${colorChar}${"5"}Potions`] = stats;
 }
 
 export interface cakeStatNumberToStat {
@@ -1840,7 +2146,7 @@ export async function calculateCakeStats(data: apiData, selectedProfile: number,
         }
     }
 
-    calcTemp[calcId].stats[`${colorChar}${"d"}Century Cakes`] = {SAME: stats};
+    calcTemp[calcId].stats.stats[`${colorChar}${"d"}Century Cakes`] = {SAME: stats};
 }
 
 //calculates stats given from armor and equipment
@@ -1861,64 +2167,64 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
     var foundSetPieces = new Set<fullSetPiece>();
     var foundSetNames = new Set<fullSetName>();
 
-    armorContents = [
-        {
-            id: 300,
-            Count: 1,
-            tag: {
-                display: {
-                    Name: "epic",
-                },
-                ExtraAttributes: {
-                    id: "MINER_OUTFIT_HELMET",
-                    enchantments: {
-                        growth: 4
-                    }
-                }
-            },
-            Damage: 3,
-        },
-        {
-            id: 300,
-            Count: 1,
-            tag: {
-                display: {
-                    Name: "epicf",
-                },
-                ExtraAttributes: {
-                    id: "MINER_OUTFIT_CHESTPLATE",
-                }
-            },
-            Damage: 3,
-        },
-        {
-            id: 300,
-            Count: 1,
-            tag: {
-                display: {
-                    Name: "epicff",
-                },
-                ExtraAttributes: {
-                    id: "MINER_OUTFIT_LEGGINGS",
-                }
-            },
-            Damage: 3,
-        },
-        {
-            id: 300,
-            Count: 1,
-            tag: {
-                display: {
-                    Name: "epicfff",
-                },
-                ExtraAttributes: {
-                    id: "MINER_OUTFIT_BOOTS",
-                    ranchers_speed: 100
-                }
-            },
-            Damage: 3,
-        },
-    ]
+    // armorContents = [
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epic",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "MINER_OUTFIT_HELMET",
+    //                 enchantments: {
+    //                     growth: 4
+    //                 }
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epicf",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "MINER_OUTFIT_CHESTPLATE",
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epicff",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "MINER_OUTFIT_LEGGINGS",
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    //     {
+    //         id: 300,
+    //         Count: 1,
+    //         tag: {
+    //             display: {
+    //                 Name: "epicfff",
+    //             },
+    //             ExtraAttributes: {
+    //                 id: "MINER_OUTFIT_BOOTS",
+    //                 ranchers_speed: 100
+    //             }
+    //         },
+    //         Damage: 3,
+    //     },
+    // ]
 
 
     //find full sets so calculateItemStats can use it
@@ -1935,7 +2241,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
         }
     }
 
-    console.log({foundSetNames, foundSetPieces});
+    // console.log({foundSetNames, foundSetPieces});
 
     var verifiedFullSets = new Set(foundSetNames);
 
@@ -1954,7 +2260,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
     calcTemp[calcId].other.fullSets = [...verifiedFullSets]
 
-    console.log(verifiedFullSets);
+    // console.log(verifiedFullSets);
 
     for (let i in armorContents) {
         var piece: nbtItem | {} = armorContents[i];
@@ -2014,7 +2320,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId, false, other, fullSetContribution !== undefined);
 
-        calcTemp[calcId].stats[piece.tag.display.Name] = stats[piece.tag.display.Name];
+        calcTemp[calcId].stats.stats[piece.tag.display.Name] = stats[piece.tag.display.Name];
     }
 
     // console.log(verifiedFullSets);
@@ -2027,77 +2333,77 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         //full set bonuses go here
         if(fullSetName == "YOUNG_DRAGON") {
-            calcTemp[calcId].stats[formattedName] = {SAME: {c_walk_speed: 100, walk_speed: 70}}
+            calcTemp[calcId].stats.stats[formattedName] = {SAME: {c_walk_speed: 100, walk_speed: 70}}
         } else
         
         if(fullSetName == "MASTIFF") {
-            calcTemp[calcId].stats[formattedName] = {SAME: {p_X_health_per_1_critical_damage: 50, s_critical_hit_multiplier: 0.5}}
+            calcTemp[calcId].stats.stats[formattedName] = {SAME: {p_X_health_per_1_critical_damage: 50, s_critical_hit_multiplier: 0.5}}
         } else
 
         if(fullSetName == "FAIRY") {
-            calcTemp[calcId].stats[formattedName] = {SAME: {
+            calcTemp[calcId].stats.stats[formattedName] = {SAME: {
                 health: data.profileData.profiles[selectedProfile].members[playerUUID].fairy_souls_collected
             }}
         } else 
 
         if(fullSetName == "FARM_SUIT") {
             if(calcTemp[calcId].status == "farming_1") {
-                calcTemp[calcId].stats[formattedName] = {SAME: {walk_speed: 20}};
+                calcTemp[calcId].stats.stats[formattedName] = {SAME: {walk_speed: 20}};
             }
         } else
 
         if(fullSetName == "FARM_ARMOR") {
             if(calcTemp[calcId].status == "farming_1") {
-                calcTemp[calcId].stats[formattedName] = {SAME: {walk_speed: 25}};
+                calcTemp[calcId].stats.stats[formattedName] = {SAME: {walk_speed: 25}};
             }
         } else
 
         if(fullSetName == "ANGLER") {
-            calcTemp[calcId].stats[formattedName] = {SAME: {health: 10*Math.floor((calcTemp[calcId].skills.fishing?.levelInfo.level || 1)/10)}};
+            calcTemp[calcId].stats.stats[formattedName] = {SAME: {health: 10*Math.floor((calcTemp[calcId].skills.fishing?.levelInfo.level || 1)/10)}};
         } else 
 
         if(fullSetName == "LAPIS_ARMOR") {
-            calcTemp[calcId].stats[formattedName] = {SAME: {health: 60}};
+            calcTemp[calcId].stats.stats[formattedName] = {SAME: {health: 60}};
         } else 
 
         if(fullSetName == "EMERALD_ARMOR") {
             let emeraldCollection = data.profileData.profiles[selectedProfile].members[playerUUID].collection.EMERALD || 0;
 
-            calcTemp[calcId].stats[formattedName] = {SAME: {
+            calcTemp[calcId].stats.stats[formattedName] = {SAME: {
                 health: Math.min(Math.floor(emeraldCollection/3000), 350),
                 defense: Math.min(Math.floor(emeraldCollection/3000), 350),
             }};
         } else 
 
         if(fullSetName == "SPEEDSTER") {
-            calcTemp[calcId].stats[formattedName] = {SAME: {walk_speed: 20}};
+            calcTemp[calcId].stats.stats[formattedName] = {SAME: {walk_speed: 20}};
         } else 
 
         if(fullSetName == "GLACITE") {
-            calcTemp[calcId].stats[formattedName] = {SAME: {mining_speed: 2*Math.floor(calcTemp[calcId].skills.mining?.levelInfo.level || 1)}};
+            calcTemp[calcId].stats.stats[formattedName] = {SAME: {mining_speed: 2*Math.floor(calcTemp[calcId].skills.mining?.levelInfo.level || 1)}};
         } else 
 
         if(fullSetName == "SUPERIOR_DRAGON") {
-            calcTemp[calcId].stats[formattedName] = {SAME: {
+            calcTemp[calcId].stats.stats[formattedName] = {SAME: {
                 s_aotd_ability_bonus: 0.5,
                 ...allStatsBoost(0.05)
             }};
         } else 
 
         if(fullSetName == "HOLY_DRAGON") {
-            calcTemp[calcId].stats[formattedName] = {SAME: {health_regeneration: 200}};
+            calcTemp[calcId].stats.stats[formattedName] = {SAME: {health_regeneration: 200}};
         } else
 
         if(fullSetName == "HEAVY" || fullSetName == "SUPER_HEAVY") {
-            calcTemp[calcId].stats[formattedName] = {SAME: {p_X_walk_speed_per_50_defense: 1}};
+            calcTemp[calcId].stats.stats[formattedName] = {SAME: {p_X_walk_speed_per_50_defense: 1}};
         } else
 
         if(fullSetName == "VANQUISHED") {
-            calcTemp[calcId].stats[formattedName] = {SAME: {s_damage_reduction: -0.1}};
+            calcTemp[calcId].stats.stats[formattedName] = {SAME: {s_damage_reduction: -0.1}};
         } else
 
         if(fullSetName == "GOBLIN") {
-            calcTemp[calcId].stats[formattedName] = {SAME: {l_intelligence: 0, p_X_mining_speed_per_15_intelligence: 1}};
+            calcTemp[calcId].stats.stats[formattedName] = {SAME: {l_intelligence: 0, p_X_mining_speed_per_15_intelligence: 1}};
         }
     }
 }
@@ -2131,7 +2437,7 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
 
     var stats: statsCategory = {};
 
-    calcTemp[calcId].stats[colorChar + "b"+"Pet Score (" + petScore + ")"] = {SAME: {magic_find: mf}};
+    calcTemp[calcId].stats.stats[colorChar + "b"+"Pet Score (" + petScore + ")"] = {SAME: {magic_find: mf}};
 }
 
 //WORK
@@ -2299,7 +2605,7 @@ export async function calculateBestiaryStats(data: apiData, selectedProfile: num
     var milestones = Math.floor(tiersUnlocked/10); //you gain a milestone for every 10 tiers unlocked
     var health = milestones*2; //you gain 2 health per milestone
 
-    calcTemp[calcId].stats[`${colorChar}${"c"}Bestiary Milestone (${milestones})`] = {SAME: {health: health}};
+    calcTemp[calcId].stats.stats[`${colorChar}${"c"}Bestiary Milestone (${milestones})`] = {SAME: {health: health}};
 }
 
 export async function calculateAbiphoneStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
@@ -2309,12 +2615,14 @@ export async function calculateAbiphoneStats(data: apiData, selectedProfile: num
 
     calcTemp[calcId].other.abiphoneContacts = abiphone.active_contacts?.length || 0; //for calculateAccStats abicase mp buffs
 
-    calcTemp[calcId].stats[`${colorChar}${5}9F™ Operator Chip`] = {SAME: {health: abiphone.operator_chip?.repaired_index !== undefined ? (abiphone.operator_chip.repaired_index+1)*2 : 0}};
+    calcTemp[calcId].stats.stats[`${colorChar}${5}9F™ Operator Chip`] = {SAME: {health: abiphone.operator_chip?.repaired_index !== undefined ? (abiphone.operator_chip.repaired_index+1)*2 : 0}};
 }
 
 
 export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    calcTemp[calcId].stats["Base Stats"] = {SAME: baseStats};
+    calcTemp[calcId].stats.stats["Base Value"] = {SAME: baseStats};
+
+    calcTemp[calcId].stats.stats["Base Caps"] = {SAME: defaultStatCaps};
 
     var specialPetData: specialPetData = {
         goldCollection: data.profileData.profiles[selectedProfile].members[playerUUID].collection.GOLD_INGOT || 0,
@@ -2344,9 +2652,87 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     await calculateBestiaryStats(data, selectedProfile, playerUUID, calcId);
 
     //catacombs level stats (not worth creating a function for)
-    calcTemp[calcId].stats[`${colorChar}${"c"}Dungeoneering Level`] = {SAME: 
+    calcTemp[calcId].stats.stats[`${colorChar}${"c"}Dungeoneering Level`] = {SAME: 
         skillLevelStats.dungeoneering(Math.floor(calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0))
     }
+
+    calcTemp[calcId].stats.stats.testing = {
+        addi: {
+            a_health: 0.2
+        },
+        multi: {
+            yes: {m_mining_fortune: 1},
+            yeah: {m_mining_fortune: 2}
+        },
+        cap: {
+            walk_speed: 1000,
+            c_walk_speed: 10,
+            health: 1000000,
+            c_health: 100,
+        },
+        limit: {
+            l_health: 75
+        }
+    }
+
+    // calcTemp[calcId].stats.stats = {
+    //     "ender helmet": {
+    //         "enchantments": {
+    //             "growth 5": {
+    //                 health: 20,
+    //             },
+    //             "protection 5": {
+    //                 defense: 30
+    //             },
+    //         },
+    //         "titanic reforge": {
+    //             health: 50,
+    //             defense: 20,
+    //         },
+    //         "TAG": {
+    //             "a": 2
+    //         }
+    //     },
+    //     "[lvl 80] blue whale": {
+    //         "base stats": {
+    //             health: 80
+    //         },
+    //         "perk": {
+    //             a_health: 0.5,
+    //         },
+    //         "per perk": {
+    //             // p_X_health_per_15_defense: 15
+    //         }
+    //     },
+    //     "hotm": {
+    //         "perk name i forgor": {
+    //             m_health: 0.1,
+    //             m_critical_chance: 0.1,
+    //             m_critical_damage: 0.1,
+    //             m_intelligence: 0.1
+    //         }
+    //     },
+    //     "default stat caps": {
+    //         c_walk_speed: 400,
+    //         c_critical_chance: 100
+    //     },
+    //     "potions": {
+    //         walk_speed: 350
+    //     },
+    //     "[lvl 71] black cat": {
+    //         "base": {
+    //             walk_speed: 71,
+    //         },
+    //         "bc perk name": {
+    //             c_walk_speed: 50
+    //         }
+    //     },
+    //     "rancher's boots": {
+    //         "ability": {
+    //             l_walk_speed: 270
+    //         }
+    //     }
+    // }
 
     /*
 
