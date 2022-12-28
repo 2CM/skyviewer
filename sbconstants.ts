@@ -1872,6 +1872,14 @@ export const defaultStatCaps: {
 
 export type statsList = { [key in statName]?: number };
 
+export type statsSources = {
+    [key in string]: statsSources | statsList
+}
+
+export type specificStatSources = {
+    [key in string]: specificStatSources | number
+}
+
 export type statIdMap<Type> = {
     [key in statName]?: Type
 }

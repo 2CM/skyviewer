@@ -5,7 +5,7 @@ import { motion, useSpring } from "framer-motion";
 import { colorCodeToHex, statChars, statColors, statIdToStatName, baseStatName, defaultStatCaps, statName } from "../sbconstants";
 import Indent from "./indent";
 
-function getStatStageInfo(statName: statName, sourcesList: Record<string, number>, type: statType) {
+function getStatStageInfo(statName: baseStatName, sourcesList: Record<string, number>, type: statType) {
     let icon = statChars[statName] || "?";
     let formattedStatName = statIdToStatName[statName] || "error";
     let statColor = colorCodeToHex[statColors[statName] || "f"];

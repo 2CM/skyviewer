@@ -12,7 +12,7 @@ interface props {
 }
 
 export default function Stats({evaluatedList, categorizedCompressedStats, categorizedFlippedStats}: props) {
-    var [selectedStat, setSelectedStat] = useState<undefined | statName>(undefined);
+    var [selectedStat, setSelectedStat] = useState<undefined | baseStatName>(undefined);
 
     var statsArr: JSX.Element[] = keys(statIdToStatName).map(key => {
         return <Stat

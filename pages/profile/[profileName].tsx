@@ -6,7 +6,7 @@ import { allSkillExpInfo, calculateAllSkillExp, calculateStats, getMostRecentPro
 import Skills from "../../components/skills";
 import Stats from "../../components/stats";
 import { GetServerSideProps } from "next";
-import { baseProfile, baseStatName, item, skyblockLocation, statName, statsList } from "../../sbconstants";
+import { baseProfile, baseStatName, item, skyblockLocation, statName, statsList, statsSources } from "../../sbconstants";
 import { randomBytes } from "crypto";
 
 
@@ -59,7 +59,7 @@ interface serverSideProps {
 export interface serverData {
 	computedData: {
 		stats: {
-			stats: any,
+			stats: statsSources,
 			tags: statTags,
 			categorizedCompressedStats: categorizedCompressedStats,
 			categorizedFlippedStats: categorizedFlippedStats,
@@ -93,7 +93,7 @@ export default function profileViewer(props: serverData) {
 		evaluatedList[key] = value[lastTransform] || 0
 	}
 
-	console.log({evaluatedList, cfs: props.computedData.stats.categorizedFlippedStats, ccs: props.computedData.stats.categorizedCompressedStats})
+	// console.log({evaluatedList, cfs: props.computedData.stats.categorizedFlippedStats, ccs: props.computedData.stats.categorizedCompressedStats})
 
     return (
 		<dataContext.Provider value={data}>

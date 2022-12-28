@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames, ExtraAttributes, enchantName, reforgeName, attributeName, enchants, attributes, skyblockStartDate, irlMinutesPerYear, monthsPerYear, daysPerMonth, hoursPerDay, minutesPerHour, seasons, seasonVariants, baseStatName } from "./sbconstants"; //so many ;-;
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames, ExtraAttributes, enchantName, reforgeName, attributeName, enchants, attributes, skyblockStartDate, irlMinutesPerYear, monthsPerYear, daysPerMonth, hoursPerDay, minutesPerHour, seasons, seasonVariants, baseStatName, statsSources, specificStatSources } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -277,7 +277,7 @@ export async function parseContents(contents: contents): Promise<nbt.NBT> {
 //url for discord emoji icon that is a recombobulator
 export const recombEmoji = "https://cdn.discordapp.com/emojis/827593781879898142"; //from skyhelper discord bot
 
-export function coloredStringToElement(string: string, element: keyof React.ReactHTML = "span", parentElement: keyof React.ReactHTML = "span") {
+export function statSourceToElement(string: string, element: keyof React.ReactHTML = "span", parentElement: keyof React.ReactHTML = "span") {
     //interfaces SPECIFICALLY for this function
     interface coloredStringToElementChar {
         char: string,
@@ -293,6 +293,15 @@ export function coloredStringToElement(string: string, element: keyof React.Reac
 
 
     var children: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
+    
+    if(string.startsWith("RECOMB")) {
+        children.push(React.createElement("img", { src: recombEmoji, style: { height: "1em", width: "auto" } }, null));
+
+        string = string.slice("RECOMB".length);
+    }
+
+    //color formatting
+    
     var chars: coloredStringToElementChar[] = [];
     var segments: coloredStringToElementSegment[] = []
 
@@ -375,43 +384,43 @@ export function coloredStringToElement(string: string, element: keyof React.Reac
 
 //WORK
 
-export function sourcesToElement(sources: any, statName: statName) {
-    let testObj = {
-        thing: {
-            epical: 2,
-            epicalal: {
-                yes: 4,
-                no: -1,
-            }
-        },
-        fe: 1,
-        eef: {
-            a: 100
-        },
-        g: {
+// export function sourcesToElement(sources: any, statName: statName) {
+//     let testObj = {
+//         thing: {
+//             epical: 2,
+//             epicalal: {
+//                 yes: 4,
+//                 no: -1,
+//             }
+//         },
+//         fe: 1,
+//         eef: {
+//             a: 100
+//         },
+//         g: {
 
-        }
-    }
+//         }
+//     }
 
-    let testHtml = [
-        React.createElement("li", null, "thing"),
-        React.createElement("ul", null, [
-            React.createElement("li", null, "epical: 2"),
-            React.createElement("li", null, "epicalal"),
-            React.createElement("ul", null, [
-                React.createElement("li", null, "yes: 4"),
-                React.createElement("li", null, "no: -1"),
-            ])
-        ]),
-        React.createElement("li", null, "fe: 1"),
-        React.createElement("li", null, "eef"),
-        React.createElement("ul", null, [
-            React.createElement("li", null, "a: 100"),
-        ])
-    ]
+//     let testHtml = [
+//         React.createElement("li", null, "thing"),
+//         React.createElement("ul", null, [
+//             React.createElement("li", null, "epical: 2"),
+//             React.createElement("li", null, "epicalal"),
+//             React.createElement("ul", null, [
+//                 React.createElement("li", null, "yes: 4"),
+//                 React.createElement("li", null, "no: -1"),
+//             ])
+//         ]),
+//         React.createElement("li", null, "fe: 1"),
+//         React.createElement("li", null, "eef"),
+//         React.createElement("ul", null, [
+//             React.createElement("li", null, "a: 100"),
+//         ])
+//     ]
 
-    return React.createElement("ul", null, testHtml)
-}
+//     return React.createElement("ul", null, testHtml)
+// }
 
 //converts stat sources to an element for stat sources popups
 // export function sourcesToElement(sources: any, statName: statName) {
@@ -855,7 +864,7 @@ export type evaluatedStats = {
 //used for: stat source viewer (popup)
 export type categorizedFlippedStats = {
     [key1 in statType]?: {
-        [key2 in baseStatName]?: any
+        [key2 in baseStatName]?: specificStatSources
     }
 }
 
@@ -877,14 +886,14 @@ export type statTags = {
 export var calcTemp: {
     [key in string]: {
         stats: {
-            stats: any
+            stats: statsSources
             
             //used for: marking ender armor stats as 2x while on the end island
             tags: statTags,
 
             //used for: calculations
             flippedStats: {
-                [key in statName]?: any
+                [key in statName]?: specificStatSources
             },
 
             //used for: calculations
@@ -1032,10 +1041,10 @@ export function evaluateStats(calcId: string) {
     }
 }
 
-export function flipStatsRecur(obj: any, path: string[], calcId: string) {
+export function flipStatsRecur(obj: statsSources | statsList, path: string[], calcId: string) {
     for(let i in keys(obj)) {
         let key: string = keys(obj)[i] as string;
-        let value = obj[key];
+        let value = obj[key as keyof typeof obj] || 0;
 
         // console.log({path, key, value, tags: calcTemp[calcId].stats.tags});
         
@@ -1061,7 +1070,7 @@ export function flipStatsRecur(obj: any, path: string[], calcId: string) {
             //recur through the path
             calcTemp[calcId].stats.flippedStats[statName] = calcTemp[calcId].stats.flippedStats[statName] || {};
 
-            let cur = calcTemp[calcId].stats.flippedStats[statName];
+            let cur = calcTemp[calcId].stats.flippedStats[statName] || {};
 
             // console.log("looping through ", sourceChain);
 
@@ -1070,7 +1079,11 @@ export function flipStatsRecur(obj: any, path: string[], calcId: string) {
 
                 // console.log(cur)
 
-                cur = cur[sourceChain[j]];
+                let nextDepth = cur[sourceChain[j]];
+
+                if(typeof nextDepth === "number") nextDepth = {};
+
+                cur = nextDepth;
             }
 
             cur[path.at(-1) || 0] = value;
@@ -1086,9 +1099,9 @@ export function flipStatsRecur(obj: any, path: string[], calcId: string) {
                 statType == "limit" ? //limits dont scale at all
                     value :
                 (preexistingVal || 0) + value //everything else scales normally
-        };
-        
-        flipStatsRecur(value, newPath, calcId)
+        } else {
+            flipStatsRecur(value, newPath, calcId)
+        }
     }
 }
 
@@ -1823,7 +1836,7 @@ export async function calculatePepperStats(data: apiData, selectedProfile: numbe
 
     if (peppers == undefined) return;
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"c"}Peppers`] = {SAME: {health: peppers}};
+    calcTemp[calcId].stats.stats[`${colorChar}${"c"}Peppers`] = {health: peppers};
 }
 
 
@@ -1988,7 +2001,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
             stats.magicPower.magicPower = mergeStatsLists(stats.magicPower.magicPower, selectedPowerStats.extra || {});
         }
 
-        calcTemp[calcId].stats.stats[`${colorChar}${"b"}Magic Power (${mp})`] = {SAME: stats.magicPower.magicPower};
+        calcTemp[calcId].stats.stats[`${colorChar}${"b"}Magic Power (${mp})`] = stats.magicPower.magicPower;
     }
 
     stats.tuning.tuning = multiplyStatsList((accessory_bag_storage.tuning.slot_0 ? accessory_bag_storage.tuning.slot_0 : {}) as statsList, tuningValues)
@@ -1997,7 +2010,7 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
     calcTemp[calcId].stats.stats[`${colorChar}${"9"}Accessory Stats`] = stats.taliStats;
     calcTemp[calcId].stats.stats[`${colorChar}${"b"}Accessory Enrichments`] = stats.enrichments;
-    calcTemp[calcId].stats.stats[`${colorChar}${"e"}Accessory Tuning`] = {SAME: stats.tuning.tuning};
+    calcTemp[calcId].stats.stats[`${colorChar}${"e"}Accessory Tuning`] = stats.tuning.tuning;
     calcTemp[calcId].stats.stats[`${colorChar}${"d"}Accessory Gems`] = stats.gems;
 }
 
@@ -2146,7 +2159,7 @@ export async function calculateCakeStats(data: apiData, selectedProfile: number,
         }
     }
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"d"}Century Cakes`] = {SAME: stats};
+    calcTemp[calcId].stats.stats[`${colorChar}${"d"}Century Cakes`] = stats;
 }
 
 //calculates stats given from armor and equipment
@@ -2333,77 +2346,77 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         //full set bonuses go here
         if(fullSetName == "YOUNG_DRAGON") {
-            calcTemp[calcId].stats.stats[formattedName] = {SAME: {c_walk_speed: 100, walk_speed: 70}}
+            calcTemp[calcId].stats.stats[formattedName] = {c_walk_speed: 100, walk_speed: 70}
         } else
         
         if(fullSetName == "MASTIFF") {
-            calcTemp[calcId].stats.stats[formattedName] = {SAME: {p_X_health_per_1_critical_damage: 50, s_critical_hit_multiplier: 0.5}}
+            calcTemp[calcId].stats.stats[formattedName] = {p_X_health_per_1_critical_damage: 50, s_critical_hit_multiplier: 0.5}
         } else
 
         if(fullSetName == "FAIRY") {
-            calcTemp[calcId].stats.stats[formattedName] = {SAME: {
+            calcTemp[calcId].stats.stats[formattedName] = {
                 health: data.profileData.profiles[selectedProfile].members[playerUUID].fairy_souls_collected
-            }}
+            }
         } else 
 
         if(fullSetName == "FARM_SUIT") {
             if(calcTemp[calcId].status == "farming_1") {
-                calcTemp[calcId].stats.stats[formattedName] = {SAME: {walk_speed: 20}};
+                calcTemp[calcId].stats.stats[formattedName] = {walk_speed: 20};
             }
         } else
 
         if(fullSetName == "FARM_ARMOR") {
             if(calcTemp[calcId].status == "farming_1") {
-                calcTemp[calcId].stats.stats[formattedName] = {SAME: {walk_speed: 25}};
+                calcTemp[calcId].stats.stats[formattedName] = {walk_speed: 25};
             }
         } else
 
         if(fullSetName == "ANGLER") {
-            calcTemp[calcId].stats.stats[formattedName] = {SAME: {health: 10*Math.floor((calcTemp[calcId].skills.fishing?.levelInfo.level || 1)/10)}};
+            calcTemp[calcId].stats.stats[formattedName] = {health: 10*Math.floor((calcTemp[calcId].skills.fishing?.levelInfo.level || 1)/10)};
         } else 
 
         if(fullSetName == "LAPIS_ARMOR") {
-            calcTemp[calcId].stats.stats[formattedName] = {SAME: {health: 60}};
+            calcTemp[calcId].stats.stats[formattedName] = {health: 60};
         } else 
 
         if(fullSetName == "EMERALD_ARMOR") {
             let emeraldCollection = data.profileData.profiles[selectedProfile].members[playerUUID].collection.EMERALD || 0;
 
-            calcTemp[calcId].stats.stats[formattedName] = {SAME: {
+            calcTemp[calcId].stats.stats[formattedName] = {
                 health: Math.min(Math.floor(emeraldCollection/3000), 350),
                 defense: Math.min(Math.floor(emeraldCollection/3000), 350),
-            }};
+            };
         } else 
 
         if(fullSetName == "SPEEDSTER") {
-            calcTemp[calcId].stats.stats[formattedName] = {SAME: {walk_speed: 20}};
+            calcTemp[calcId].stats.stats[formattedName] = {walk_speed: 20};
         } else 
 
         if(fullSetName == "GLACITE") {
-            calcTemp[calcId].stats.stats[formattedName] = {SAME: {mining_speed: 2*Math.floor(calcTemp[calcId].skills.mining?.levelInfo.level || 1)}};
+            calcTemp[calcId].stats.stats[formattedName] = {mining_speed: 2*Math.floor(calcTemp[calcId].skills.mining?.levelInfo.level || 1)};
         } else 
 
         if(fullSetName == "SUPERIOR_DRAGON") {
-            calcTemp[calcId].stats.stats[formattedName] = {SAME: {
+            calcTemp[calcId].stats.stats[formattedName] = {
                 s_aotd_ability_bonus: 0.5,
                 ...allStatsBoost(0.05)
-            }};
+            };
         } else 
 
         if(fullSetName == "HOLY_DRAGON") {
-            calcTemp[calcId].stats.stats[formattedName] = {SAME: {health_regeneration: 200}};
+            calcTemp[calcId].stats.stats[formattedName] = {health_regeneration: 200};
         } else
 
         if(fullSetName == "HEAVY" || fullSetName == "SUPER_HEAVY") {
-            calcTemp[calcId].stats.stats[formattedName] = {SAME: {p_X_walk_speed_per_50_defense: 1}};
+            calcTemp[calcId].stats.stats[formattedName] = {p_X_walk_speed_per_50_defense: 1};
         } else
 
         if(fullSetName == "VANQUISHED") {
-            calcTemp[calcId].stats.stats[formattedName] = {SAME: {s_damage_reduction: -0.1}};
+            calcTemp[calcId].stats.stats[formattedName] = {s_damage_reduction: -0.1};
         } else
 
         if(fullSetName == "GOBLIN") {
-            calcTemp[calcId].stats.stats[formattedName] = {SAME: {l_intelligence: 0, p_X_mining_speed_per_15_intelligence: 1}};
+            calcTemp[calcId].stats.stats[formattedName] = {l_intelligence: 0, p_X_mining_speed_per_15_intelligence: 1};
         }
     }
 }
@@ -2437,7 +2450,7 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
 
     var stats: statsCategory = {};
 
-    calcTemp[calcId].stats.stats[colorChar + "b"+"Pet Score (" + petScore + ")"] = {SAME: {magic_find: mf}};
+    calcTemp[calcId].stats.stats[colorChar + "b"+"Pet Score (" + petScore + ")"] = {magic_find: mf};
 }
 
 //WORK
@@ -2605,7 +2618,7 @@ export async function calculateBestiaryStats(data: apiData, selectedProfile: num
     var milestones = Math.floor(tiersUnlocked/10); //you gain a milestone for every 10 tiers unlocked
     var health = milestones*2; //you gain 2 health per milestone
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"c"}Bestiary Milestone (${milestones})`] = {SAME: {health: health}};
+    calcTemp[calcId].stats.stats[`${colorChar}${"c"}Bestiary Milestone (${milestones})`] = {health: health};
 }
 
 export async function calculateAbiphoneStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
@@ -2615,14 +2628,14 @@ export async function calculateAbiphoneStats(data: apiData, selectedProfile: num
 
     calcTemp[calcId].other.abiphoneContacts = abiphone.active_contacts?.length || 0; //for calculateAccStats abicase mp buffs
 
-    calcTemp[calcId].stats.stats[`${colorChar}${5}9F™ Operator Chip`] = {SAME: {health: abiphone.operator_chip?.repaired_index !== undefined ? (abiphone.operator_chip.repaired_index+1)*2 : 0}};
+    calcTemp[calcId].stats.stats[`${colorChar}${5}9F™ Operator Chip`] = {health: abiphone.operator_chip?.repaired_index !== undefined ? (abiphone.operator_chip.repaired_index+1)*2 : 0};
 }
 
 
 export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
-    calcTemp[calcId].stats.stats["Base Value"] = {SAME: baseStats};
+    calcTemp[calcId].stats.stats["Base Value"] = baseStats;
 
-    calcTemp[calcId].stats.stats["Base Caps"] = {SAME: defaultStatCaps};
+    calcTemp[calcId].stats.stats["Base Caps"] = defaultStatCaps;
 
     var specialPetData: specialPetData = {
         goldCollection: data.profileData.profiles[selectedProfile].members[playerUUID].collection.GOLD_INGOT || 0,
@@ -2652,9 +2665,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     await calculateBestiaryStats(data, selectedProfile, playerUUID, calcId);
 
     //catacombs level stats (not worth creating a function for)
-    calcTemp[calcId].stats.stats[`${colorChar}${"c"}Dungeoneering Level`] = {SAME: 
-        skillLevelStats.dungeoneering(Math.floor(calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0))
-    }
+    calcTemp[calcId].stats.stats[`${colorChar}${"c"}Dungeoneering Level`] = skillLevelStats.dungeoneering(Math.floor(calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0))
 
     calcTemp[calcId].stats.stats.testing = {
         addi: {
