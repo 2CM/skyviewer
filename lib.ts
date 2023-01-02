@@ -277,7 +277,7 @@ export async function parseContents(contents: contents): Promise<nbt.NBT> {
 //url for discord emoji icon that is a recombobulator
 export const recombEmoji = "https://cdn.discordapp.com/emojis/827593781879898142"; //from skyhelper discord bot
 
-export function statSourceToElement(string: string, element: keyof React.ReactHTML = "span", parentElement: keyof React.ReactHTML = "span") {
+export function formattedStringToElement(string: string, element: keyof React.ReactHTML = "span", parentElement: keyof React.ReactHTML = "span") {
     //interfaces SPECIFICALLY for this function
     interface coloredStringToElementChar {
         char: string,
@@ -904,7 +904,7 @@ export var calcTemp: {
             },
 
             categorizedFlippedStats: categorizedFlippedStats,
-            categorizedCompressedStats: categorizedCompressedStats
+            categorizedCompressedStats: categorizedCompressedStats,
 
             evaluatedStats: evaluatedStats
         },

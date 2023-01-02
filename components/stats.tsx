@@ -29,6 +29,7 @@ export default function Stats({evaluatedList, categorizedCompressedStats, catego
             <StatsPopUp
                 statName={selectedStat || "health"}
                 statData={categorizedFlippedStats}
+                compressedStatData={categorizedCompressedStats}
                 visible={selectedStat !== undefined}
                 evaluated={evaluatedList[selectedStat || "health"] || 0}
                 onClose={() => {

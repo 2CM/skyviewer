@@ -102,9 +102,17 @@ function getStatStageInfo(statName: baseStatName, sourcesList: Record<string, nu
     //sum
 
     //sum of the current stage
-    let stageSum = values(sourcesList)
-        .reduce((prev, curr) => prev+curr, 0)
+    let stageSum =
+        //multiplicative
+        type == "multiplicative" ?
+            values(sourcesList).reduce((prev, curr) => prev*curr, 1) :
+        
+        //there shouldnt be a double limit but if there is just go with the first one
+        type == "limit" ? 
+            values(sourcesList)[0] :
 
+        //everything else
+        values(sourcesList).reduce((prev, curr) => prev+curr, 0)
 
     let sumPrefix =
         (type == "multiplicative") ?

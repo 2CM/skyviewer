@@ -63,6 +63,7 @@ export interface serverData {
 			tags: statTags,
 			categorizedCompressedStats: categorizedCompressedStats,
 			categorizedFlippedStats: categorizedFlippedStats,
+
 			evaluatedStats: evaluatedStats,
 		},
 
@@ -92,6 +93,8 @@ export default function profileViewer(props: serverData) {
 
 		evaluatedList[key] = value[lastTransform] || 0
 	}
+
+	console.log(props)
 
 	// console.log({evaluatedList, cfs: props.computedData.stats.categorizedFlippedStats, ccs: props.computedData.stats.categorizedCompressedStats})
 
