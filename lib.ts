@@ -1906,7 +1906,7 @@ export async function calculateSlayerStats(data: apiData, selectedProfile: numbe
 export interface accStatsInterface {
     taliStats: statsCategory,
     enrichments: statsCategory,
-    magicPower: statsCategory,
+    magicPower: statsList,
     tuning: statsCategory,
     gems: statsCategory,
 }
@@ -1995,23 +1995,26 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
     if(selectedPower) {
         var selectedPowerStats = accPowers[selectedPower];
 
-        stats.magicPower.magicPower = multiplyStatsList(selectedPowerStats.per, statsMultiplier);
+        stats.magicPower = multiplyStatsList(selectedPowerStats.per, statsMultiplier);
 
         if (selectedPowerStats.extra) {
-            stats.magicPower.magicPower = mergeStatsLists(stats.magicPower.magicPower, selectedPowerStats.extra || {});
+            stats.magicPower = mergeStatsLists(stats.magicPower, selectedPowerStats.extra || {});
         }
-
-        calcTemp[calcId].stats.stats[`${colorChar}${"b"}Magic Power (${mp})`] = stats.magicPower.magicPower;
     }
 
     stats.tuning.tuning = multiplyStatsList((accessory_bag_storage.tuning.slot_0 ? accessory_bag_storage.tuning.slot_0 : {}) as statsList, tuningValues)
 
     console.log({ mp, statsMultiplier });
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"9"}Accessory Stats`] = stats.taliStats;
-    calcTemp[calcId].stats.stats[`${colorChar}${"b"}Accessory Enrichments`] = stats.enrichments;
-    calcTemp[calcId].stats.stats[`${colorChar}${"e"}Accessory Tuning`] = stats.tuning.tuning;
-    calcTemp[calcId].stats.stats[`${colorChar}${"d"}Accessory Gems`] = stats.gems;
+    let finalObj: statsSources = {};
+
+    finalObj[`${colorChar}${"b"}Magic Power (${mp})`] = stats.magicPower;
+    finalObj[`${colorChar}${"9"}Accessory Stats`] = stats.taliStats;
+    finalObj[`${colorChar}${"b"}Accessory Enrichments`] = stats.enrichments;
+    finalObj[`${colorChar}${"e"}Accessory Tuning`] = stats.tuning.tuning;
+    finalObj[`${colorChar}${"d"}Accessory Gems`] = stats.gems;
+
+    calcTemp[calcId].stats.stats[`${colorChar}${"d"}Accessories`] = finalObj;
 }
 
 
@@ -2275,6 +2278,8 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
     // console.log(verifiedFullSets);
 
+    let finalObj: statsSources = {};
+
     for (let i in armorContents) {
         var piece: nbtItem | {} = armorContents[i];
 
@@ -2333,7 +2338,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId, false, other, fullSetContribution !== undefined);
 
-        calcTemp[calcId].stats.stats[piece.tag.display.Name] = stats[piece.tag.display.Name];
+        finalObj[piece.tag.display.Name] = stats[piece.tag.display.Name];
     }
 
     // console.log(verifiedFullSets);
@@ -2346,43 +2351,43 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         //full set bonuses go here
         if(fullSetName == "YOUNG_DRAGON") {
-            calcTemp[calcId].stats.stats[formattedName] = {c_walk_speed: 100, walk_speed: 70}
+            finalObj[formattedName] = {c_walk_speed: 100, walk_speed: 70}
         } else
         
         if(fullSetName == "MASTIFF") {
-            calcTemp[calcId].stats.stats[formattedName] = {p_X_health_per_1_critical_damage: 50, s_critical_hit_multiplier: 0.5}
+            finalObj[formattedName] = {p_X_health_per_1_critical_damage: 50, s_critical_hit_multiplier: 0.5}
         } else
 
         if(fullSetName == "FAIRY") {
-            calcTemp[calcId].stats.stats[formattedName] = {
+            finalObj[formattedName] = {
                 health: data.profileData.profiles[selectedProfile].members[playerUUID].fairy_souls_collected
             }
         } else 
 
         if(fullSetName == "FARM_SUIT") {
             if(calcTemp[calcId].status == "farming_1") {
-                calcTemp[calcId].stats.stats[formattedName] = {walk_speed: 20};
+                finalObj[formattedName] = {walk_speed: 20};
             }
         } else
 
         if(fullSetName == "FARM_ARMOR") {
             if(calcTemp[calcId].status == "farming_1") {
-                calcTemp[calcId].stats.stats[formattedName] = {walk_speed: 25};
+                finalObj[formattedName] = {walk_speed: 25};
             }
         } else
 
         if(fullSetName == "ANGLER") {
-            calcTemp[calcId].stats.stats[formattedName] = {health: 10*Math.floor((calcTemp[calcId].skills.fishing?.levelInfo.level || 1)/10)};
+            finalObj[formattedName] = {health: 10*Math.floor((calcTemp[calcId].skills.fishing?.levelInfo.level || 1)/10)};
         } else 
 
         if(fullSetName == "LAPIS_ARMOR") {
-            calcTemp[calcId].stats.stats[formattedName] = {health: 60};
+            finalObj[formattedName] = {health: 60};
         } else 
 
         if(fullSetName == "EMERALD_ARMOR") {
             let emeraldCollection = data.profileData.profiles[selectedProfile].members[playerUUID].collection.EMERALD || 0;
 
-            calcTemp[calcId].stats.stats[formattedName] = {
+            finalObj[formattedName] = {
                 health: Math.min(Math.floor(emeraldCollection/3000), 350),
                 defense: Math.min(Math.floor(emeraldCollection/3000), 350),
             };
@@ -2393,32 +2398,34 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
         } else 
 
         if(fullSetName == "GLACITE") {
-            calcTemp[calcId].stats.stats[formattedName] = {mining_speed: 2*Math.floor(calcTemp[calcId].skills.mining?.levelInfo.level || 1)};
+            finalObj[formattedName] = {mining_speed: 2*Math.floor(calcTemp[calcId].skills.mining?.levelInfo.level || 1)};
         } else 
 
         if(fullSetName == "SUPERIOR_DRAGON") {
-            calcTemp[calcId].stats.stats[formattedName] = {
+            finalObj[formattedName] = {
                 s_aotd_ability_bonus: 0.5,
                 ...allStatsBoost(0.05)
             };
         } else 
 
         if(fullSetName == "HOLY_DRAGON") {
-            calcTemp[calcId].stats.stats[formattedName] = {health_regeneration: 200};
+            finalObj[formattedName] = {health_regeneration: 200};
         } else
 
         if(fullSetName == "HEAVY" || fullSetName == "SUPER_HEAVY") {
-            calcTemp[calcId].stats.stats[formattedName] = {p_X_walk_speed_per_50_defense: 1};
+            finalObj[formattedName] = {p_X_walk_speed_per_50_defense: 1};
         } else
 
         if(fullSetName == "VANQUISHED") {
-            calcTemp[calcId].stats.stats[formattedName] = {s_damage_reduction: -0.1};
+            finalObj[formattedName] = {s_damage_reduction: -0.1};
         } else
 
         if(fullSetName == "GOBLIN") {
-            calcTemp[calcId].stats.stats[formattedName] = {l_intelligence: 0, p_X_mining_speed_per_15_intelligence: 1};
+            finalObj[formattedName] = {l_intelligence: 0, p_X_mining_speed_per_15_intelligence: 1};
         }
     }
+
+    calcTemp[calcId].stats.stats[`${colorChar}${"f"}Wearables`] = finalObj;
 }
 
 //calculates stats given from pet score
@@ -2667,24 +2674,24 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     //catacombs level stats (not worth creating a function for)
     calcTemp[calcId].stats.stats[`${colorChar}${"c"}Dungeoneering Level`] = skillLevelStats.dungeoneering(Math.floor(calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0))
 
-    calcTemp[calcId].stats.stats.testing = {
-        addi: {
-            a_health: 0.2
-        },
-        multi: {
-            yes: {m_mining_fortune: 1},
-            yeah: {m_mining_fortune: 2}
-        },
-        cap: {
-            walk_speed: 1000,
-            c_walk_speed: 10,
-            health: 1000000,
-            c_health: 100,
-        },
-        limit: {
-            l_health: 75
-        }
-    }
+    // calcTemp[calcId].stats.stats.testing = {
+    //     addi: {
+    //         a_health: 0.2
+    //     },
+    //     multi: {
+    //         yes: {m_mining_fortune: 1},
+    //         yeah: {m_mining_fortune: 2}
+    //     },
+    //     cap: {
+    //         walk_speed: 1000,
+    //         c_walk_speed: 10,
+    //         health: 1000000,
+    //         c_health: 100,
+    //     },
+    //     limit: {
+    //         l_health: 75
+    //     }
+    // }
 
     // calcTemp[calcId].stats.stats = {
     //     "ender helmet": {

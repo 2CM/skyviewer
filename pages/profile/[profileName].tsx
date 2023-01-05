@@ -200,3 +200,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
 	return returnValue;
 }
+
+/*
+tags
+per stats
+*/
