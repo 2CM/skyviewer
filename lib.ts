@@ -382,154 +382,6 @@ export function formattedStringToElement(string: string, element: keyof React.Re
     return React.createElement(parentElement, {}, children)
 }
 
-//WORK
-
-// export function sourcesToElement(sources: any, statName: statName) {
-//     let testObj = {
-//         thing: {
-//             epical: 2,
-//             epicalal: {
-//                 yes: 4,
-//                 no: -1,
-//             }
-//         },
-//         fe: 1,
-//         eef: {
-//             a: 100
-//         },
-//         g: {
-
-//         }
-//     }
-
-//     let testHtml = [
-//         React.createElement("li", null, "thing"),
-//         React.createElement("ul", null, [
-//             React.createElement("li", null, "epical: 2"),
-//             React.createElement("li", null, "epicalal"),
-//             React.createElement("ul", null, [
-//                 React.createElement("li", null, "yes: 4"),
-//                 React.createElement("li", null, "no: -1"),
-//             ])
-//         ]),
-//         React.createElement("li", null, "fe: 1"),
-//         React.createElement("li", null, "eef"),
-//         React.createElement("ul", null, [
-//             React.createElement("li", null, "a: 100"),
-//         ])
-//     ]
-
-//     return React.createElement("ul", null, testHtml)
-// }
-
-//converts stat sources to an element for stat sources popups
-// export function sourcesToElement(sources: any, statName: statName) {
-//     //elements from the sources of one specific stat
-//     function elementsFromSource(currentSources: any, numberFormatter: (num: number) => string, title?: string, titleNumberFormatter?: (num: number) => string): React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] {
-//         if (keys(currentSources).length == 0) {
-//             return []
-//         }
-
-//         var elements: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
-
-//         var sum = 0;
-
-//         for (let i in keys(currentSources)) {
-//             var categoryName: string = keys(currentSources)[i] as string;
-//             var category = currentSources[categoryName];
-
-//             var categoryChildren: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
-
-//             var categorySum = 0;
-
-//             var lastSourceName: string = "inital value :)";
-//             var lastSource: number = -1;
-
-//             for (let j in keys(category)) {
-//                 var sourceName = keys(category)[j] as string;
-//                 var source: number = category[sourceName];
-
-//                 var formattedName = sourceName + "";
-
-//                 // var color: string = "unset";
-//                 var hasRecomb: boolean = false;
-
-//                 if (formattedName.startsWith("RECOMB")) {
-//                     hasRecomb = true;
-//                     formattedName = formattedName.slice("RECOMB".length);
-//                 }
-
-//                 // if(formattedName.startsWith(colorChar)) {
-//                 //     color = colorCodeToHex[formattedName[1]];
-//                 //     formattedName = formattedName.slice(2);
-//                 // }
-
-//                 lastSourceName = formattedName;
-//                 lastSource = source;
-
-//                 categorySum += source;
-
-//                 categoryChildren.push(
-//                     React.createElement(
-//                         "li",
-//                         {
-//                             className: statStyles.statValue,
-//                             // style: {
-//                             //     color: color
-//                             // },
-//                         },
-//                         [
-//                             hasRecomb ? React.createElement("img", { src: recombEmoji, style: { height: "1em", width: "auto" } }, null) : null,
-//                             coloredStringToElement(` ${formattedName}`),
-//                             React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(source)}`)
-//                         ]
-//                     )
-//                 );
-//             }
-
-//             if (keys(category).length == 1 && lastSourceName == "SAME") {
-//                 elements.push(
-//                     React.createElement("li", { className: statStyles.statsCategory }, [ //style: {color: colorCodeToHex[statCategoryColors[categoryName]]}
-//                         coloredStringToElement(categoryName),
-//                         React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(categorySum)}`)
-//                     ]),
-//                     React.createElement("br")
-//                 )
-//             } else {
-//                 elements.push(
-//                     React.createElement("li", { className: statStyles.statsCategory }, [
-//                         coloredStringToElement(categoryName),
-//                         React.createElement("span", { style: { color: "white" } }, `: ${numberFormatter(categorySum)}`)
-//                     ]),
-//                     React.createElement("ul", { className: statStyles.statValue }, categoryChildren),
-//                     React.createElement("br")
-//                 )
-//             }
-
-//             sum += categorySum;
-//         }
-
-//         if (title) return [React.createElement("span", {}, title + (titleNumberFormatter !== undefined ? titleNumberFormatter(sum) : numberFormatter(sum))), React.createElement("ul", {}, elements)];
-
-//         return elements;
-//     }
-
-//     var children: React.DetailedReactHTMLElement<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>[] = [];
-
-//     var hasAdditiveBuff = !(sources[statName] === undefined || keys(sources[statName]).length === 0);
-//     var hasMultiplicativeBuff = sources["m_" + statName] !== undefined;
-
-//     if (hasAdditiveBuff)
-//         children.push(...elementsFromSource(sources[statName] || {}, num => statFormatter.format(num), hasMultiplicativeBuff ? "Additive: " : undefined));
-
-//     if (hasMultiplicativeBuff)
-//         children.push(...elementsFromSource(sources["m_" + statName] || {}, num => percentFormatter.format(num * 100) + "%", hasAdditiveBuff ? "Multiplicative: " : undefined, num => multiplierFormatter.format(num + 1) + "x"))
-
-//     if (!hasAdditiveBuff && !hasMultiplicativeBuff)
-//         children.push(React.createElement("h2", { style: { textAlign: "center", fontSize: "20px" } }, `This player has no ${statIdToStatName[statName] || "error"} :(`))
-
-//     return React.createElement("ul", {}, children);
-// }
 
 export function hotmExpToLevel(exp: number): number {
     var level = 0;
@@ -608,6 +460,11 @@ export function getSkyblockTime() {
             .replace("[SUFFIX]", (determineDaySuffix(Math.floor(day) + 1)) + "") // "st" | "nd" | "rd" | "th"
             .replace("[YEAR]", (Math.floor(year) + 1) + "")
     }
+}
+
+//determines if the player is on a public island
+export function isPlayerOnPublicIsland(calcId: string): boolean {
+    return !([undefined, "dynamic", "dungeon", "instanced"].includes(calcTemp[calcId].status))
 }
 
 // *** PROFILES ***
@@ -1133,157 +990,6 @@ export function processStats(calcId: string) {
     //evaluates them by chaining all the types. flat -> additive -> multiplicative -> cap -> limit
     evaluateStats(calcId);
 }
-
-//WORK
-
-// //sums up a statSources into a statsList
-// export function sumStatsSources(sources: statSources): {capped: statsList, summed: statsList} {
-//     var stats: statsList = {};
-//     var m_stats: statsList = {};
-
-
-//     //adds them up
-//     for (let i in keys(sources)) {
-//         let statName: statName = keys(sources)[i];
-//         let statValue = sources[statName] || {};
-
-//         for (let j in keys(statValue)) {
-//             let categoryName = keys(statValue)[j];
-//             let categoryValue = statValue[categoryName];
-
-//             for (let k in keys(categoryValue)) {
-//                 let sourceName = keys(categoryValue)[k];
-//                 let sourceValue = categoryValue[sourceName];
-
-//                 stats[statName] = (stats[statName] || 0) + sourceValue;
-//             }
-//         }
-//     }
-
-//     //multiplies them
-//     for (let i in keys(stats)) {
-//         let statName: statName = keys(stats)[i];
-//         let statValue: number = stats[statName] || 0;
-
-//         if (statName.startsWith("m_")) {
-//             var originalStatName: statName = statName.slice(2) as statName;
-
-//             m_stats[originalStatName] = statValue + 1;
-//         }
-//     }
-
-//     var summed = multiplyStatsList(stats, m_stats);
-//     var capped: statsList = {};
-
-//     for(let i in keys(summed)) {
-//         let statName = keys(summed)[i];
-
-//         let statCap: number | undefined = defaultStatCaps[statName]
-
-//         if(statName == "walk_speed" && summed.c_walk_speed !== undefined) statCap = (statCap || 0) + summed.c_walk_speed;
-//         if(statName == "walk_speed" && summed.l_walk_speed !== undefined) statCap = summed.l_walk_speed; //l_ overrides c_
-//         if(statName == "intelligence" && summed.l_intelligence !== undefined) statCap = summed.l_intelligence;
-//         if(statName == "vitality" && summed.l_vitality !== undefined) statCap = summed.l_vitality;
-//         if(statName == "mending" && summed.l_mending !== undefined) statCap = summed.l_mending;
-
-
-//         capped[statName] = Math.min(summed[statName] || 0, statCap === undefined ? Infinity : statCap);
-//     }
-
-//     return {capped, summed};
-// }
-
-
-// export function getStatSources(categories: statsCategories): statSources {
-//     var sources: any = {};
-
-//     for (let i in keys(categories)) {
-//         let categoryName: string = keys(categories)[i];
-//         let category: statsCategory = categories[categoryName];
-
-//         for (let j in keys(category)) {
-//             let listName: string = keys(category)[j];
-//             let list: statsList = category[listName];
-
-//             for (let k in keys(list)) {
-//                 let statName: statName = keys(list)[k];
-//                 let stat: number = list[statName] || 0;
-
-//                 if (stat === undefined) continue;
-//                 if (stat == 0 && !statName.startsWith("l_")) continue; //l_ stats can be 0
-
-//                 if (!sources[statName]) sources[statName] = {};
-
-//                 if (!sources[statName][categoryName]) sources[statName][categoryName] = {};
-
-//                 sources[statName][categoryName][listName] = stat;
-//             }
-//         }
-//     }
-
-//     //for calculating pers
-//     var summedRaw = sumStatsSources(sources);
-
-//     var summed: statsList = {...summedRaw.capped, ...summedRaw.summed};
-
-//     // console.log(summed)
-
-//     //calculate pers
-//     for(let i in keys(sources)) { //for each stat in sources
-//         let stat: statName = keys(sources)[i] as statName;
-//         if(!stat.startsWith("p_")) continue; //if its not a per stat, continue
-
-//         // console.log(stat)
-
-//         let name = stat.slice("p_".length);
-
-//         var perGiving: string | number = name.split("_per_")[1].split("_")[0];
-//         var perRecieving: string | number = name.split("_")[0];
-
-//         if(perGiving == "X") perGiving = summed[stat] || 0;
-//         if(perRecieving == "X") perRecieving = summed[stat] || 0;
-
-//         perGiving = Number(perGiving);
-//         perRecieving = Number(perRecieving);
-
-//         var [recievingStat, givingStat] = name.replace(/.+?_/, "").split(/_per_.+?_/) as statName[];
-
-//         // console.log({perGiving, perRecieving, recievingStat, givingStat})
-
-//         //because there arent any ways to get multiple of a type of per stat, ill just treat it as only one
-//         //depth into sources (yes im good at variable naming)
-//         var depth1Name = keys(sources[stat])[0];
-//         var depth2Name = keys(sources[stat][depth1Name])[0];
-
-//         var gained = perRecieving*((summed[givingStat] || 0)/perGiving);
-
-//         if(!sources[recievingStat])
-//             sources[recievingStat] = {};
-
-//         if(!sources[recievingStat][depth1Name])
-//             sources[recievingStat][depth1Name] = {};
-
-//         if(!sources[recievingStat][depth1Name][depth2Name])
-//             sources[recievingStat][depth1Name][depth2Name] = gained;
-
-//         //for cases where we have 
-//         // * p_X_STAT1_per_1_STAT2
-//         // * p_X_STAT3_per_1_STAT1
-//         summed[recievingStat] = (summed[recievingStat] || 0)+gained;
-//     }
-
-//     //fill in (excludes special stats (m_, s_, p_, a_, l_, d_))
-//     for (let i in keys(statIdToStatName)) {
-//         var statName = keys(statIdToStatName)[i];
-
-//         if (sources[statName] === undefined) sources[statName] = {};
-//     }
-
-//     // console.log(sources);
-
-//     return sources;
-// }
-
 
 // export type itemStatSource = "hpbs" | "baseStats" | "starStats" | "enrichments" | "gemstones";
 
@@ -2638,6 +2344,47 @@ export async function calculateAbiphoneStats(data: apiData, selectedProfile: num
     calcTemp[calcId].stats.stats[`${colorChar}${5}9F™ Operator Chip`] = {health: abiphone.operator_chip?.repaired_index !== undefined ? (abiphone.operator_chip.repaired_index+1)*2 : 0};
 }
 
+export async function calculateMayorStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    let currentMayor = data.electionData?.mayor;
+
+    if(!currentMayor) return;
+
+    let stringifiedPerks = currentMayor.perks.map(perk => perk.name);
+
+    let mayorPerks: statsSources = {};
+
+    console.log(currentMayor)
+
+
+    //diana -> "Lucky!" -> +15 Pet Luck
+    //marinia -> "Fishing Exp Buff" -> +50 fishing exp on public islands
+    //marinia -> "Luck Of The Sea 2.0" -> +15 SCC
+
+    //jerry -> "Statspocalypse" -> 10% all stats (NEEDS CONFIRMATION)
+
+    //jerry -> "Perkpocalypse" -> mayor cycle mechanics
+    //foxy -> "Extra Event" -> extra spooky fest
+    //cole -> "Mining Fiesta" -> +75 mining wisdom on public islands
+
+    
+    //diana
+        if(stringifiedPerks.includes("Lucky!")) {
+            mayorPerks[`${colorChar}${statColors.pet_luck}Lucky!`] = {pet_luck: 15};
+        }
+
+    //marina
+        if(stringifiedPerks.includes("Luck of the Sea 2.0")) {
+            mayorPerks[`${colorChar}${statColors.sea_creature_chance}Luck of the Sea 2.0`] = {sea_creature_chance: 15};
+        }
+
+        if(stringifiedPerks.includes("Fishing XP Buff")) {
+            if(isPlayerOnPublicIsland(calcId)) {
+                mayorPerks[`${colorChar}${statColors.fishing_wisdom}Fishing XP Buff`] = {fishing_wisdom: 50};
+            }
+        }
+
+    calcTemp[calcId].stats.stats[`${colorChar}${"b"}Current Mayor (${currentMayor.name})`] = mayorPerks;
+}
 
 export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
     calcTemp[calcId].stats.stats["Base Value"] = baseStats;
@@ -2670,6 +2417,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     await calculateCakeStats(data, selectedProfile, playerUUID, calcId);
     await calculatePetScoreStats(data, selectedProfile, playerUUID, calcId);
     await calculateBestiaryStats(data, selectedProfile, playerUUID, calcId);
+    await calculateMayorStats(data, selectedProfile, playerUUID, calcId);
 
     //catacombs level stats (not worth creating a function for)
     calcTemp[calcId].stats.stats[`${colorChar}${"c"}Dungeoneering Level`] = skillLevelStats.dungeoneering(Math.floor(calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0))

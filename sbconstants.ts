@@ -4920,3 +4920,216 @@ export const monthsPerYear = 12;
 export const daysPerMonth = 31;
 export const hoursPerDay = 24;
 export const minutesPerHour = 60;
+
+export const mayors = {
+    slayer: {
+        name: "Aatrox",
+        perks: [
+            {
+                name: "SLASHED Pricing",
+                description: "Starting slayer quests is §ehalf price§7."
+            },
+            {
+                name: "Slayer Xp Buff",
+                description: ""
+            },
+            {
+                name: "Pathfinder",
+                description: "Gain rare drops §d20% §7more often."
+            },
+        ]
+    },
+    mining: {
+        name: "Cole",
+        perks: [
+            {
+                name: "Prospection",
+                description: "Mining minions work §a25% §7faster."
+            },
+            {
+                name: "Mining XP Buff",
+                description: ""
+            },
+            {
+                name: "Mining Fiesta",
+                description: ""
+            }
+        ]
+    },
+    diana: {
+        name: "Diana",
+        perks: [
+            {
+                name: "Lucky!",
+                description: ""
+            },
+            {
+                name: "Mythological Ritual",
+                description: ""
+            },
+            {
+                name: "Pet XP Buff",
+                description: ""
+            }
+        ]
+    },
+    economist: {
+        name: "Diaz",
+        perks: [
+            {
+                name: "Barrier Street",
+                description: "Gain §625% §7more bank interest."
+            },
+            {
+                name: "Shopping Spree",
+                description: "Increase daily NPC buy limits by §e10x§7."
+            },
+        ]
+    },
+    finnegan: {
+        name: "Finnegan",
+        perks: [
+            {
+                name: "Farming Simulator",
+                description: ""
+            },
+            {
+                name: "Pelt-pocalypse",
+                description: ""
+            },
+            {
+                name: "GOATed",
+                description: ""
+            }
+        ]
+    },
+    events: {
+        name: "Foxy",
+        perks: [
+            {
+                name: "Sweet Tooth",
+                description: "Grants §a+20% §7chance to get Candy from mobs during the §6Spooky Festival§7."
+            },
+            {
+                name: "Benevolence",
+                description: "Gain §c2.5x §7gifts from the attack event on Jerry's Workshop."
+            },
+            {
+                name: "Extra Event",
+                description: ""
+            }
+        ],
+    },
+    fishing: {
+        name: "Marina", //i hate this community
+        perks: [
+            {
+                name: "Fishing XP Buff",
+                description: ""
+            },
+            {
+                name: "Luck of the Sea 2.0", //this shit is op
+                description: ""
+            },
+            {
+                name: "Fishing Festival",
+                description: "Start a special fishing event the first §b3 §7days of each month!"
+            }
+        ],
+    },
+    paul: {
+        name: "Paul",
+        perks: [
+            {
+                name: "Marauder",
+                description: ""
+            },
+            {
+                name: "EZPZ",
+                description: ""
+            },
+            {
+                name: "Benediction",
+                description: ""
+            }
+        ],
+    },
+
+    derpy: {
+        name: "Derpy",
+        perks: [
+            {
+                name: "TURBO MINIONS!!!",
+                description: ""
+            },
+            {
+                name: "AH CLOSED!!!",
+                description: ""
+            },
+            {
+                name: "DOUBLE MOBS HP!!!",
+                description: ""
+            },
+            {
+                name: "MOAR SKILLZ!!!",
+                description: ""
+            }
+        ],
+    },
+    jerry: {
+        name: "Jerry",
+        perks: [
+            {
+                name: "Perkpocalypse",
+                description: ""
+            },
+            {
+                name: "Statspocalypse",
+                description: ""
+            },
+            {
+                name: "Jerrypocalypse",
+                description: ""
+            }
+        ],
+    },
+    scorpius: {
+        name: "Scorpius",
+        perks: [
+            {
+                name: "Bribe",
+                description: ""
+            },
+            {
+                name: "Darker Auctions",
+                description: ""
+            },
+            {
+                name: "Benediction",
+                description: ""
+            }
+        ],
+    },
+} as const;
+
+export type mayorKey = keyof typeof mayors;
+export type mayorName = typeof mayors[keyof typeof mayors]["name"];
+
+export type mayorData<key extends mayorKey> = {
+    key: key,
+    name: typeof mayors[key]["name"],
+    perks: typeof mayors[key]["perks"][number][]
+}
+
+export type anyMayorData =
+    mayorData<"slayer"> |
+    mayorData<"mining"> |
+    mayorData<"diana"> |
+    mayorData<"economist"> |
+    mayorData<"finnegan"> |
+    mayorData<"events"> |
+    mayorData<"fishing"> |
+    mayorData<"paul"> |
+    mayorData<"derpy"> |
+    mayorData<"jerry"> |
+    mayorData<"scorpius">;
