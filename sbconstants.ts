@@ -4927,15 +4927,15 @@ export const mayors = {
         perks: [
             {
                 name: "SLASHED Pricing",
-                description: "Starting slayer quests is §ehalf price§7."
+                description: "Starting slayer quests is §ehalf price§r."
             },
             {
                 name: "Slayer Xp Buff",
-                description: ""
+                description: "Earn §d25% §rSlayer XP."
             },
             {
                 name: "Pathfinder",
-                description: "Gain rare drops §d20% §7more often."
+                description: "Gain rare drops §d20% §rmore often."
             },
         ]
     },
@@ -4944,32 +4944,32 @@ export const mayors = {
         perks: [
             {
                 name: "Prospection",
-                description: "Mining minions work §a25% §7faster."
+                description: "Mining minions work §a25% §rfaster."
             },
             {
                 name: "Mining XP Buff",
-                description: ""
+                description: "Earn §3+50☯Mining Wisdom §ron public islands."
             },
             {
                 name: "Mining Fiesta",
-                description: ""
+                description: "Schedules two Mining Fiesta events during the year. Earn §3+75☯Mining Wisdom §r, §d2X §rdrops, and §eUnique Loot§r! Only active on public islands."
             }
         ]
     },
-    diana: {
+    pets: { //best guess
         name: "Diana",
         perks: [
             {
                 name: "Lucky!",
-                description: ""
+                description: "Gain §d+25♣Pet Luck§r."
             },
             {
                 name: "Mythological Ritual",
-                description: ""
+                description: "Mayor Diana will sell Griffin pet, which lets you find §2Mythological Creatures §rand tons of §eunique items§r."
             },
             {
                 name: "Pet XP Buff",
-                description: ""
+                description: "Gain §d35% §rmore pet XP."
             }
         ]
     },
@@ -4978,28 +4978,28 @@ export const mayors = {
         perks: [
             {
                 name: "Barrier Street",
-                description: "Gain §625% §7more bank interest."
+                description: "Gain §625% §rmore bank interest."
             },
             {
                 name: "Shopping Spree",
-                description: "Increase daily NPC buy limits by §e10x§7."
+                description: "Increase daily NPC buy limits by §e10x§r."
             },
         ]
     },
-    finnegan: {
+    farming: { //best guess
         name: "Finnegan",
         perks: [
             {
                 name: "Farming Simulator",
-                description: ""
+                description: "There is a §a25% §rchance for §rMathematical Hoes and the §9Cultivating Enchantment §rto count twice."
             },
             {
                 name: "Pelt-pocalypse",
-                description: ""
+                description: "Obtain §a1.5x §rmore §5pelts §5§rfrom §aTrevor §rin the §eMushroom Desert§r, hunt a new trapper mob, and purchase items from a new trapper shop.",
             },
             {
                 name: "GOATed",
-                description: ""
+                description: "§eJacob's Farming Contest §rbrackets include §a10% §rmore players each."
             }
         ]
     },
@@ -5008,15 +5008,17 @@ export const mayors = {
         perks: [
             {
                 name: "Sweet Tooth",
-                description: "Grants §a+20% §7chance to get Candy from mobs during the §6Spooky Festival§7."
+                description: "Grants §a+20% §rchance to get Candy from mobs during the §6Spooky Festival§r."
             },
             {
                 name: "Benevolence",
-                description: "Gain §c2.5x §7gifts from the attack event on Jerry's Workshop."
+                description: "Gain §c2.5x §rgifts from the attack event on Jerry's Workshop."
             },
+
+            //i am going to do one for each event once i get enough info
             {
                 name: "Extra Event",
-                description: ""
+                description: "Scedules an extra §6(Event Name) §revent during the year."
             }
         ],
     },
@@ -5025,54 +5027,55 @@ export const mayors = {
         perks: [
             {
                 name: "Fishing XP Buff",
-                description: ""
+                description: "Gain §3+50☯Fishing Wisdom §ron public islands."
             },
             {
                 name: "Luck of the Sea 2.0", //this shit is op
-                description: ""
+                description: "Gain §3+α15 Sea Creature Chance."
             },
             {
                 name: "Fishing Festival",
-                description: "Start a special fishing event the first §b3 §7days of each month!"
+                description: "Start a special fishing event the first §b3 §rdays of each month!"
             }
         ],
     },
-    paul: {
+    dungeons: { //best guess
         name: "Paul",
         perks: [
             {
                 name: "Marauder",
-                description: ""
+                description: "Dungeon reward chests are §e20% §rcheaper."
             },
             {
                 name: "EZPZ",
-                description: ""
+                description: "Gain §e10§r bonus score on dungeon runs."
             },
             {
                 name: "Benediction",
-                description: ""
+                description: "Blessings are §d25% §d§rstronger."
             }
         ],
     },
 
+    //no idea of the names
     derpy: {
         name: "Derpy",
         perks: [
             {
                 name: "TURBO MINIONS!!!",
-                description: ""
+                description: "Minions have double the output!"
             },
             {
                 name: "AH CLOSED!!!",
-                description: ""
+                description: "The Auction House with be closed while Derpy is elected!"
             },
             {
                 name: "DOUBLE MOBS HP!!!",
-                description: ""
+                description: "All monsters have double SkyBlock icons Health!"
             },
             {
                 name: "MOAR SKILLZ!!!",
-                description: ""
+                description: "Gain §d+50%§r more skill experience!"
             }
         ],
     },
@@ -5081,15 +5084,15 @@ export const mayors = {
         perks: [
             {
                 name: "Perkpocalypse",
-                description: ""
+                description: "Activate all perks of another Mayor every 18 SkyBlock Days (6 hours)."
             },
             {
                 name: "Statspocalypse",
-                description: ""
+                description: "Increase most stats by §a10%§r."
             },
             {
                 name: "Jerrypocalypse",
-                description: ""
+                description: "Reveal Hidden Jerries from logging, farming, mining, and killing mobs."
             }
         ],
     },
@@ -5098,16 +5101,12 @@ export const mayors = {
         perks: [
             {
                 name: "Bribe",
-                description: ""
+                description: "If Scorpius wins and you voted for him, Mayor Scorpius will offer you §6Coins§r as a token of gratitude."
             },
             {
                 name: "Darker Auctions",
-                description: ""
+                description: "Scorpius will intrude in Dark Auctions increasing the amount of rounds to 6 and offering special items."
             },
-            {
-                name: "Benediction",
-                description: ""
-            }
         ],
     },
 } as const;
@@ -5124,12 +5123,12 @@ export type mayorData<key extends mayorKey> = {
 export type anyMayorData =
     mayorData<"slayer"> |
     mayorData<"mining"> |
-    mayorData<"diana"> |
+    mayorData<"pets"> |
     mayorData<"economist"> |
-    mayorData<"finnegan"> |
+    mayorData<"farming"> |
     mayorData<"events"> |
     mayorData<"fishing"> |
-    mayorData<"paul"> |
+    mayorData<"dungeons"> |
     mayorData<"derpy"> |
     mayorData<"jerry"> |
     mayorData<"scorpius">;

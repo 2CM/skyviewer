@@ -230,4 +230,5 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 /*
 tags
 per stats
+fix capped stats with no base not showing anything in popup
 */
