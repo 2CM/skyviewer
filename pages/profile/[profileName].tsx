@@ -6,7 +6,7 @@ import { allSkillExpInfo, calculateAllSkillExp, calculateStats, getMostRecentPro
 import Skills from "../../components/skills";
 import Stats from "../../components/stats";
 import { GetServerSideProps } from "next";
-import { baseProfile, baseStatName, item, skyblockLocation, statName, statsList, statsSources } from "../../sbconstants";
+import { anyMayorData, baseProfile, baseStatName, item, mayorData, mayorKey, mayorName, mayors, skyblockLocation, statName, statsList, statsSources } from "../../sbconstants";
 import { randomBytes } from "crypto";
 
 
@@ -18,17 +18,20 @@ export interface dataContext {
 
 export type apiError = {success: false};
 
+//data about profile we are viewing
 export type profileData = {
 	success: true,
 	profiles: baseProfile[],
 }
 
+//data about skyblock items
 export type itemsData = {
 	success: true,
 	lastUpdated: number,
 	items: item[],
 }
 
+//data about the status of the player
 export type hypixelGame = "SKYBLOCK" | "other game";
 
 export type statusData = {
@@ -46,10 +49,29 @@ export type statusData = {
 	}
 }
 
+//data about skyblock mayors
+export type electionData = {
+	success: true,
+	lastUpdated: number,
+	mayor: anyMayorData,
+	election: {
+		year: number,
+		candidates: [
+			anyMayorData & {votes: number},
+			anyMayorData & {votes: number},
+			anyMayorData & {votes: number},
+			anyMayorData & {votes: number},
+			anyMayorData & {votes: number},
+		]
+	}
+}
+
+//all api data
 export interface apiData {
 	profileData: profileData,
 	itemsData: itemsData,
 	statusData?: statusData,
+	electionData?: electionData,
 }
 
 interface serverSideProps {
@@ -137,16 +159,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 	const profileData = JSON.parse(readFileSync("testContent/"+staticFileName, "utf8")) as profileData | apiError;
 	const itemsData = JSON.parse(readFileSync("testContent/items.json", "utf8")) as itemsData | apiError;
 	const statusData = JSON.parse(readFileSync("testContent/status.json", "utf8")) as statusData | apiError;
+	const electionData = JSON.parse(readFileSync("testContent/election.json", "utf8")) as electionData | apiError;
 
 	if(!profileData.success) throw new Error("profile data was invalid");
 	if(!itemsData.success) throw new Error("items data was invalid");
 	if(!statusData.success) console.warn("statusData was unsuccessful"); //its not critical. you just wont know the extra stats given from location buffs (like the extra stuff on rampart armor)
+	if(!electionData.success) console.warn("electionData was unsuccessful"); //its not critical. you just wont know the extra stats given from mayor perks
 
 	var apiData: apiData = { profileData, itemsData };
 
 	if(statusData.success) apiData.statusData = statusData;
+	if(electionData.success) apiData.electionData = electionData;
 	
 	var selectedProfile = getMostRecentProfile(apiData.profileData.profiles, playerUUID);
+
 
 	initItems(apiData);
 	initFullSets();
@@ -204,4 +230,5 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 /*
 tags
 per stats
+fix capped stats with no base not showing anything in popup
 */
