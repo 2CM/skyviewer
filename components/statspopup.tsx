@@ -1,19 +1,23 @@
 import React from "react";
 import { useEffect } from "react"
-import { categorizedFlippedStats, formattedStringToElement, keys, statFormatter, statType, formatStat, categorizedCompressedStats, values} from "../lib";
+import { categorizedFlippedStats, formattedStringToElement, keys, statFormatter, statType, formatStat, categorizedCompressedStats, values, statTags} from "../lib";
 import { statName, statColors, statChars, statIdToStatName, colorCodeToHex, baseStatName, colorChar } from "../sbconstants";
 import styles from "../styles/stat.module.css";
 import Indent from "./indent";
 
 type line = {key: string, value: number, depth: number};
+function isLine(val: any): val is line {return val.key !== undefined && val.value !== undefined}
 
-let lines: (line | "break")[] = [];
+type tag = {value: string, depth: number}
+function isTag(val: any): val is line {return val.value !== undefined}
+
+let lines: (line | "break" | tag)[] = [];
 
 function checkPushBreak() {
     if(lines[lines.length-1] != "break") lines.push("break");
 }
 
-function recur(obj: any, path: string[]): number {
+function recur(obj: any, path: string[], tags: statTags): number {
     let groupSum = 0;
 
     for(let i in keys(obj)) {
@@ -27,13 +31,12 @@ function recur(obj: any, path: string[]): number {
         
         let lineIndex = lines.length - 1;
         
-        
         let contribution = 0;
 
         if(typeof value === "object") {
             //its another group
 
-            contribution = recur(value, extendedPath);
+            contribution = recur(value, extendedPath, tags);
         } else if(typeof value == "number") {
             //its the end
 
@@ -48,12 +51,28 @@ function recur(obj: any, path: string[]): number {
         if(path.length == 0) checkPushBreak();
     }
 
+    loop1: for(let i in tags) {
+        let tag = tags[i];
+
+        if(path.length == tags[i].path.length) {
+            for(let j in tag.path) {
+                if(!path[j].includes(tag.path[j])) continue loop1
+            }
+
+            console.log(path, tags[i])
+
+            checkPushBreak();
+
+            lines.push({depth: path.length, value: tags[i].value});
+        }
+    }
+
     checkPushBreak();
 
     return groupSum;
 }
 
-function statDataToElement(statData: categorizedFlippedStats, statName: baseStatName, compressedStatData: categorizedCompressedStats) {
+function statDataToElement(statData: categorizedFlippedStats, statName: baseStatName, compressedStatData: categorizedCompressedStats, tags: statTags) {
     let elements: JSX.Element[] = [];
 
     let statTypeElements: {
@@ -77,44 +96,50 @@ function statDataToElement(statData: categorizedFlippedStats, statName: baseStat
         lines = [];
 
         //sets lines
-        recur(statTypeData[statName], []);
+        recur(statTypeData[statName], [], tags);
 
 
         for(let j in lines) {
-            if(lines[j] === "break") {
+            let line = lines[j]
+
+            if(line === "break") {
                 statTypeElements[statType].push(<br/>);
 
                 continue;
             }
 
-            //i hate it too but typescript still thought it was a line | "break"
-            let sourceName = (lines[j] as line).key;
-            let sourceValue = (lines[j] as line).value;
-            let depth = (lines[j] as line).depth;
-
+            let lineContent = 
+                isLine(line) ?
+                    <>{formattedStringToElement(`${line.key}: `)}{formatStat(line.value, statType)}</> :
+                isTag(line) ?
+                    <>{formattedStringToElement(line.value)}</> :
+                ""
             
             statTypeElements[statType].push(
-                <div style={{marginLeft: `${depth*36}px`}}>
-                    {formattedStringToElement(`${sourceName}: `)}{formatStat(sourceValue, statType)}
+                <div style={{marginLeft: `${line.depth*36}px`}}>
+                    {lineContent}
                 </div>
             );
         }
     }
 
     //statTypeElements but only the ones that arent empty
-    let onlySetStatTypes = values(statTypeElements).filter(type => type.length > 0)
+    let onlyValuedStatTypes = values(statTypeElements).filter(type => type.length > 0)
 
-    //just give the flat ones if theres only flat
-    if(onlySetStatTypes.length == 1 && statTypeElements.flat !== undefined) {
-        console.log("fef")
-    
-        return statTypeElements.flat;
-    }
+    console.log(statTypeElements)
 
-    //if there arent any, give this
-    if(onlySetStatTypes.length == 0) {
+    if(onlyValuedStatTypes.length == 0) {
         return <h2 style={{ textAlign: "center", fontSize: "20px" }}>{`This player has no ${statIdToStatName[statName] || "error"} :(`}</h2>;
     }
+
+    //just give the flat ones if theres only flat
+    // if(statTypeElements.flat !== undefined && onlyValuedStatTypes.length == 1) {
+    //     console.log("fef")
+    
+    //     return statTypeElements.flat;
+    // }
+
+    //if there arent any, give this
 
     for(let i in keys(statTypeElements)) {
         let statType = keys(statTypeElements)[i];
@@ -141,12 +166,14 @@ function statDataToElement(statData: categorizedFlippedStats, statName: baseStat
                 {/* label */}
                 <span style={{color: colorCodeToHex[statColors[statName] || "f"], fontWeight: "bold"}}>{statType.capitalize()}: </span>
                 {formatStat(typeSum, statType)}
+
                 <br/>
 
                 {/* the actual stats */}
                 <Indent width={36}>
                     {statTypeElements[statType]}
                 </Indent>
+                
                 <br/>
             </>
         );
@@ -161,11 +188,12 @@ interface props {
     visible: boolean,
     statData: categorizedFlippedStats,
     compressedStatData: categorizedCompressedStats,
+    tags: statTags
     statName: baseStatName,
     evaluated: number,
 }
 
-export default function StatsPopUp({onClose, visible, statData, compressedStatData, statName, evaluated}: props) {
+export default function StatsPopUp({onClose, visible, statData, compressedStatData, tags, statName, evaluated}: props) {
     var close = () => onClose();
 
     // console.log(statData)
@@ -201,7 +229,7 @@ export default function StatsPopUp({onClose, visible, statData, compressedStatDa
                                 </div>
                                 <main className={styles.popupContent}>
                                     <br/>
-                                    <Indent width={36}>{statDataToElement(statData, statName, compressedStatData)}</Indent>
+                                    <Indent width={36}>{statDataToElement(statData, statName, compressedStatData, tags)}</Indent>
                                 </main>
                                 <div className={styles.popupFooter}>
                                     <a

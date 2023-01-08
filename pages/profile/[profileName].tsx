@@ -132,6 +132,7 @@ export default function profileViewer(props: serverData) {
 						evaluatedList={evaluatedList}
 						categorizedCompressedStats={props.computedData.stats.categorizedCompressedStats}
 						categorizedFlippedStats={props.computedData.stats.categorizedFlippedStats}
+						tags={props.computedData.stats.tags}
 					/>
 				</main>
 			</main>
@@ -226,9 +227,3 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
 	return returnValue;
 }
-
-/*
-tags
-per stats
-fix capped stats with no base not showing anything in popup
-*/

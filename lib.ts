@@ -197,6 +197,11 @@ export async function getItemRarity(item: nbtItem, baseItem?: item): Promise<num
 
 // *** MISC ***
 
+//gives you a minecraft color code of a color
+export function color(code: colorCode): `${typeof colorChar}${colorCode}` {
+    return `${colorChar}${code}`;
+}
+
 //calculates pet level from a pet
 export function petToLevel(pet: pet): number {
     var exp = pet.exp;
@@ -905,13 +910,13 @@ export function flipStatsRecur(obj: statsSources | statsList, path: string[], ca
 
         // console.log({path, key, value, tags: calcTemp[calcId].stats.tags});
         
-        if(key == "TAG") {
-            calcTemp[calcId].stats.tags.push({path, value});
+        // if(key == "TAG") {
+        //     calcTemp[calcId].stats.tags.push({path, value});
 
-            console.log("found tag")
+        //     console.log("found tag")
 
-            return;
-        }
+        //     return;
+        // }
 
         let newPath: string[] = [...path, key];
         
@@ -1017,8 +1022,8 @@ export type calculateItemStatsOther = {
     farmingSkill?: number, //for lantern helmet
 }
 
-export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, other?: calculateItemStatsOther, isFullSet?: boolean): Promise<statsCategory> {
-    var stats: statsCategory = {};
+export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, other?: calculateItemStatsOther, isFullSet?: boolean): Promise<statsSources> {
+    var stats: statsSources = {};
 
     //theres a lot of multiplier exceptions
     function multiplyGivenStats(amount: number) {
@@ -1031,6 +1036,8 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     // console.log(JSON.stringify(item));
     // console.log(JSON.stringify(baseItem));
+
+    var formattedItemName = `${item.tag.ExtraAttributes.rarity_upgrades == 1 ? "RECOMB" : ""}${item.tag.display.Name}`;
 
     var foramattedNames: {
         [key in string]: string
@@ -1061,7 +1068,7 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
     var reforge: reforgeName | undefined = item.tag.ExtraAttributes.modifier;
 
     if (reforge !== undefined && reforge !== "none" && baseItem.category !== "ACCESSORY") {
-        foramattedNames.reforge = `${colorChar}${"5"}${reforge.capitalize()}`;
+        foramattedNames.reforge = `${color("5")}${reforge.capitalize()}`;
 
         if (reforgeStats[reforge] !== undefined) {
             stats.reforge = reforgeStats[reforge](
@@ -1126,7 +1133,7 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
             }
 
             foramattedNames[enchantName] =
-                `${colorChar}${statColors[keys(recievedEnchantStats)[0]] || "f"}${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`;
+                `${color(statColors[keys(recievedEnchantStats)[0]] || "f")}${enchantName.replaceAll("_", " ").capitalize()} ${enchantLevel}`;
 
             stats[enchantName] = recievedEnchantStats;
         } else {
@@ -1146,7 +1153,7 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
             let recievedAttributeStats = (attributeStats[attributeName] || UNDEFINEDFUNC)(attributeLevel) || {};
 
             foramattedNames[attributeName] = 
-                `${colorChar}${statColors[keys(recievedAttributeStats)[0]] || "f"}${attributeName.replaceAll("_", " ").capitalize()} ${attributeLevel}`;
+                `${color(statColors[keys(recievedAttributeStats)[0]] || "f")}${attributeName.replaceAll("_", " ").capitalize()} ${attributeLevel}`;
 
             stats[attributeName] = recievedAttributeStats;
         } else {
@@ -1244,6 +1251,9 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
             var statName = keys(stats.baseStats)[i];
             var statValue = stats.baseStats[statName] || 0;
 
+            //it wont be but typescript will be mad without it
+            if(typeof statValue === "object") continue;
+
             stats.starStats[statName] = statValue * 0.1 * (starCount / 5);
         }
     }
@@ -1281,13 +1291,13 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         contents = contents.filter(val => isNbtItem(val)) as nbtItem[]; //filter out {}
         
         if(!stats.baseStats) stats.baseStats = {};
-        stats[`${colorChar}${"c"}New Year Cake Bag Bonus`] = {health: contents.length}
+        stats[`${color("c")}New Year Cake Bag Bonus`] = {health: contents.length}
     } else
 
     if(item.tag.ExtraAttributes.id == "PULSE_RING") {
         if(!stats.baseStats) stats.baseStats = {};
 
-        stats[`${colorChar}${"b"}Pulse Ring Bonus`] = {magic_find: 
+        stats[`${color("b")}Pulse Ring Bonus`] = {magic_find: 
             0.25*( //get extra pulse ring rarity by subtracting all rarity that isnt from thunder
                 rarity -
                 tierStringToNumber(baseItem.tier || "COMMON") -
@@ -1302,20 +1312,20 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
     if(item.tag.ExtraAttributes.id == "BLOOD_GOD_CREST") {
         if(!stats.baseStats) stats.baseStats = {};
         
-        stats[`${colorChar}${"c"}Blood God Crest Bonus`] = {strength: Math.floor(Math.log10(item.tag.ExtraAttributes.blood_god_kills || 0)+1)}; //digits
+        stats[`${color("c")}Blood God Crest Bonus`] = {strength: Math.floor(Math.log10(item.tag.ExtraAttributes.blood_god_kills || 0)+1)}; //digits
     } else
 
     if(item.tag.ExtraAttributes.id.startsWith("SYNTHESIZER_V")) {
         let synthTier = +(item.tag.ExtraAttributes.id.at(-1) || "1")-1;
 
-        if(synthTier >= 0) stats[`${colorChar}${"c"}X`] = {health: (item.tag.ExtraAttributes.EXE || 0)};
-        if(synthTier >= 1) stats[`${colorChar}${"a"}Y`] = {defense: (item.tag.ExtraAttributes.WAI || 0)};
-        if(synthTier >= 2) stats[`${colorChar}${"b"}Z`] = {intelligence: (item.tag.ExtraAttributes.ZEE || 0)};
+        if(synthTier >= 0) stats[`${color("c")}X`] = {health: (item.tag.ExtraAttributes.EXE || 0)};
+        if(synthTier >= 1) stats[`${color("a")}Y`] = {defense: (item.tag.ExtraAttributes.WAI || 0)};
+        if(synthTier >= 2) stats[`${color("b")}Z`] = {intelligence: (item.tag.ExtraAttributes.ZEE || 0)};
     } else
 
     if(item.tag.ExtraAttributes.id.startsWith("RAMPART")) {
         if(calcTemp[calcId].status == "crimson_isle") {
-            stats[`${colorChar}${"c"}Crimson Isle Buff`] = {
+            stats[`${color("c")}Crimson Isle Buff`] = {
                 health: 50,
                 strength: 20,
                 critical_damage: 15,
@@ -1329,6 +1339,8 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
             //multiply all stat sources by 2
             multiplyGivenStats(2);
+
+            calcTemp[calcId].stats.tags.push({path: [`Wearables`, item.tag.display.Name], value: `${color("7")}This piece's stats are currently doubled, as this profile is currently in the end.`})
         }
     } else
 
@@ -1337,48 +1349,50 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
             //same stuff with end armor but 3x
 
             multiplyGivenStats(3);
+
+            calcTemp[calcId].stats.tags.push({path: [`Wearables`, formattedItemName], value: `${color("7")}This piece's stats are currently tripled, as this profile is currently in the end.`})
         }
     } else
 
     if(item.tag.ExtraAttributes.id == "OBSIDIAN_CHESTPLATE") {
-        stats[`${colorChar}${"5"}Obsidian Chestplate Bonus`] = {walk_speed: Math.round((other?.invObsidian || 0)/20)};
+        stats[`${color("5")}Obsidian Chestplate Bonus`] = {walk_speed: Math.round((other?.invObsidian || 0)/20)};
     } else
 
     if(item.tag.ExtraAttributes.id == "KRAMPUS_HELMET") {
         let krampusHealth = Math.min(Math.floor((other?.gifts || 0)/50), 500);
 
-        stats[`${colorChar}${"c"}Krampus Helmet Gifts (${other?.gifts || 0})`] = {health: krampusHealth};
+        stats[`${color("c")}Krampus Helmet Gifts (${other?.gifts || 0})`] = {health: krampusHealth};
     } else 
 
     if(item.tag.ExtraAttributes.id == "ENCHANTED_JACK_O_LANTERN") {
-        stats[`${colorChar}${"a"}Lantern Helmet Bonus`] = {health: Math.floor(other?.farmingSkill || 0)*4, defense: Math.floor(other?.farmingSkill || 0)*2};
+        stats[`${color("a")}Lantern Helmet Bonus`] = {health: Math.floor(other?.farmingSkill || 0)*4, defense: Math.floor(other?.farmingSkill || 0)*2};
     } else
     
     if(["ZOMBIE_HEART", "CRYSTALLIZED_HEART", "REVIVED_HEART", "REAPER_MASK"].includes(item.tag.ExtraAttributes.id)) {
-        stats[`${colorChar}${"4"}${baseItem.name} Bonus`] = {a_mending: 1, a_vitality: 1};
+        stats[`${color("4")}${baseItem.name} Bonus`] = {a_mending: 1, a_vitality: 1};
     } else
     
     if(item.tag.ExtraAttributes.id == "VANQUISHED_MAGMA_NECKLACE") {
-        stats[`${colorChar}${"c"}Magma Cube Absorber`] = {health: Math.min(Math.floor((item.tag.ExtraAttributes.magma_cube_absorber || 0)/1000), 10)}
+        stats[`${color("c")}Magma Cube Absorber`] = {health: Math.min(Math.floor((item.tag.ExtraAttributes.magma_cube_absorber || 0)/1000), 10)}
     } else
 
     if(item.tag.ExtraAttributes.id == "VANQUISHED_GHAST_CLOAK") {
-        stats[`${colorChar}${"c"}Ghast Blaster`] = {health: Math.min(Math.floor((item.tag.ExtraAttributes.ghast_blaster || 0)/1000), 10)}
+        stats[`${color("c")}Ghast Blaster`] = {health: Math.min(Math.floor((item.tag.ExtraAttributes.ghast_blaster || 0)/1000), 10)}
     } else
 
     if(item.tag.ExtraAttributes.id == "VANQUISHED_BLAZE_BELT") {
-        stats[`${colorChar}${"c"}Blaze Consumer`] = {strength: Math.min(Math.floor((item.tag.ExtraAttributes.blaze_consumer || 0)/1000), 10)}
+        stats[`${color("c")}Blaze Consumer`] = {strength: Math.min(Math.floor((item.tag.ExtraAttributes.blaze_consumer || 0)/1000), 10)}
     } else
 
     if(item.tag.ExtraAttributes.id == "VANQUISHED_GLOWSTONE_GAUNTLET") {
-        stats[`${colorChar}${"c"}Glowing`] = {health: Math.min(Math.floor((item.tag.ExtraAttributes.glowing || 0)/1000), 10)}
+        stats[`${color("c")}Glowing`] = {health: Math.min(Math.floor((item.tag.ExtraAttributes.glowing || 0)/1000), 10)}
     } else
 
     if(item.tag.ExtraAttributes.id == "SKELETOR_CHESTPLATE") {
         if(isFullSet == true) {
             let skeletorKills = item.tag.ExtraAttributes.skeletorKills || 0;
 
-            stats[`${colorChar}${"7"}Skeletor`] = {
+            stats[`${color("7")}Skeletor`] = {
                 strength: Math.floor(Math.min(skeletorKills,500)/10),
                 critical_damage: Math.floor(Math.min(skeletorKills,500)/10),
             }
@@ -1389,17 +1403,17 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         if(isFullSet == true) {
             let yogsKilled = item.tag.ExtraAttributes.yogsKilled || 0;
 
-            stats[`${colorChar}${"6"}Absorb`] = {
+            stats[`${color("6")}Absorb`] = {
                 mining_speed: Math.min(Math.floor(yogsKilled/10),500),
             }
         }
     } else
 
     if(["FARMER_BOOTS", "RANCHERS_BOOTS"].includes(item.tag.ExtraAttributes.id)) {
-        stats[`${colorChar}${"a"}${baseItem.name.split(" ")[0]} Boots Bonus`] = {defense: Math.floor(other?.farmingSkill || 0)*2, walk_speed: Math.floor(other?.farmingSkill || 0)*4};
+        stats[`${color("a")}${baseItem.name.split(" ")[0]} Boots Bonus`] = {defense: Math.floor(other?.farmingSkill || 0)*2, walk_speed: Math.floor(other?.farmingSkill || 0)*4};
     
         if(item.tag.ExtraAttributes.id == "RANCHERS_BOOTS") {
-            stats[`${colorChar}${"f"}Farmer's Speed`] = {l_walk_speed: (item.tag.ExtraAttributes.ranchers_speed || 400)}
+            stats[`${color("f")}Farmer's Speed`] = {l_walk_speed: (item.tag.ExtraAttributes.ranchers_speed || 400)}
         }
     } else
 
@@ -1430,10 +1444,14 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
             //bat person gives 3x stats during spooky fest
 
             multiplyGivenStats(3);
+
+            calcTemp[calcId].stats.tags.push({path: [`${color("f")}Wearables`, formattedItemName], value: `${color("7")}This piece's stats are currently tripled, as there is a spooky festival.`})
         } else if(calcTemp[calcId].time.other.isNight == true) { //if its night (else if because we dont want 6x stats during spooky fest)
             //it also gives 2x stats during night
             
             multiplyGivenStats(2);
+
+            calcTemp[calcId].stats.tags.push({path: [`${color("f")}Wearables`, formattedItemName], value: `${color("7")}This piece's stats are currently doubled, as it's currently night.`})
         }
     } else
 
@@ -1442,6 +1460,8 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
             //snow suit gives 2x stats on the jerry island
 
             multiplyGivenStats(2);
+
+            calcTemp[calcId].stats.tags.push({path: [`${color("f")}Wearables`, formattedItemName], value: `${color("7")}This piece's stats are currently doubled, as this profile is currently on the jerry island`})
         }
     }
 
@@ -1479,7 +1499,7 @@ export async function calculateSkillStats(data: apiData, selectedProfile: number
         stats[colorChar + skillColors[name] + name.capitalize() + " " + Math.floor(levelInfo.level)] = skillLevelStats[name](Math.floor(levelInfo.level))
     }
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"6"}Skills`] = stats;
+    calcTemp[calcId].stats.stats[`${color("6")}Skills`] = stats;
 }
 
 export const fairySoulStats = {
@@ -1520,19 +1540,19 @@ export async function calculateHotmStats(data: apiData, selectedProfile: number,
 
     if (mining_core.nodes.mining_experience) stats["Seasoned Mineman"] = { mining_wisdom: 5 + 0.1 * mining_core.nodes.mining_experience || 0 }
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"5"}HoTM`] = stats;
+    calcTemp[calcId].stats.stats[`${color("5")}HoTM`] = stats;
 }
 
 //calculates stats given from the wither essence shop
 export async function calculateEssenceStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
     var perks = data.profileData.profiles[selectedProfile].members[playerUUID].perks;
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"7"}Essence Shop`] = {
-        [`${colorChar}${"c"}Forbidden Health`]: { health: (perks.permanent_health || 0) * 2 },
-        [`${colorChar}${"a"}Forbidden Defense`]: { defense: (perks.permanent_defense || 0) * 1 },
-        [`${colorChar}${"f"}Forbidden Speed`]: { walk_speed: (perks.permanent_speed || 0) * 1 },
-        [`${colorChar}${"b"}Forbidden Intelligence`]: { intelligence: (perks.permanent_intelligence || 0) * 2 },
-        [`${colorChar}${"c"}Forbidden Strength`]: { strength: (perks.permanent_strength || 0) * 1 },
+    calcTemp[calcId].stats.stats[`${color("7")}Essence Shop`] = {
+        [`${color("c")}Forbidden Health`]: { health: (perks.permanent_health || 0) * 2 },
+        [`${color("a")}Forbidden Defense`]: { defense: (perks.permanent_defense || 0) * 1 },
+        [`${color("f")}Forbidden Speed`]: { walk_speed: (perks.permanent_speed || 0) * 1 },
+        [`${color("b")}Forbidden Intelligence`]: { intelligence: (perks.permanent_intelligence || 0) * 2 },
+        [`${color("c")}Forbidden Strength`]: { strength: (perks.permanent_strength || 0) * 1 },
     };
 }
 
@@ -1542,7 +1562,7 @@ export async function calculatePepperStats(data: apiData, selectedProfile: numbe
 
     if (peppers == undefined) return;
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"c"}Peppers`] = {health: peppers};
+    calcTemp[calcId].stats.stats[`${color("c")}Peppers`] = {health: peppers};
 }
 
 
@@ -1565,7 +1585,7 @@ export async function calculateHarpStats(data: apiData, selectedProfile: number,
         stats[colorChar+harpColors[name]+name.replaceAll("_", " ").capitalize()] = { intelligence: (perfectCompletions >= 1 ? 1 : 0) * harpStats[name] };
     }
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"d"}Harp`] = stats;
+    calcTemp[calcId].stats.stats[`${color("d")}Harp`] = stats;
 }
 
 
@@ -1606,7 +1626,7 @@ export async function calculateSlayerStats(data: apiData, selectedProfile: numbe
 
     stats[colorChar + "3" + "Global Combat Wisdom Buff"] = { combat_wisdom: combatWisdomBuff };
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"2"}Slayer`] = stats;
+    calcTemp[calcId].stats.stats[`${color("2")}Slayer`] = stats;
 }
 
 export interface accStatsInterface {
@@ -1714,13 +1734,13 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
 
     let finalObj: statsSources = {};
 
-    finalObj[`${colorChar}${"b"}Magic Power (${mp})`] = stats.magicPower;
-    finalObj[`${colorChar}${"9"}Accessory Stats`] = stats.taliStats;
-    finalObj[`${colorChar}${"b"}Accessory Enrichments`] = stats.enrichments;
-    finalObj[`${colorChar}${"e"}Accessory Tuning`] = stats.tuning.tuning;
-    finalObj[`${colorChar}${"d"}Accessory Gems`] = stats.gems;
+    finalObj[`${color("b")}Magic Power (${mp})`] = stats.magicPower;
+    finalObj[`${color("9")}Accessory Stats`] = stats.taliStats;
+    finalObj[`${color("b")}Accessory Enrichments`] = stats.enrichments;
+    finalObj[`${color("e")}Accessory Tuning`] = stats.tuning.tuning;
+    finalObj[`${color("d")}Accessory Gems`] = stats.gems;
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"d"}Accessories`] = finalObj;
+    calcTemp[calcId].stats.stats[`${color("d")}Accessories`] = finalObj;
 }
 
 
@@ -1843,7 +1863,7 @@ export async function calculatePotionStats(data: apiData, selectedProfile: numbe
         stats[`${colorChar+effectColors[effect.effect]+effect.effect.replaceAll("_", " ").capitalize()} ${effect.level}`] = effectStatsList;
     }
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"5"}Potions`] = stats;
+    calcTemp[calcId].stats.stats[`${color("5")}Potions`] = stats;
 }
 
 export interface cakeStatNumberToStat {
@@ -1868,7 +1888,7 @@ export async function calculateCakeStats(data: apiData, selectedProfile: number,
         }
     }
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"d"}Century Cakes`] = stats;
+    calcTemp[calcId].stats.stats[`${color("d")}Century Cakes`] = stats;
 }
 
 //calculates stats given from armor and equipment
@@ -1999,6 +2019,8 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
 
         var category = baseItem.category;
 
+        let formattedItemName = `${piece.tag.ExtraAttributes.rarity_upgrades == 1 ? "RECOMB" : ""}${piece.tag.display.Name}`
+
         //other stuff that shouldnt be calculated in calculateItemStats()
         let other: calculateItemStatsOther = {};
 
@@ -2042,9 +2064,9 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
             fullSetContribution = pieceFullSetName;
         }
 
-        stats[piece.tag.display.Name] = await calculateItemStats(piece, baseItem, calcId, false, other, fullSetContribution !== undefined);
+        stats[formattedItemName] = await calculateItemStats(piece, baseItem, calcId, false, other, fullSetContribution !== undefined);
 
-        finalObj[piece.tag.display.Name] = stats[piece.tag.display.Name];
+        finalObj[formattedItemName] = stats[formattedItemName];
     }
 
     // console.log(verifiedFullSets);
@@ -2131,7 +2153,7 @@ export async function calculateArmorStats(data: apiData, selectedProfile: number
         }
     }
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"f"}Wearables`] = finalObj;
+    calcTemp[calcId].stats.stats[`${color("f")}Wearables`] = finalObj;
 }
 
 //calculates stats given from pet score
@@ -2229,7 +2251,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
     // BABY_YETI, 100, LEGENDARY -> (gray)[Lvl 100] (gold)Baby Yeti
     function formatPet(name: string, tier: petTier, level: number): string {
-        return `${colorChar}7[Lvl ${level}] ${colorChar}${rarityColors[tier]+name.replaceAll("_", " ").capitalize()}`;
+        return `${colorChar}7[Lvl ${level}] ${color(rarityColors[tier])+name.replaceAll("_", " ").capitalize()}`;
     }
 
     //gets the stats of a pet's perks (ammonite is the first thing that came up)
@@ -2244,10 +2266,10 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
             var recievedStats = perks[perkName].stats(level, tier, specialData);
 
-            perkStats[`${colorChar}${rarityColors[perks[perkName].tier]}${perkName}`] = recievedStats; //color is the required rarity of the pet to get the perk
+            perkStats[`${color(rarityColors[perks[perkName].tier])}${perkName}`] = recievedStats; //color is the required rarity of the pet to get the perk
 
             if(perkName == "Chimera") { //(from bingo pet) gives a stat boost on equipped pet so it needs an exception
-                stats[`${colorChar}${rarityColors[perks[perkName].tier]}Bingo Chimera`] = multiplyStatsList(baseStats, recievedStats.s_pet_stat_buff || 0); //color is the bingo pet rarity
+                stats[`${color(rarityColors[perks[perkName].tier])}Bingo Chimera`] = multiplyStatsList(baseStats, recievedStats.s_pet_stat_buff || 0); //color is the bingo pet rarity
             }
         }
 
@@ -2331,7 +2353,7 @@ export async function calculateBestiaryStats(data: apiData, selectedProfile: num
     var milestones = Math.floor(tiersUnlocked/10); //you gain a milestone for every 10 tiers unlocked
     var health = milestones*2; //you gain 2 health per milestone
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"c"}Bestiary Milestone (${milestones})`] = {health: health};
+    calcTemp[calcId].stats.stats[`${color("c")}Bestiary Milestone (${milestones})`] = {health: health};
 }
 
 export async function calculateAbiphoneStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
@@ -2341,7 +2363,7 @@ export async function calculateAbiphoneStats(data: apiData, selectedProfile: num
 
     calcTemp[calcId].other.abiphoneContacts = abiphone.active_contacts?.length || 0; //for calculateAccStats abicase mp buffs
 
-    calcTemp[calcId].stats.stats[`${colorChar}${5}9F™ Operator Chip`] = {health: abiphone.operator_chip?.repaired_index !== undefined ? (abiphone.operator_chip.repaired_index+1)*2 : 0};
+    calcTemp[calcId].stats.stats[`${color("5")}9F™ Operator Chip`] = {health: abiphone.operator_chip?.repaired_index !== undefined ? (abiphone.operator_chip.repaired_index+1)*2 : 0};
 }
 
 export async function calculateMayorStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
@@ -2369,21 +2391,21 @@ export async function calculateMayorStats(data: apiData, selectedProfile: number
     
     //diana
         if(stringifiedPerks.includes("Lucky!")) {
-            mayorPerks[`${colorChar}${statColors.pet_luck}Lucky!`] = {pet_luck: 15};
+            mayorPerks[`${color(statColors.pet_luck || "f")}Lucky!`] = {pet_luck: 15};
         }
 
     //marina
         if(stringifiedPerks.includes("Luck of the Sea 2.0")) {
-            mayorPerks[`${colorChar}${statColors.sea_creature_chance}Luck of the Sea 2.0`] = {sea_creature_chance: 15};
+            mayorPerks[`${color(statColors.sea_creature_chance || "f")}Luck of the Sea 2.0`] = {sea_creature_chance: 15};
         }
 
         if(stringifiedPerks.includes("Fishing XP Buff")) {
             if(isPlayerOnPublicIsland(calcId)) {
-                mayorPerks[`${colorChar}${statColors.fishing_wisdom}Fishing XP Buff`] = {fishing_wisdom: 50};
+                mayorPerks[`${color(statColors.fishing_wisdom || "f")}Fishing XP Buff`] = {fishing_wisdom: 50};
             }
         }
 
-    calcTemp[calcId].stats.stats[`${colorChar}${"b"}Current Mayor (${currentMayor.name})`] = mayorPerks;
+    calcTemp[calcId].stats.stats[`${color("b")}Current Mayor (${currentMayor.name})`] = mayorPerks;
 }
 
 export async function calculateStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
@@ -2420,7 +2442,7 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     await calculateMayorStats(data, selectedProfile, playerUUID, calcId);
 
     //catacombs level stats (not worth creating a function for)
-    calcTemp[calcId].stats.stats[`${colorChar}${"c"}Dungeoneering Level`] = skillLevelStats.dungeoneering(Math.floor(calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0))
+    calcTemp[calcId].stats.stats[`${color("c")}Dungeoneering Level`] = skillLevelStats.dungeoneering(Math.floor(calcTemp[calcId].skills.dungeoneering?.levelInfo.level || 0))
 
     // calcTemp[calcId].stats.stats.testing = {
     //     addi: {

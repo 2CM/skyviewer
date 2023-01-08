@@ -4927,15 +4927,15 @@ export const mayors = {
         perks: [
             {
                 name: "SLASHED Pricing",
-                description: "Starting slayer quests is §ehalf price§r."
+                description: "Starting slayer quests is §ehalf price§7."
             },
             {
                 name: "Slayer Xp Buff",
-                description: "Earn §d25% §rSlayer XP."
+                description: "Earn §d25% §7Slayer XP."
             },
             {
                 name: "Pathfinder",
-                description: "Gain rare drops §d20% §rmore often."
+                description: "Gain rare drops §d20% §7more often."
             },
         ]
     },
@@ -4944,15 +4944,15 @@ export const mayors = {
         perks: [
             {
                 name: "Prospection",
-                description: "Mining minions work §a25% §rfaster."
+                description: "Mining minions work §a25% §7faster."
             },
             {
                 name: "Mining XP Buff",
-                description: "Earn §3+50☯Mining Wisdom §ron public islands."
+                description: "Earn §3+50☯Mining Wisdom §7on public islands."
             },
             {
                 name: "Mining Fiesta",
-                description: "Schedules two Mining Fiesta events during the year. Earn §3+75☯Mining Wisdom §r, §d2X §rdrops, and §eUnique Loot§r! Only active on public islands."
+                description: "Schedules two Mining Fiesta events during the year. Earn §3+75☯Mining Wisdom §7, §d2X §7drops, and §eUnique Loot§7! Only active on public islands."
             }
         ]
     },
@@ -4961,15 +4961,15 @@ export const mayors = {
         perks: [
             {
                 name: "Lucky!",
-                description: "Gain §d+25♣Pet Luck§r."
+                description: "Gain §d+25♣Pet Luck§7."
             },
             {
                 name: "Mythological Ritual",
-                description: "Mayor Diana will sell Griffin pet, which lets you find §2Mythological Creatures §rand tons of §eunique items§r."
+                description: "Mayor Diana will sell Griffin pet, which lets you find §2Mythological Creatures §7and tons of §eunique items§7."
             },
             {
                 name: "Pet XP Buff",
-                description: "Gain §d35% §rmore pet XP."
+                description: "Gain §d35% §7more pet XP."
             }
         ]
     },
@@ -4978,11 +4978,11 @@ export const mayors = {
         perks: [
             {
                 name: "Barrier Street",
-                description: "Gain §625% §rmore bank interest."
+                description: "Gain §625% §7more bank interest."
             },
             {
                 name: "Shopping Spree",
-                description: "Increase daily NPC buy limits by §e10x§r."
+                description: "Increase daily NPC buy limits by §e10x§7."
             },
         ]
     },
@@ -4991,15 +4991,15 @@ export const mayors = {
         perks: [
             {
                 name: "Farming Simulator",
-                description: "There is a §a25% §rchance for §rMathematical Hoes and the §9Cultivating Enchantment §rto count twice."
+                description: "There is a §a25% §7chance for §7Mathematical Hoes and the §9Cultivating Enchantment §7to count twice."
             },
             {
                 name: "Pelt-pocalypse",
-                description: "Obtain §a1.5x §rmore §5pelts §5§rfrom §aTrevor §rin the §eMushroom Desert§r, hunt a new trapper mob, and purchase items from a new trapper shop.",
+                description: "Obtain §a1.5x §7more §5pelts §5§7from §aTrevor §7in the §eMushroom Desert§7, hunt a new trapper mob, and purchase items from a new trapper shop.",
             },
             {
                 name: "GOATed",
-                description: "§eJacob's Farming Contest §rbrackets include §a10% §rmore players each."
+                description: "§eJacob's Farming Contest §7brackets include §a10% §7more players each."
             }
         ]
     },
@@ -5008,17 +5008,17 @@ export const mayors = {
         perks: [
             {
                 name: "Sweet Tooth",
-                description: "Grants §a+20% §rchance to get Candy from mobs during the §6Spooky Festival§r."
+                description: "Grants §a+20% §7chance to get Candy from mobs during the §6Spooky Festival§7."
             },
             {
                 name: "Benevolence",
-                description: "Gain §c2.5x §rgifts from the attack event on Jerry's Workshop."
+                description: "Gain §c2.5x §7gifts from the attack event on Jerry's Workshop."
             },
 
             //i am going to do one for each event once i get enough info
             {
                 name: "Extra Event",
-                description: "Scedules an extra §6(Event Name) §revent during the year."
+                description: "Scedules an extra §6(Event Name) §7event during the year."
             }
         ],
     },
@@ -5027,7 +5027,7 @@ export const mayors = {
         perks: [
             {
                 name: "Fishing XP Buff",
-                description: "Gain §3+50☯Fishing Wisdom §ron public islands."
+                description: "Gain §3+50☯Fishing Wisdom §7on public islands."
             },
             {
                 name: "Luck of the Sea 2.0", //this shit is op
@@ -5035,7 +5035,7 @@ export const mayors = {
             },
             {
                 name: "Fishing Festival",
-                description: "Start a special fishing event the first §b3 §rdays of each month!"
+                description: "Start a special fishing event the first §b3 §7days of each month!"
             }
         ],
     },
@@ -5044,15 +5044,15 @@ export const mayors = {
         perks: [
             {
                 name: "Marauder",
-                description: "Dungeon reward chests are §e20% §rcheaper."
+                description: "Dungeon reward chests are §e20% §7cheaper."
             },
             {
                 name: "EZPZ",
-                description: "Gain §e10§r bonus score on dungeon runs."
+                description: "Gain §e10§7 bonus score on dungeon runs."
             },
             {
                 name: "Benediction",
-                description: "Blessings are §d25% §d§rstronger."
+                description: "Blessings are §d25% §d§7stronger."
             }
         ],
     },
@@ -5075,7 +5075,7 @@ export const mayors = {
             },
             {
                 name: "MOAR SKILLZ!!!",
-                description: "Gain §d+50%§r more skill experience!"
+                description: "Gain §d+50%§7 more skill experience!"
             }
         ],
     },
@@ -5088,7 +5088,7 @@ export const mayors = {
             },
             {
                 name: "Statspocalypse",
-                description: "Increase most stats by §a10%§r."
+                description: "Increase most stats by §a10%§7."
             },
             {
                 name: "Jerrypocalypse",
@@ -5101,7 +5101,7 @@ export const mayors = {
         perks: [
             {
                 name: "Bribe",
-                description: "If Scorpius wins and you voted for him, Mayor Scorpius will offer you §6Coins§r as a token of gratitude."
+                description: "If Scorpius wins and you voted for him, Mayor Scorpius will offer you §6Coins§7 as a token of gratitude."
             },
             {
                 name: "Darker Auctions",

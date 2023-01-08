@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { categorizedCompressedStats, categorizedFlippedStats, keys } from "../lib";
+import { categorizedCompressedStats, categorizedFlippedStats, keys, statTags } from "../lib";
 import StatsPopUp from "./statspopup";
 import Stat from "./stat";
 import styles from "../styles/stat.module.css";
@@ -7,11 +7,12 @@ import { statsList, statName, statIdToStatName, baseStatName } from "../sbconsta
 
 interface props {
     evaluatedList: statsList,
-    categorizedCompressedStats: categorizedCompressedStats
-	categorizedFlippedStats: categorizedFlippedStats
+    categorizedCompressedStats: categorizedCompressedStats,
+	categorizedFlippedStats: categorizedFlippedStats,
+    tags: statTags
 }
 
-export default function Stats({evaluatedList, categorizedCompressedStats, categorizedFlippedStats}: props) {
+export default function Stats({evaluatedList, categorizedCompressedStats, categorizedFlippedStats, tags}: props) {
     var [selectedStat, setSelectedStat] = useState<undefined | baseStatName>(undefined);
 
     var statsArr: JSX.Element[] = keys(statIdToStatName).map(key => {
@@ -32,6 +33,7 @@ export default function Stats({evaluatedList, categorizedCompressedStats, catego
                 compressedStatData={categorizedCompressedStats}
                 visible={selectedStat !== undefined}
                 evaluated={evaluatedList[selectedStat || "health"] || 0}
+                tags={tags}
                 onClose={() => {
                     console.log("closing")
 
