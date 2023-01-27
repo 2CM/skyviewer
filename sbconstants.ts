@@ -1772,15 +1772,19 @@ export type baseStatName =
 
 //additive stats (add then multiply)
 export type additiveStatName = `a_${baseStatName}`;
+export const isAdditiveStatName = (statName: statName): statName is statName => statName.startsWith("a_");
 
 //multiplicative stats (chain multiply)
 export type multiplicativeStatName = `m_${baseStatName}`;
+export const isMultiplicativeStatName = (statName: statName): statName is statName => statName.startsWith("m_");
 
 //cap stats (add then cap)
 export type capStatName = `c_${baseStatName}`;
+export const isCapStatName = (statName: statName): statName is statName => statName.startsWith("c_");
 
 //limit stats (hard limit)
 export type limitStatName = `l_${baseStatName}`;
+export const isLimitStatName = (statName: statName): statName is statName => statName.startsWith("l_");
 
 //special stats
 export type specialStatName = 
@@ -1793,28 +1797,29 @@ export type specialStatName =
 
     "s_aotd_damage" | //dragon pet
     "s_aotd_strength" | //dragon pet
-
+    
     "s_fs_ts_c_buff" | //lion pet
-
+    
     "s_ember_armor_stats" | //magma cube
-
+    
     "s_shark_armor_buff" | //megalodon pet
-
+    
     "s_pigman_sword_damage" | //pigman pet
     "s_pigman_sword_strength" | //pigman pet
-
+    
     "s_ink_wand_damage" | //squid pet
     "s_ink_wand_strength" | //squid pet
-
+    
     "s_undead_armor_defense" | //zombie pet
-
+    
     "s_pet_stat_buff" | //bingo pet
-
+    
     "s_critical_hit_multiplier" | //mastiff
-
+    
     "s_aotd_ability_bonus" | //sup armor
-
-    "s_damage_reduction"
+    
+    "s_damage_reduction";
+export const isSpecialStatName = (statName: statName): statName is statName => statName.startsWith("s_");
 
 //y per x
 export type perStatName = 
@@ -1839,8 +1844,8 @@ export type perStatName =
 
     "p_X_walk_speed_per_50_defense" | //heavy armor
 
-    "p_X_mining_speed_per_15_intelligence" //goblin
-
+    "p_X_mining_speed_per_15_intelligence"; //goblin
+export const isPerStatName = (statName: statName): statName is statName => statName.startsWith("p_");
 
 //damage buff stats (specific mob damage buffs)
 export type damageBuffStatName = 
@@ -1849,6 +1854,7 @@ export type damageBuffStatName =
     "d_lvl_100" | //pigman pet
     "d_wither_mobs" | //wither skeleton
     "d_zombies"; //zombie pet
+export const isDamageBuffStatName = (statName: statName): statName is statName => statName.startsWith("d_");
 
 export type statName = 
     baseStatName |
@@ -3531,8 +3537,8 @@ export const petStats: {
             "Shining Scales": {
                 tier: "LEGENDARY",
                 stats: (level, tier, special) => ({
-                    strength: (Math.ceil(Math.log10(special.goldCollection))*10)*(level < 100 ? 0 : 1),
-                    magic_find: (Math.ceil(Math.log10(special.goldCollection))*2)*(level < 100 ? 0 : 1),
+                    strength: (Math.ceil(Math.log10(special.goldCollection)+1)*10)*(level < 100 ? 0 : 1),
+                    magic_find: (Math.ceil(Math.log10(special.goldCollection)+1)*2)*(level < 100 ? 0 : 1),
                 })
             },
             "Dragon's Greed": {
@@ -3764,7 +3770,7 @@ export const petStats: {
             },
             "Superior": {
                 tier: "LEGENDARY",
-                stats: (level, tier, special) => allStatsBoost(0.1*level)
+                stats: (level, tier, special) => allStatsBoost(0.001*level)
             },
         }
     },
@@ -4461,11 +4467,11 @@ export const petItemStats: {
     "GOLD_CLAWS": {critical_damage: 50, critical_chance: 50},
     "PET_ITEM_HARDENED_SCALES_UNCOMMON": {defense: 25},
     "REINFORCED_SCALES": {defense: 40},
-    "PET_ITEM_TEXTBOOK": {m_intelligence: 1},
+    "PET_ITEM_TEXTBOOK": {a_intelligence: 1},
     "PET_ITEM_LUCKY_CLOVER": {magic_find: 7},
     "PET_ITEM_SPOOKY_CUPCAKE": {strength: 30, walk_speed: 20},
     "CROCHET_TIGER_PLUSHIE": {attack_speed: 35},
-    "ANTIQUE_REMEDIES": {m_strength: 0.8},
+    "ANTIQUE_REMEDIES": {a_strength: 0.8},
     //ill account for minos relic in the function to avoid typing every stat
     "WASHED_UP_SOUVENIR": {sea_creature_chance: 5},
     //same with quick claw because it uses a per level system

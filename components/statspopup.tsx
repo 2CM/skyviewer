@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect } from "react"
-import { categorizedFlippedStats, formattedStringToElement, keys, statFormatter, statType, formatStat, categorizedCompressedStats, values, statTags} from "../lib";
+import { categorizedFlippedStats, formattedStringToElement, keys, statFormatter, statType, formatStat, categorizedCompressedStats, values, statTags, mapObjectValues} from "../lib";
 import { statName, statColors, statChars, statIdToStatName, colorCodeToHex, baseStatName, colorChar } from "../sbconstants";
 import styles from "../styles/stat.module.css";
 import Indent from "./indent";
@@ -84,13 +84,29 @@ function statDataToElement(statData: categorizedFlippedStats, statName: baseStat
         cap: [],
         limit: []
     }
+
+    let existantStats: {
+        [key in statType]: boolean
+    } = {
+        flat: false,
+        additive: false,
+        multiplicative: false,
+        cap: false,
+        limit: false,
+    };
+
     
     //for each type of stat
     for(let i in keys(statData)) {
         let statType: statType = keys(statData)[i];
 
         let statTypeData = statData[statType];
-        if(statTypeData === undefined || statTypeData[statName] === undefined) continue;
+
+        if(statTypeData === undefined || statTypeData[statName] === undefined) { 
+            continue;
+        }
+        
+        existantStats[statType] = true;
 
         //clear lines
         lines = [];
@@ -145,7 +161,8 @@ function statDataToElement(statData: categorizedFlippedStats, statName: baseStat
         let statType = keys(statTypeElements)[i];
 
         //if there arent any values in statData[statType][statName], continue
-        if(keys(statData[statType]?.[statName] || {}).length == 0) continue;
+        if(existantStats[statType] === false) continue;
+        if(statType == "limit") continue;
 
         //all sources of the current type summed (or multiplied) together
         let typeSum =
@@ -153,25 +170,60 @@ function statDataToElement(statData: categorizedFlippedStats, statName: baseStat
             statType == "multiplicative" ?
                 values(compressedStatData[statType]?.[statName] || {}).reduce((prev, curr) => prev*curr, 1) :
             
-            //there shouldnt be a double limit but if there is just go with the first one
-            statType == "limit" ? 
-                values(compressedStatData[statType]?.[statName] || {})[0] :
+            // //there shouldnt be a double limit but if there is just go with the first one
+            // statType == "limit" ? 
+            //     values(compressedStatData[statType]?.[statName] || {})[0] :
 
             //everything else
             values(compressedStatData[statType]?.[statName] || {}).reduce((prev, curr) => prev+curr, 0)
 
+        let overwrittenPath: string[] = [];
+
+        if(existantStats.limit == true) {
+            let current: object | number = statData.limit?.[statName] || 0;
+
+            for(let i = 0; i < 100; i++) {
+                if(typeof current === "number") break;
+
+                overwrittenPath.push(keys(current)[0]);
+
+                current = values(current)[0];
+
+                console.log("s")
+            }
+
+            //determine path of the stat overriding
+
+            //a/yes/c
+        }
 
         elements.push(
             <>
                 {/* label */}
                 <span style={{color: colorCodeToHex[statColors[statName] || "f"], fontWeight: "bold"}}>{statType.capitalize()}: </span>
-                {formatStat(typeSum, statType)}
+                {
+                    formatStat(
+                        (
+                            //if there is a limit and we are doing cap right now
+                            statType == "cap" && existantStats.limit === true ?
+                                values(compressedStatData.limit?.[statName] || {})[0] : //the first limit we can find
+                            typeSum
+                        ),
+                        statType
+                    )
+                }
 
                 <br/>
 
                 {/* the actual stats */}
                 <Indent width={36}>
                     {statTypeElements[statType]}
+                    {
+                        statType == "cap" && existantStats.limit === true ?
+                            <span>Overwritten by: {overwrittenPath.join(" -> ")}</span> :
+                        <></>
+                    }
+                    
                 </Indent>
                 
                 <br/>

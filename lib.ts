@@ -2,7 +2,7 @@ import nbt from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames, ExtraAttributes, enchantName, reforgeName, attributeName, enchants, attributes, skyblockStartDate, irlMinutesPerYear, monthsPerYear, daysPerMonth, hoursPerDay, minutesPerHour, seasons, seasonVariants, baseStatName, statsSources, specificStatSources } from "./sbconstants"; //so many ;-;
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames, ExtraAttributes, enchantName, reforgeName, attributeName, enchants, attributes, skyblockStartDate, irlMinutesPerYear, monthsPerYear, daysPerMonth, hoursPerDay, minutesPerHour, seasons, seasonVariants, baseStatName, statsSources, specificStatSources, additiveStatName, isAdditiveStatName } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
@@ -2205,9 +2205,9 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
     equippedPet = { //for testing
         exp: 5038804, //from deathstreeks
         tier: "LEGENDARY",
-        type: "GRIFFIN",
+        type: "ENDER_DRAGON",
         active: true,
-        heldItem: null,
+        heldItem: "ANTIQUE_REMEDIES",
         candyUsed: 0,
         uuid: "",
         skin: "",
@@ -2247,7 +2247,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
         }
     }
 
-    var baseStats = petInfo.base(petLevel, equippedPet.tier); //base stats of the pet
+    var basePetStats = petInfo.base(petLevel, equippedPet.tier); //base stats of the pet
 
     // BABY_YETI, 100, LEGENDARY -> (gray)[Lvl 100] (gold)Baby Yeti
     function formatPet(name: string, tier: petTier, level: number): string {
@@ -2269,7 +2269,7 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
             perkStats[`${color(rarityColors[perks[perkName].tier])}${perkName}`] = recievedStats; //color is the required rarity of the pet to get the perk
 
             if(perkName == "Chimera") { //(from bingo pet) gives a stat boost on equipped pet so it needs an exception
-                stats[`${color(rarityColors[perks[perkName].tier])}Bingo Chimera`] = multiplyStatsList(baseStats, recievedStats.s_pet_stat_buff || 0); //color is the bingo pet rarity
+                stats[`${color(rarityColors[perks[perkName].tier])}Bingo Chimera`] = multiplyStatsList(basePetStats, recievedStats.s_pet_stat_buff || 0); //color is the bingo pet rarity
             }
         }
 
@@ -2301,35 +2301,34 @@ export async function calculatePetStats(data: apiData, selectedProfile: number, 
 
         stats[petItemName] = {};
 
-        if(equippedPet.heldItem == "MINOS_RELIC") { //i dont want to type m_[statName] in petItemStats
-            stats[petItemName] = multiplyStatsList(baseStats, 1/3);
+        if(equippedPet.heldItem == "MINOS_RELIC") {
+            stats[petItemName] = multiplyStatsList(basePetStats, 1/3);
         } else if(equippedPet.heldItem == "PET_ITEM_QUICK_CLAW") { //changes based on level
             stats[petItemName] = {mining_speed: petLevel, mining_fortune: petLevel};
         } else { //its a normal pet item
             var heldItemStats = petItemStats[equippedPet.heldItem] || {};
 
-            //WORK
+            //loop so we can treat a_ stats correctly.
+            //a_ stats with pet items mean its for the pet and not the player
+            for(let i in keys(heldItemStats)) {
+                let statName: statName = keys(heldItemStats)[i];
 
-            // //loop so we can treat m_ stats correctly
-            // for(let i in keys(heldItemStats)) {
-            //     let name: statName = keys(heldItemStats)[i];
+                if(isAdditiveStatName(statName)) {
+                    let baseStatName: additiveStatName = statName.slice("a_".length) as additiveStatName;
 
-            //     if(name.startsWith("m_")) {
-            //         var realName: statName = name.slice("m_".length) as statName;
-
-            //         stats[petItemName][realName] = (baseStats[realName] || 0) * (heldItemStats[name] || 0);
-            //     } else {
-            //         stats[petItemName][name] = (heldItemStats[name] || 0)
-            //     }
-            // }
+                    stats[petItemName][baseStatName] = (basePetStats[baseStatName] || 0) * (heldItemStats[statName] || 0);
+                } else {
+                    stats[petItemName][statName] = heldItemStats[statName] || 0;
+                }
+            }
         }
     }
 
-    stats.Base = baseStats;
+    stats.Base = basePetStats;
 
     var mergedStats: any = {...backgroundPetStats, [formatPet(equippedPet.type, equippedPet.tier, petLevel)]: stats};
 
-    calcTemp[calcId].stats = {...calcTemp[calcId].stats, ...mergedStats}; //because mergedStats is a statCategories
+    calcTemp[calcId].stats.stats = {...calcTemp[calcId].stats.stats, ...mergedStats};
 }
 
 //calculates stats given from bestiary milestones
@@ -2382,7 +2381,7 @@ export async function calculateMayorStats(data: apiData, selectedProfile: number
     //marinia -> "Fishing Exp Buff" -> +50 fishing exp on public islands
     //marinia -> "Luck Of The Sea 2.0" -> +15 SCC
 
-    //jerry -> "Statspocalypse" -> 10% all stats (NEEDS CONFIRMATION)
+    //jerry -> "Statspocalypse" -> 10% all stats
 
     //jerry -> "Perkpocalypse" -> mayor cycle mechanics
     //foxy -> "Extra Event" -> extra spooky fest
@@ -2405,6 +2404,27 @@ export async function calculateMayorStats(data: apiData, selectedProfile: number
             }
         }
 
+    //jerry
+        if(stringifiedPerks.includes("Statspocalypse")) {
+            mayorPerks[`${color("d")}Statspocalypse`] = {
+                a_health: 0.1,
+                a_defense: 0.1,
+                a_true_defense: 0.1,
+                a_strength: 0.1,
+                a_walk_speed: 0.1,
+                a_critical_chance: 0.1,
+                a_critical_damage: 0.1,
+                a_intelligence: 0.1,
+                a_mining_speed: 0.1,
+                a_sea_creature_chance: 0.1,
+                a_magic_find: 0.1,
+                a_pet_luck: 0.1,
+                a_attack_speed: 0.1,
+                a_ability_damage: 0.1,
+                a_ferocity: 0.1,
+            }
+        }
+
     calcTemp[calcId].stats.stats[`${color("b")}Current Mayor (${currentMayor.name})`] = mayorPerks;
 }
 
@@ -2412,6 +2432,13 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     calcTemp[calcId].stats.stats["Base Value"] = baseStats;
 
     calcTemp[calcId].stats.stats["Base Caps"] = defaultStatCaps;
+
+    //crimson isle gives a fishing speed cap bonus
+    if(calcTemp[calcId].status == "crimson_isle") {
+        calcTemp[calcId].stats.stats["Crimson Isle Fishing Speed Cap Bonus"] = {
+            c_fishing_speed: 50
+        }
+    }
 
     var specialPetData: specialPetData = {
         goldCollection: data.profileData.profiles[selectedProfile].members[playerUUID].collection.GOLD_INGOT || 0,
@@ -2460,6 +2487,32 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
     //     },
     //     limit: {
     //         l_health: 75
+    //     }
+    // }
+
+    // calcTemp[calcId].stats.stats = {
+    //     a: {
+    //         walk_speed: 1000
+    //     },
+    //     baseCaps: defaultStatCaps,
+    //     capp: {
+    //         c_walk_speed: 20
+    //     },
+    //     lim: {
+    //         l_walk_speed: 50
+    //     }
+    // }
+
+    // calcTemp[calcId].stats.stats.a = {
+    //     // l_walk_speed: 1
+    //     base: {
+    //         health: 100,
+    //         defense: 50
+    //     },
+    //     yes: {
+    //         c:  {
+    //             l_walk_speed: 100
+    //         }
     //     }
     // }
 

@@ -28,9 +28,6 @@
     - skycrypt stuff
     - dummy damage tester
 - refactoring
-    - popup
     - hover based tag system?
     - per stats rework
         - oh god
-    - add depth
-        - Base [STAT] cap
