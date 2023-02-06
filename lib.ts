@@ -1,34 +1,13 @@
-import nbt from "prismarine-nbt";
+import nbt, { NBT } from "prismarine-nbt";
 import React from "react";
 import { promisify } from "util";
 import { apiData } from "./pages/profile/[profileName]";
-import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames, ExtraAttributes, enchantName, reforgeName, attributeName, enchants, attributes, skyblockStartDate, irlMinutesPerYear, monthsPerYear, daysPerMonth, hoursPerDay, minutesPerHour, seasons, seasonVariants, baseStatName, statsSources, specificStatSources, additiveStatName, isAdditiveStatName } from "./sbconstants"; //so many ;-;
+import { accPowers, attributeStats, baseProfile, baseStats, cakeStats, colorCode, effectColors, effectName, effectStats, enchantStats, enrichmentStats, gemstone, gemstoneRarities, gemstoneSlots, gemstoneStats, gemstoneTier, harpNames, harpSong, harpStats, item, itemGemstoneSlotType, itemIdReplacements, itemTier, mpTable, nbtItem, petScores, profileMember, rarityColors, reforgeStats, skillCaps, skillColors, skillExtrapolation, skillLeveling, skillLevelStats, skillName, skillNameToApiName, skillType, slayerColors, slayerName, slayerStats, specialGemstoneSlots, statIdToStatName, statName, statsList, tuningValues, contents, itemStats, colorChar, colorCodeToHex, harpColors, pet, petStatInfo, petStats, petLeveling, petRarityOffset, specialPetData, statColors, petItemStats, petItemNames, defaultStatCaps, hotmLeveling, alwaysActivePets, petTier, petName, bestiaryInfo, bestiaryBosses, maxBestiaryLevels, bestiaryMobFamily, bestiaryLeveling, abicaseStats, skyblockLocation, fullSets, fullSetPiece, fullSetName, fullSetNames, ExtraAttributes, enchantName, reforgeName, attributeName, enchants, attributes, skyblockStartDate, irlMinutesPerYear, monthsPerYear, daysPerMonth, hoursPerDay, minutesPerHour, seasons, seasonVariants, baseStatName, statsSources, specificStatSources, additiveStatName, isAdditiveStatName, beastmasterKillMilestones } from "./sbconstants"; //so many ;-;
 import statStyles from "./styles/stat.module.css";
 
 var parseNbt = promisify(nbt.parse); //using it because i found it in the skycrypt github and it works
 
-interface IObjectKeys {
-    //(PROBABLY A TEMP SOLUTION, THIS DOESNT LOOK STABLE. SOME TYPESCRIPT GOD CAN CORRECT ME ON A BETTER WAY TO DO THIS)
-    //this interface is extended from when theres an interface that you need to select a value using object[key] notation. if you dont use it, youll get a ts error
-
-
-    [key: string]: any;
-}
-
-//function that retuns undefined
-//useful for cases where you need to call a function that might not exist
-const UNDEFINEDFUNC = () => {return undefined};
-
-//function that returns all the keys of an object BUT respects object key type
-export function keys<Type extends object>(obj: Type): (keyof Type)[] {
-    return Object.keys(obj) as (keyof Type)[];
-}
-
-export function values<Type extends object>(obj: Type): Type[keyof Type][] {
-    return Object.values(obj) as Type[keyof Type][];
-}
-
-// *** CUSTOM PROTOTYPES ***
+//#region CUSTOM_PROTOTYPES
 // custom prototypes are used for stuff like "this is a string".capitalize() because writing captialize("this is a string") is worse
 declare global {
     interface String {
@@ -56,36 +35,9 @@ Number.prototype.compact = function () {
     return formatter.format(Number(this));
 }
 
-//maps values of an object
-export function mapObjectKeys<Type extends object>(obj: Type, callbackfn: (value: keyof Type, index: number, array: any[]) => string): Type {
-    var newObj: Type | any = {};
+//#endregion CUSTOM_PROTOTYPES
 
-    for (let i = 0; i < keys(obj).length; i++) {
-        var name = keys(obj)[i];
-        var newName = callbackfn(name, i, keys(obj))
-
-        newObj[newName] = obj[name as keyof typeof obj];
-    }
-
-    return newObj
-}
-
-//maps values of an object
-export function mapObjectValues<Type extends object>(obj: Type, callbackfn: (value: Type[keyof Type], index: number, array: any[]) => Type[keyof Type]): Type {
-    var newObj: Type | any = {};
-
-    for (let i = 0; i < keys(obj).length; i++) {
-        var name = keys(obj)[i];
-        var value = obj[name as keyof typeof obj];
-        var newValue = callbackfn(value, i, keys(obj))
-
-        newObj[name] = newValue;
-    }
-
-    return newObj
-}
-
-// *** ITEMS ***
+//#region ITEMS
 
 export var items: item[] = [];
 export var itemsIndex = new Map<string, number>(); //index that takes an item id -> index of items[]
@@ -195,7 +147,51 @@ export async function getItemRarity(item: nbtItem, baseItem?: item): Promise<num
     return baseRarity+recomb+extraRarity;
 }
 
-// *** MISC ***
+//#endregion ITEMS
+
+//#region MISC
+
+//function that retuns undefined
+//useful for cases where you need to call a function that might not exist
+const UNDEFINEDFUNC = () => {return undefined};
+
+//function that returns all the keys of an object BUT respects object key type
+export function keys<Type extends object>(obj: Type): (keyof Type)[] {
+    return Object.keys(obj) as (keyof Type)[];
+}
+
+export function values<Type extends object>(obj: Type): Type[keyof Type][] {
+    return Object.values(obj) as Type[keyof Type][];
+}
+
+//maps values of an object
+export function mapObjectKeys<Type extends object>(obj: Type, callbackfn: (value: keyof Type, index: number, array: any[]) => string): Type {
+    var newObj: Type | any = {};
+
+    for (let i = 0; i < keys(obj).length; i++) {
+        var name = keys(obj)[i];
+        var newName = callbackfn(name, i, keys(obj))
+
+        newObj[newName] = obj[name as keyof typeof obj];
+    }
+
+    return newObj
+}
+
+//maps values of an object
+export function mapObjectValues<Type extends object>(obj: Type, callbackfn: (value: Type[keyof Type], index: number, array: any[]) => Type[keyof Type]): Type {
+    var newObj: Type | any = {};
+
+    for (let i = 0; i < keys(obj).length; i++) {
+        var name = keys(obj)[i];
+        var value = obj[name as keyof typeof obj];
+        var newValue = callbackfn(value, i, keys(obj))
+
+        newObj[name] = newValue;
+    }
+
+    return newObj
+}
 
 //gives you a minecraft color code of a color
 export function color(code: colorCode): `${typeof colorChar}${colorCode}` {
@@ -472,7 +468,19 @@ export function isPlayerOnPublicIsland(calcId: string): boolean {
     return !([undefined, "dynamic", "dungeon", "instanced"].includes(calcTemp[calcId].status))
 }
 
-// *** PROFILES ***
+export function calculateBeastmasterTier(kills: number): number {
+    for(let i = 0; i < beastmasterKillMilestones.length; i++) {
+        if(kills < beastmasterKillMilestones[i]) {
+            return i;
+        }
+    }
+
+    return 9;
+}
+
+//#endregion MISC
+
+//#region PROFILES
 
 //gets the most recently played profile of player
 export function getMostRecentProfile(profiles: baseProfile[], playerUUID: string): number {
@@ -483,8 +491,9 @@ export function getMostRecentProfile(profiles: baseProfile[], playerUUID: string
     return -1;
 }
 
+//#endregion PROFILES
 
-// *** SKILLS ***
+//#region SKILLS
 
 //info that is returned when converting from skillExp
 export interface skillExpInfo {
@@ -608,7 +617,9 @@ export function calculateAllSkillExp(apiData: apiData, selectedProfile: number, 
     return skills;
 }
 
-// *** STATS ***
+//#endregion SKILLS
+
+//#region STATS
 
 export const statTypes = [
     "flat",
@@ -778,7 +789,7 @@ export var calcTemp: {
             abiphoneContacts?: number,
             fullSets?: fullSetName[],
             griffinStrengthLevel?: number,
-            griffinRegenLevel?: number,
+            griffinRegenLevel?: number
         }
     }        
 } = {};
@@ -1020,6 +1031,7 @@ export type calculateItemStatsOther = {
     invObsidian?: number, //for obby chestplate
     gifts?: number, //for krampus helm
     farmingSkill?: number, //for lantern helmet
+    mythos_kills?: number, //for beastmaster crest
 }
 
 export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: string, compact: boolean = false, other?: calculateItemStatsOther, isFullSet?: boolean): Promise<statsSources> {
@@ -1039,9 +1051,7 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
 
     var formattedItemName = `${item.tag.ExtraAttributes.rarity_upgrades == 1 ? "RECOMB" : ""}${item.tag.display.Name}`;
 
-    var foramattedNames: {
-        [key in string]: string
-    } = {};
+    var foramattedNames: Record<string, string> = {};
 
     var rarity = await getItemRarity(item, baseItem);
 
@@ -1291,28 +1301,36 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
         contents = contents.filter(val => isNbtItem(val)) as nbtItem[]; //filter out {}
         
         if(!stats.baseStats) stats.baseStats = {};
-        stats[`${color("c")}New Year Cake Bag Bonus`] = {health: contents.length}
+        stats.abilities = {
+            health: contents.length
+        }
     } else
 
     if(item.tag.ExtraAttributes.id == "PULSE_RING") {
         if(!stats.baseStats) stats.baseStats = {};
 
-        stats[`${color("b")}Pulse Ring Bonus`] = {magic_find: 
-            0.25*( //get extra pulse ring rarity by subtracting all rarity that isnt from thunder
-                rarity -
-                tierStringToNumber(baseItem.tier || "COMMON") -
-                (item.tag.ExtraAttributes.rarity_upgrades || 0)
-            )+0.25 //it starts at 0.25
+        stats.abilities = {
+            magic_find: 
+                0.25*( //get extra pulse ring rarity by subtracting all rarity that isnt from thunder
+                    rarity -
+                    tierStringToNumber(baseItem.tier || "COMMON") -
+                    (item.tag.ExtraAttributes.rarity_upgrades || 0)
+                )+0.25 //it starts at 0.25
 
-            //guys its mx+b
-            //ALGEBRA REFERENCE??!?!???
+                //guys its mx+b
+                //ALGEBRA REFERENCE??!?!???
         }
     } else
 
     if(item.tag.ExtraAttributes.id == "BLOOD_GOD_CREST") {
         if(!stats.baseStats) stats.baseStats = {};
         
-        stats[`${color("c")}Blood God Crest Bonus`] = {strength: Math.floor(Math.log10(item.tag.ExtraAttributes.blood_god_kills || 0)+1)}; //digits
+
+        stats.abilities = {
+            [`${color("c")}Blood God Crest Bonus (${item.tag.ExtraAttributes.blood_god_kills || 0})`]: {
+                strength: Math.floor(Math.log10(item.tag.ExtraAttributes.blood_god_kills || 0)+1)
+            }
+        };
     } else
 
     if(item.tag.ExtraAttributes.id.startsWith("SYNTHESIZER_V")) {
@@ -1418,18 +1436,18 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
     } else
 
     if(item.tag.ExtraAttributes.id == "LAVA_SHELL_NECKLACE") {
-        stats["lava shell necklace"] = {l_mending: 0, l_vitality: 0}
+        stats["Lava Shell Necklace Ability"] = {l_mending: 0, l_vitality: 0}
     } else
 
     if(item.tag.ExtraAttributes.id == "NIGHT_CRYSTAL") {
         if(calcTemp[calcId].time.other.isNight == true) {
-            stats.baseStats = {defense: 5, strength: 5}
+            stats.abilities = {defense: 5, strength: 5}
         }
     } else
     
     if(item.tag.ExtraAttributes.id == "DAY_CRYSTAL") {
         if(calcTemp[calcId].time.other.isNight == false) {
-            stats.baseStats = {defense: 5, strength: 5}
+            stats.abilities = {defense: 5, strength: 5}
         }
     } else
 
@@ -1462,6 +1480,27 @@ export async function calculateItemStats(item: nbtItem, baseItem: item, calcId: 
             multiplyGivenStats(2);
 
             calcTemp[calcId].stats.tags.push({path: [`${color("f")}Wearables`, formattedItemName], value: `${color("7")}This piece's stats are currently doubled, as this profile is currently on the jerry island`})
+        }
+    } else
+
+    if(item.tag.ExtraAttributes.id.startsWith("BEASTMASTER_CREST")) {
+        let tier = calculateBeastmasterTier(other?.mythos_kills || 0);
+        let asRange = (tier+1)/10;
+
+        console.log({tier, asRange})
+
+        stats.abilities = {
+            [`${color("2")}Mythological Kills Bonus (${other?.mythos_kills || 0})`]: {
+                intelligence:
+                    (baseItem.tier == "UNCOMMON")  ? asRange * 1 :
+                    (baseItem.tier == "RARE")      ? asRange * 2 :
+                    (baseItem.tier == "EPIC")      ? asRange * 2 :
+                    (baseItem.tier == "LEGENDARY") ? asRange * 3 : 0,
+
+                health:
+                    (baseItem.tier == "EPIC")      ? asRange * 2 :
+                    (baseItem.tier == "LEGENDARY") ? asRange * 3 : 0,
+            }
         }
     }
 
@@ -1630,74 +1669,93 @@ export async function calculateSlayerStats(data: apiData, selectedProfile: numbe
 }
 
 export interface accStatsInterface {
-    taliStats: statsCategory,
-    enrichments: statsCategory,
     magicPower: statsList,
-    tuning: statsCategory,
-    gems: statsCategory,
+    taliStats: statsSources,
+    enrichments: statsSources,
+    tuning: statsList,
+    gems: statsSources,
+    abilities: statsSources,
 }
 
 //calculates stats given from accessories
 export async function calculateAccStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
+    var accessory_bag_storage = data.profileData.profiles[selectedProfile].members[playerUUID].accessory_bag_storage;
     var talisman_bag_raw = data.profileData.profiles[selectedProfile].members[playerUUID].talisman_bag;
     var inv_raw = data.profileData.profiles[selectedProfile].members[playerUUID].inv_contents
-    var accessory_bag_storage = data.profileData.profiles[selectedProfile].members[playerUUID].accessory_bag_storage;
-
-    if (!talisman_bag_raw) return;
 
     var stats: accStatsInterface = {
+        magicPower: {},
         taliStats: {},
         enrichments: {},
-        magicPower: {},
         tuning: {},
         gems: {},
+        abilities: {},
     };
 
-    var taliBag = await parseContents(talisman_bag_raw) as IObjectKeys;
-    if (taliBag.i === undefined) return;
+    var taliBagContents: nbtItem[] = [];
+    var invContents: nbtItem[] = [];
 
-    var taliContents: nbtItem[] = taliBag.i;
-    taliContents = taliContents.filter(value => keys(value).length);
+    //talisman bag accessories
+    if(talisman_bag_raw !== undefined) {
+        let parsed = await parseContents(talisman_bag_raw) as any;
 
+        if(parsed.i === undefined) return;
+        taliBagContents = parsed.i.filter((value: any) => keys(value).length > 0);
+    }
+    
+    //inventory accessories
+    if(inv_raw !== undefined) {
+        let parsed = await parseContents(inv_raw) as any;
+
+        if(parsed.i === undefined) return;
+        invContents = parsed.i.filter((value: any) => keys(value).length > 0);
+    }
+
+    //all acessories
+    var accs: nbtItem[] = [...taliBagContents, ...invContents];
+    
+    
     var mp = 0;
     var abicaseFound = false;
 
-    for (let i = 0; i < taliContents.length; i++) {
-        var tali: nbtItem = taliContents[i];
-        var itemAttributes = tali.tag.ExtraAttributes;
-        var itemId = itemAttributes.id;
+    //iterate through all accessories
+    for (let i = 0; i < accs.length; i++) {
+        let tali: nbtItem = accs[i];
+        let itemAttributes = tali.tag.ExtraAttributes;
+        let itemId = itemAttributes.id;
 
-        var itemInfo = await itemIdToItem(itemId);
+        
+        let itemInfo = await itemIdToItem(itemId);  //info about the base item
+
         if (itemInfo === undefined) {
             console.warn(`cant find item ${itemId}`);
+
             continue;
         }
 
-        // console.log({[itemAttributes.id]: keys(itemAttributes).map(key => {
-        //     return !["timestamp", "rarity_upgrades", "id", "uuid", "originTag", "modifier", "talisman_enrichment"].includes(key) ? 
-        //     key+": "+(typeof itemAttributes[key] == "object" ? JSON.stringify(itemAttributes[key]) : itemAttributes[key]) : "";
-        // }).filter(val => val != "")})
 
-        if (itemInfo.category !== "ACCESSORY") continue;
+        if(itemInfo.category !== "ACCESSORY") continue;
 
-        var rarityUpgrades: number = itemAttributes.rarity_upgrades || 0;
-        var rarity: number = await getItemRarity(tali, itemInfo);
+        //get the name to present to the user
+            let rarity: number = await getItemRarity(tali, itemInfo);
+            let rarityUpgrades: number = itemAttributes.rarity_upgrades || 0;
 
-        var formattedName = (rarityUpgrades === undefined ? "" : rarityUpgrades == 1 ? "RECOMB" : "") + colorChar + Object.values(rarityColors)[rarity] + removeStringColors(itemInfo.name);
+            let formattedName = (rarityUpgrades === undefined ? "" : rarityUpgrades == 1 ? "RECOMB" : "") + color(values(rarityColors)[rarity]) + removeStringColors(itemInfo.name);
 
-        var itemStats = await calculateItemStats(tali, itemInfo, calcId, true);
+        
+        let mythos_kills = data.profileData.profiles[selectedProfile].members[playerUUID].stats.mythos_kills || 0; //for beastmaster crest
 
-        if(keys(itemStats.baseStats || {}).length > 0) stats.taliStats[formattedName] = itemStats.baseStats || {};
-        if(keys(itemStats.enrichments || {}).length > 0) stats.enrichments[formattedName] = itemStats.enrichments || {};
-        if(keys(itemStats.gemstones || {}).length > 0) stats.gems[formattedName] = itemStats.gemstones || {};
+        //stats
+            let itemStats = await calculateItemStats(tali, itemInfo, calcId, true, { mythos_kills });
 
-        let mpGiven = mpTable[keys(mpTable)[rarity]];
+            stats.taliStats[formattedName] = itemStats.baseStats || {};
+            stats.enrichments[formattedName] = itemStats.enrichments || {};
+            stats.gems[formattedName] = itemStats.gemstones || {};
+            stats.abilities[formattedName] = itemStats.abilities || {};
 
-        if(itemInfo.id == "HEGEMONY_ARTIFACT") mpGiven *= 2; //it gives double mp
 
-        mp += mpGiven;
-
-        if(itemId == "ABICASE" && abicaseFound == false && itemAttributes.model) {
+        //abicases give mp for each contact
+        if(itemId == "ABICASE" && abicaseFound == false && itemAttributes.model !== undefined) {
             mp += Math.floor((calcTemp[calcId].other.abiphoneContacts || 0)/2);
 
             stats.taliStats[formattedName] = mergeStatsLists(stats.taliStats[formattedName], abicaseStats[itemAttributes.model] || {})
@@ -1706,44 +1764,72 @@ export async function calculateAccStats(data: apiData, selectedProfile: number, 
         }
     }
 
-    var selectedPower = accessory_bag_storage.selected_power
+    //handle magic power; doing this in a seperate loop because you only get mp in the accessory bag
+    for(let i = 0; i < taliBagContents.length; i++) {
+        let tali = taliBagContents[i];
+        let itemAttributes = tali.tag.ExtraAttributes;
+        let itemId = itemAttributes.id;
 
-    if (accessory_bag_storage.selected_power === undefined) console.warn("no selected power");
+        let itemInfo = await itemIdToItem(itemId); //info about the base item
 
-    if (keys(accPowers).findIndex(key => {return key == accessory_bag_storage.selected_power}) == -1) {
-        console.warn("couldnt find selected power", accessory_bag_storage.selected_power);
+        if(itemInfo === undefined) {
+            console.warn(`cant find item ${itemId}`);
 
-        selectedPower = undefined;
-    }
-
-    var statsMultiplier = 29.97 * Math.pow((Math.log(0.0019 * mp + 1)), 1.2); //i am maths enjoyer :)))
-
-    if(selectedPower) {
-        var selectedPowerStats = accPowers[selectedPower];
-
-        stats.magicPower = multiplyStatsList(selectedPowerStats.per, statsMultiplier);
-
-        if (selectedPowerStats.extra) {
-            stats.magicPower = mergeStatsLists(stats.magicPower, selectedPowerStats.extra || {});
+            continue;
         }
+
+        if(itemInfo.category !== "ACCESSORY") continue;
+
+
+        let rarity: number = await getItemRarity(tali, itemInfo);
+
+
+        //apply mp
+            let mpGiven = mpTable[keys(mpTable)[rarity]];
+
+            if(itemInfo.id == "HEGEMONY_ARTIFACT") mpGiven *= 2;
+
+            mp += mpGiven;
     }
 
-    stats.tuning.tuning = multiplyStatsList((accessory_bag_storage.tuning.slot_0 ? accessory_bag_storage.tuning.slot_0 : {}) as statsList, tuningValues)
+    //i am maths enjoyer :)))
+    let statsMultiplier = 29.97 * Math.pow((Math.log(0.0019 * mp + 1)), 1.2);
 
+    //handle power
+    if (accessory_bag_storage.selected_power !== undefined) {
+        let selectedPower = accessory_bag_storage.selected_power;
+
+        if(accPowers[selectedPower] !== undefined) {
+            var selectedPowerStats = accPowers[selectedPower];
+
+            stats.magicPower = multiplyStatsList(selectedPowerStats.per, statsMultiplier);
+
+            if (selectedPowerStats.extra) {
+                stats.magicPower = mergeStatsLists(stats.magicPower, selectedPowerStats.extra || {});
+            }
+        } else {
+            console.warn("couldnt find selected power", selectedPower);
+        }
+    } else {
+        console.warn("no selected power")
+    }
+
+    //tuning
+    stats.tuning = multiplyStatsList((accessory_bag_storage.tuning.slot_0 || {}), tuningValues)
+
+    //this extremely obscure javascript api function outputs a hashmap to a list of characters called the console
     console.log({ mp, statsMultiplier });
 
-    let finalObj: statsSources = {};
-
-    finalObj[`${color("b")}Magic Power (${mp})`] = stats.magicPower;
-    finalObj[`${color("9")}Accessory Stats`] = stats.taliStats;
-    finalObj[`${color("b")}Accessory Enrichments`] = stats.enrichments;
-    finalObj[`${color("e")}Accessory Tuning`] = stats.tuning.tuning;
-    finalObj[`${color("d")}Accessory Gems`] = stats.gems;
-
-    calcTemp[calcId].stats.stats[`${color("d")}Accessories`] = finalObj;
+    
+    calcTemp[calcId].stats.stats[`${color("d")}Accessories`] = {
+        [`${color("b")}Magic Power (${mp})`]: stats.magicPower,
+        [`${color("9")}Accessory Stats`]: stats.taliStats,
+        [`${color("b")}Accessory Enrichments`]: stats.enrichments,
+        [`${color("e")}Accessory Tuning`]: stats.tuning,
+        [`${color("d")}Accessory Gems`]: stats.gems,
+        [`${color("7")}Accessory Abilities`]: stats.abilities,
+    };
 }
-
-
 
 //calculates stats given from potions
 export async function calculatePotionStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
@@ -1865,11 +1951,6 @@ export async function calculatePotionStats(data: apiData, selectedProfile: numbe
 
     calcTemp[calcId].stats.stats[`${color("5")}Potions`] = stats;
 }
-
-export interface cakeStatNumberToStat {
-    [key: string]: statName
-}
-
 
 //calculates stats given from century cakes
 export async function calculateCakeStats(data: apiData, selectedProfile: number, playerUUID: string, calcId: string) {
@@ -2183,12 +2264,8 @@ export async function calculatePetScoreStats(data: apiData, selectedProfile: num
         mf++;
     }
 
-    var stats: statsCategory = {};
-
     calcTemp[calcId].stats.stats[colorChar + "b"+"Pet Score (" + petScore + ")"] = {magic_find: mf};
 }
-
-//WORK
 
 //calculates stats given from current pet
 export async function calculatePetStats(data: apiData, selectedProfile: number, playerUUID: string, specialData: specialPetData, calcId: string) {
@@ -2619,3 +2696,5 @@ export async function calculateStats(data: apiData, selectedProfile: number, pla
             abiphone (Y)
     */
 }
+
+//#endregion STATS

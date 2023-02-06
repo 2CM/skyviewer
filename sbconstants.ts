@@ -1342,6 +1342,7 @@ export interface profileMember { //all objects can be expanded upon; all any[] |
     last_save: number,
     stats: {
         gifts_given?: number,
+        mythos_kills?: number
     },
 
     //misc stats
@@ -5138,3 +5139,15 @@ export type anyMayorData =
     mayorData<"derpy"> |
     mayorData<"jerry"> |
     mayorData<"scorpius">;
+
+export const beastmasterKillMilestones = [
+    25,
+    100,
+    250,
+    500,
+    1000,
+    2500,
+    5000,
+    7500,
+    10000,
+]
